@@ -10,6 +10,7 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as CollectionRouteImport } from './routes/collection'
 import { Route as DatabaseRouteImport } from './routes/database'
@@ -18,6 +19,7 @@ import { Route as ProfileRouteImport } from './routes/profile'
 import { Route as ScanRouteImport } from './routes/scan'
 import { Route as TradesRouteImport } from './routes/trades'
 import { Route as TrendsRouteImport } from './routes/trends'
+import { Route as AuthenticatedAccountRouteImport } from './routes/_authenticated/account'
 import { Route as CardCardIdRouteImport } from './routes/card.$cardId'
 import { Route as ApiPublicRefreshPricesRouteImport } from './routes/api/public/refresh-prices'
 import { Route as ApiPublicSyncCatalogRouteImport } from './routes/api/public/sync-catalog'
@@ -25,6 +27,10 @@ import { Route as ApiPublicSyncCatalogRouteImport } from './routes/api/public/sy
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AuthenticatedRouteRoute = AuthenticatedRouteRouteImport.update({
+  id: '/_authenticated',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AuthRoute = AuthRouteImport.update({
@@ -67,6 +73,11 @@ const TrendsRoute = TrendsRouteImport.update({
   path: '/trends',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AuthenticatedAccountRoute = AuthenticatedAccountRouteImport.update({
+  id: '/account',
+  path: '/account',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
 const CardCardIdRoute = CardCardIdRouteImport.update({
   id: '/card/$cardId',
   path: '/card/$cardId',
@@ -93,6 +104,7 @@ export interface FileRoutesByFullPath {
   '/scan': typeof ScanRoute
   '/trades': typeof TradesRoute
   '/trends': typeof TrendsRoute
+  '/account': typeof AuthenticatedAccountRoute
   '/card/$cardId': typeof CardCardIdRoute
   '/api/public/refresh-prices': typeof ApiPublicRefreshPricesRoute
   '/api/public/sync-catalog': typeof ApiPublicSyncCatalogRoute
@@ -107,6 +119,7 @@ export interface FileRoutesByTo {
   '/scan': typeof ScanRoute
   '/trades': typeof TradesRoute
   '/trends': typeof TrendsRoute
+  '/account': typeof AuthenticatedAccountRoute
   '/card/$cardId': typeof CardCardIdRoute
   '/api/public/refresh-prices': typeof ApiPublicRefreshPricesRoute
   '/api/public/sync-catalog': typeof ApiPublicSyncCatalogRoute
@@ -114,6 +127,7 @@ export interface FileRoutesByTo {
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/_authenticated': typeof AuthenticatedRouteRouteWithChildren
   '/auth': typeof AuthRoute
   '/collection': typeof CollectionRoute
   '/database': typeof DatabaseRoute
@@ -122,6 +136,7 @@ export interface FileRoutesById {
   '/scan': typeof ScanRoute
   '/trades': typeof TradesRoute
   '/trends': typeof TrendsRoute
+  '/_authenticated/account': typeof AuthenticatedAccountRoute
   '/card/$cardId': typeof CardCardIdRoute
   '/api/public/refresh-prices': typeof ApiPublicRefreshPricesRoute
   '/api/public/sync-catalog': typeof ApiPublicSyncCatalogRoute
@@ -138,6 +153,7 @@ export interface FileRouteTypes {
     | '/scan'
     | '/trades'
     | '/trends'
+    | '/account'
     | '/card/$cardId'
     | '/api/public/refresh-prices'
     | '/api/public/sync-catalog'
@@ -152,12 +168,14 @@ export interface FileRouteTypes {
     | '/scan'
     | '/trades'
     | '/trends'
+    | '/account'
     | '/card/$cardId'
     | '/api/public/refresh-prices'
     | '/api/public/sync-catalog'
   id:
     | '__root__'
     | '/'
+    | '/_authenticated'
     | '/auth'
     | '/collection'
     | '/database'
@@ -166,6 +184,7 @@ export interface FileRouteTypes {
     | '/scan'
     | '/trades'
     | '/trends'
+    | '/_authenticated/account'
     | '/card/$cardId'
     | '/api/public/refresh-prices'
     | '/api/public/sync-catalog'
@@ -173,6 +192,7 @@ export interface FileRouteTypes {
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  AuthenticatedRouteRoute: typeof AuthenticatedRouteRouteWithChildren
   AuthRoute: typeof AuthRoute
   CollectionRoute: typeof CollectionRoute
   DatabaseRoute: typeof DatabaseRoute
@@ -193,6 +213,13 @@ declare module '@tanstack/react-router' {
       path: '/'
       fullPath: '/'
       preLoaderRoute: typeof IndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/_authenticated': {
+      id: '/_authenticated'
+      path: ''
+      fullPath: '/'
+      preLoaderRoute: typeof AuthenticatedRouteRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/auth': {
@@ -251,6 +278,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof TrendsRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/_authenticated/account': {
+      id: '/_authenticated/account'
+      path: '/account'
+      fullPath: '/account'
+      preLoaderRoute: typeof AuthenticatedAccountRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/card/$cardId': {
       id: '/card/$cardId'
       path: '/card/$cardId'
@@ -275,8 +309,20 @@ declare module '@tanstack/react-router' {
   }
 }
 
+interface AuthenticatedRouteRouteChildren {
+  AuthenticatedAccountRoute: typeof AuthenticatedAccountRoute
+}
+
+const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
+  AuthenticatedAccountRoute: AuthenticatedAccountRoute,
+}
+
+const AuthenticatedRouteRouteWithChildren =
+  AuthenticatedRouteRoute._addFileChildren(AuthenticatedRouteRouteChildren)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
   AuthRoute: AuthRoute,
   CollectionRoute: CollectionRoute,
   DatabaseRoute: DatabaseRoute,
