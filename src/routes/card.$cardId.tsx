@@ -149,7 +149,7 @@ function CardDetail() {
               <Loader2 className="size-5 animate-spin" />
             </div>
           ) : (
-            <MultiSourceChart data={chartData} sources={shown} />
+            <MultiSourceChart data={chartData} sources={shown} currencies={currencyBySource} />
           )}
           <div className="mt-2 flex flex-wrap gap-1.5">
             {allSources.map((s) => {
@@ -218,7 +218,7 @@ function CardDetail() {
                         ? "—"
                         : q.currency === "JPY"
                           ? `¥${q.price.toLocaleString()}`
-                          : money(q.price)}
+                          : money(q.price, q.currency)}
                     </td>
                   </tr>
                 );

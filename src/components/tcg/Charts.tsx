@@ -34,17 +34,22 @@ const axis = {
 export function MultiSourceChart({
   data,
   sources,
+  currencies = {},
 }: {
   data: Record<string, string | number>[];
   sources: PriceSource[];
+  /** Currency per source, so EUR (Cardmarket) and JPY series stay honest. */
+  currencies?: Partial<Record<PriceSource, string>>;
 }) {
+  const axisCurrency = currencies[sources[0]] ?? "USD";
+  const symbol = axisCurrency === "EUR" ? "\u20ac" : axisCurrency === "JPY" ? "\u00a5" : "$";
   return (
     <div className="h-56 w-full">
       <ResponsiveContainer width="100%" height="100%">
         <LineChart data={data} margin={{ top: 8, right: 8, left: 0, bottom: 0 }}>
           <CartesianGrid strokeDasharray="3 3" stroke="var(--color-border)" vertical={false} />
           <XAxis dataKey="date" tickFormatter={(v) => fmtDate(String(v))} minTickGap={32} {...axis} />
-          <YAxis tickFormatter={(v) => `$${compact(Number(v))}`} width={46} domain={["auto", "auto"]} {...axis} />
+          <YAxis tickFormatter={(v) => `${symbol}${compact(Number(v))}`} width={46} domain={["auto", "auto"]} {...axis} />
           <Tooltip
             contentStyle={{
               background: "var(--color-popover)",
@@ -54,7 +59,7 @@ export function MultiSourceChart({
             }}
             labelFormatter={(v) => fmtDate(String(v), false)}
             formatter={(value, name) => [
-              money(Number(value)),
+              money(Number(value), currencies[name as PriceSource] ?? "USD"),
               SOURCE_META[name as PriceSource]?.label ?? String(name),
             ]}
           />
