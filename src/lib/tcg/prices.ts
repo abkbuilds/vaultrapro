@@ -47,6 +47,7 @@ function dayLabel(daysAgo: number, range: TimeRange) {
 
 const SOURCE_BIAS: Record<PriceSource, number> = {
   tcgplayer: 1,
+  cardmarket: 0.9,
   ebay: 0.94,
   snkrdunk: 1.06,
   pricecharting: 0.98,

@@ -45,11 +45,11 @@ export function PriceDelta({ value, className }: { value: number; className?: st
   );
 }
 
-export function money(n: number) {
-  return n.toLocaleString("en-US", {
+export function money(n: number, currency = "USD") {
+  return n.toLocaleString(currency === "JPY" ? "ja-JP" : "en-US", {
     style: "currency",
-    currency: "USD",
-    maximumFractionDigits: n >= 1000 ? 0 : 2,
+    currency,
+    maximumFractionDigits: currency === "JPY" || n >= 1000 ? 0 : 2,
   });
 }
 

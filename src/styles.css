@@ -40,6 +40,7 @@
   --color-src-ebay: var(--src-ebay);
   --color-src-snkrdunk: var(--src-snkrdunk);
   --color-src-pricecharting: var(--src-pricecharting);
+  --color-src-cardmarket: var(--src-cardmarket);
   --color-chart-1: var(--chart-1);
   --color-chart-2: var(--chart-2);
   --color-chart-3: var(--chart-3);
@@ -88,6 +89,7 @@
   --src-ebay: oklch(0.78 0.18 150);
   --src-snkrdunk: oklch(0.68 0.2 20);
   --src-pricecharting: oklch(0.8 0.16 75);
+  --src-cardmarket: oklch(0.72 0.17 320);
   --chart-1: oklch(0.68 0.19 268);
   --chart-2: oklch(0.78 0.18 150);
   --chart-3: oklch(0.72 0.18 320);

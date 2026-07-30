@@ -6,7 +6,8 @@
  * report `live: false` with a reason when the credential is missing instead of
  * inventing a number.
  *
- * - TCGplayer / Cardmarket : api.pokemontcg.io (real market prices, EN)
+ * - TCGplayer              : api.pokemontcg.io (real market prices, EN)
+ * - Cardmarket             : api.tcgdex.net (real EN + JP prices, no API key)
  * - eBay                   : Browse API (needs EBAY_CLIENT_ID + EBAY_CLIENT_SECRET)
  * - PriceCharting          : api /product (needs PRICECHARTING_API_TOKEN)
  * - snkrdunk               : no public API — needs SNKRDUNK_API_TOKEN partner feed
@@ -87,6 +88,102 @@ export async function quoteTcgplayer(cardId: string): Promise<Quote> {
     live: false,
     note: "TCGplayer has no market price yet",
   };
+}
+
+/* ------------------------------- Cardmarket ------------------------------ */
+/**
+ * TCGdex republishes Cardmarket's daily figures for both English and Japanese
+ * printings and needs no API key, so it is the default live source. It also
+ * exposes 1/7/30-day averages, which we replay as real historical readings.
+ */
+const TCGDEX = "https://api.tcgdex.net/v2";
+
+function tcgdexUrl(cardId: string) {
+  const jp = cardId.startsWith("jp-");
+  return `${TCGDEX}/${jp ? "ja" : "en"}/cards/${cardId.replace(/^(jp|en)-/, "")}`;
+}
+
+type CardmarketBlock = Record<string, number | null | string>;
+
+/**
+ * Cardmarket quotes in EUR. Charts and portfolio totals are USD, so convert
+ * with the ECB daily reference rate (Frankfurter, keyless), cached for 6h.
+ */
+let eurUsd: { rate: number; expires: number } | null = null;
+async function eurToUsd(): Promise<number> {
+  if (eurUsd && eurUsd.expires > Date.now()) return eurUsd.rate;
+  const json = await getJson<{ rates?: { USD?: number } }>(
+    "https://api.frankfurter.app/latest?from=EUR&to=USD",
+  );
+  const rate = json?.rates?.USD;
+  if (typeof rate === "number" && rate > 0) {
+    eurUsd = { rate, expires: Date.now() + 6 * 3600_000 };
+    return rate;
+  }
+  return eurUsd?.rate ?? 1.08;
+}
+
+async function cardmarketBlock(cardId: string): Promise<CardmarketBlock | null> {
+  const json = await getJson<{ pricing?: { cardmarket?: CardmarketBlock | null } }>(
+    tcgdexUrl(cardId),
+  );
+  return json?.pricing?.cardmarket ?? null;
+}
+
+function pickNumber(block: CardmarketBlock, keys: string[]) {
+  for (const k of keys) {
+    const v = block[k];
+    if (typeof v === "number" && v > 0) return Number(v.toFixed(2));
+  }
+  return null;
+}
+
+export async function quoteCardmarket(cardId: string): Promise<Quote> {
+  const block = await cardmarketBlock(cardId);
+  if (!block) {
+    return {
+      source: "cardmarket",
+      price: null,
+      currency: "EUR",
+      live: false,
+      note: "No Cardmarket listing for this printing",
+    };
+  }
+  const eur = pickNumber(block, ["trend-holo", "trend", "avg-holo", "avg", "low"]);
+  const rate = await eurToUsd();
+  const price = eur == null ? null : Number((eur * rate).toFixed(2));
+  return {
+    source: "cardmarket",
+    price,
+    currency: "USD",
+    live: price != null,
+    note:
+      eur == null
+        ? "Cardmarket has no price yet"
+        : `Cardmarket trend \u20ac${eur.toFixed(2)} at ECB ${rate.toFixed(3)}`,
+  };
+}
+
+/**
+ * Real dated readings we can backfill immediately: Cardmarket's 1, 7 and 30 day
+ * averages. Returned oldest-first as `{ daysAgo, price }`.
+ */
+export async function cardmarketHistorySeeds(cardId: string) {
+  const block = await cardmarketBlock(cardId);
+  if (!block) return [];
+  const holo = typeof block["trend-holo"] === "number" && (block["trend-holo"] as number) > 0;
+  const key = (base: string) => (holo ? `${base}-holo` : base);
+  const rate = await eurToUsd();
+  const seeds: { daysAgo: number; price: number }[] = [];
+  for (const [daysAgo, base] of [
+    [30, "avg30"],
+    [7, "avg7"],
+    [1, "avg1"],
+  ] as const) {
+    const v = pickNumber(block, [key(base), base]);
+    if (v != null) seeds.push({ daysAgo, price: Number((v * rate).toFixed(2)) });
+  }
+  return seeds;
 }
 
 /* --------------------------------- eBay --------------------------------- */
@@ -210,8 +307,8 @@ export async function quoteSnkrdunk(query: string): Promise<Quote> {
 /** Sources that apply to a card, by language. */
 export function sourcesFor(language: string): PriceSource[] {
   return language === "JP"
-    ? ["ebay", "snkrdunk"]
-    : ["tcgplayer", "ebay", "pricecharting"];
+    ? ["cardmarket", "ebay", "snkrdunk"]
+    : ["tcgplayer", "cardmarket", "ebay", "pricecharting"];
 }
 
 export async function quoteAll(card: {
@@ -225,6 +322,7 @@ export async function quoteAll(card: {
   const wanted = sourcesFor(card.language);
   const runners: Record<PriceSource, () => Promise<Quote>> = {
     tcgplayer: () => quoteTcgplayer(card.id),
+    cardmarket: () => quoteCardmarket(card.id),
     ebay: () => quoteEbay(query),
     pricecharting: () => quotePriceCharting(query),
     snkrdunk: () => quoteSnkrdunk(query),

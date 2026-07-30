@@ -68,6 +68,16 @@ function CardDetail() {
   const series = prices.data?.series ?? [];
   const allSources = series.map((s) => s.source);
   const shown = allSources.filter((s) => !hidden.includes(s));
+  const currencyBySource = Object.fromEntries(series.map((s) => [s.source, s.currency]));
+
+  // Headline price prefers a live quote (TCGplayer first, then any other live
+  // source) so it can never contradict the quote table below it.
+  const liveQuotes = (prices.data?.quotes ?? []).filter((q) => q.live && q.price != null);
+  const headline =
+    liveQuotes.find((q) => q.source === "tcgplayer")?.price ??
+    liveQuotes[0]?.price ??
+    card.marketPrice;
+  const headlineSource = liveQuotes.find((q) => q.source === "tcgplayer") ?? liveQuotes[0];
 
   const chartData = useMemo(() => {
     const rows = new Map<string, Record<string, string | number>>();
@@ -131,10 +141,15 @@ function CardDetail() {
             </div>
             <div className="mt-3 flex items-end gap-2">
               <p className="font-display text-3xl font-bold tabular-nums">
-                {money(card.marketPrice)}
+                {money(headline)}
               </p>
               <PriceDelta value={card.change7d} className="mb-1" />
             </div>
+            <p className="mt-1 text-[11px] text-muted-foreground">
+              {headlineSource
+                ? `${SOURCE_META[headlineSource.source].label} live`
+                : "Last catalogue price"}
+            </p>
             {card.artist && (
               <p className="mt-1 text-[11px] text-muted-foreground">Illus. {card.artist}</p>
             )}
@@ -149,7 +164,7 @@ function CardDetail() {
               <Loader2 className="size-5 animate-spin" />
             </div>
           ) : (
-            <MultiSourceChart data={chartData} sources={shown} />
+            <MultiSourceChart data={chartData} sources={shown} currencies={currencyBySource} />
           )}
           <div className="mt-2 flex flex-wrap gap-1.5">
             {allSources.map((s) => {
@@ -218,7 +233,7 @@ function CardDetail() {
                         ? "—"
                         : q.currency === "JPY"
                           ? `¥${q.price.toLocaleString()}`
-                          : money(q.price)}
+                          : money(q.price, q.currency)}
                     </td>
                   </tr>
                 );

@@ -26,7 +26,12 @@ export const CONDITION_MULTIPLIER: Record<Condition, number> = {
   Damaged: 0.25,
 };
 
-export type PriceSource = "tcgplayer" | "ebay" | "snkrdunk" | "pricecharting";
+export type PriceSource =
+  | "tcgplayer"
+  | "cardmarket"
+  | "ebay"
+  | "snkrdunk"
+  | "pricecharting";
 
 export type TimeRange = "1D" | "1W" | "1M" | "3M" | "1Y" | "5Y" | "ALL";
 
@@ -94,6 +99,11 @@ export const SOURCE_META: Record<
   { label: string; color: string; languages: Language[] }
 > = {
   tcgplayer: { label: "TCGplayer", color: "var(--src-tcgplayer)", languages: ["EN"] },
+  cardmarket: {
+    label: "Cardmarket",
+    color: "var(--src-cardmarket)",
+    languages: ["EN", "JP"],
+  },
   ebay: { label: "eBay sold", color: "var(--src-ebay)", languages: ["EN", "JP"] },
   snkrdunk: { label: "snkrdunk", color: "var(--src-snkrdunk)", languages: ["JP"] },
   pricecharting: {
