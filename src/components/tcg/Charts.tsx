@@ -20,6 +20,10 @@ function fmtDate(iso: string, compact = true) {
     : d.toLocaleString("en-US", { month: "short", day: "numeric", hour: "numeric" });
 }
 
+function compact(n: number) {
+  return n >= 1000 ? `${(n / 1000).toFixed(1)}k` : String(Math.round(n));
+}
+
 const axis = {
   stroke: "var(--color-muted-foreground)",
   fontSize: 10,
