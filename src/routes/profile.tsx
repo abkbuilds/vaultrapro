@@ -44,6 +44,7 @@ const MARKETPLACES = [
 
 function ProfilePage() {
   const { entries, wishlist } = useCollection();
+  const { user, signOut } = useAuth();
   const valued = useMemo(() => valueEntries(entries), [entries]);
 
   const allocation = useMemo(() => {
