@@ -1,6 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
-import { ArrowUpRight, Bell, ScanLine, Sparkles } from "lucide-react";
+import { ArrowUpRight, Bell, Handshake, ScanLine, Sparkles } from "lucide-react";
 import { PageHeader, PriceDelta, CardRow, money } from "@/components/tcg/CardBits";
 import { TrendAreaChart } from "@/components/tcg/Charts";
 import { RangeToggle } from "@/components/tcg/RangeToggle";
@@ -99,13 +99,28 @@ function Dashboard() {
           </span>
           <ArrowUpRight className="size-5 text-muted-foreground" />
         </Link>
+        <Link
+          to="/trades"
+          className="mt-2 flex items-center gap-3 rounded-2xl bg-surface p-4"
+        >
+          <span className="grid size-11 place-items-center rounded-xl bg-surface-2 text-accent">
+            <Handshake className="size-5" />
+          </span>
+          <span className="flex-1">
+            <span className="block text-sm font-semibold">Log a sale or trade</span>
+            <span className="block text-xs text-muted-foreground">
+              Card shows, deals and flips — with realised P/L
+            </span>
+          </span>
+          <ArrowUpRight className="size-5 text-muted-foreground" />
+        </Link>
       </section>
 
       <section className="mt-6">
         <div className="flex items-center justify-between px-4 pb-2">
-          <h2 className="font-display text-lg font-semibold">Top movers</h2>
-          <Link to="/collection" className="text-xs font-semibold text-primary">
-            View all
+          <h2 className="font-display text-lg font-semibold">My top movers</h2>
+          <Link to="/trends" className="text-xs font-semibold text-primary">
+            Market movers
           </Link>
         </div>
         <div className="space-y-2 px-4">
