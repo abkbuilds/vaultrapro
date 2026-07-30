@@ -1,10 +1,12 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useMemo } from "react";
 import { Cell, Pie, PieChart, ResponsiveContainer, Tooltip } from "recharts";
-import { Bell, ChevronRight, Heart, LogOut, Plug, ShieldCheck } from "lucide-react";
+import { Bell, ChevronRight, Heart, LogIn, LogOut, Plug, ShieldCheck } from "lucide-react";
+import { toast } from "sonner";
 import { PageHeader, CardRow, money } from "@/components/tcg/CardBits";
 import { useCollection, valueEntries } from "@/lib/tcg/collection";
 import { CARD_BY_ID } from "@/lib/tcg/cards";
+import { useAuth } from "@/lib/auth";
 import { Switch } from "@/components/ui/switch";
 
 export const Route = createFileRoute("/profile")({
