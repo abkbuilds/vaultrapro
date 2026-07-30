@@ -227,7 +227,7 @@ export async function quoteAll(card: {
     tcgplayer: () => quoteTcgplayer(card.id),
     ebay: () => quoteEbay(query),
     pricecharting: () => quotePriceCharting(query),
-    snkrdunk: () => quoteSnkrdunk(card.nativeQuery ?? query),
+    snkrdunk: () => quoteSnkrdunk(query),
   } as never;
   return Promise.all(wanted.map((s) => runners[s]()));
 }
