@@ -41,10 +41,10 @@ export function MultiSourceChart({
   return (
     <div className="h-56 w-full">
       <ResponsiveContainer width="100%" height="100%">
-        <LineChart data={data} margin={{ top: 8, right: 8, left: -18, bottom: 0 }}>
+        <LineChart data={data} margin={{ top: 8, right: 8, left: 0, bottom: 0 }}>
           <CartesianGrid strokeDasharray="3 3" stroke="var(--color-border)" vertical={false} />
           <XAxis dataKey="date" tickFormatter={(v) => fmtDate(String(v))} minTickGap={32} {...axis} />
-          <YAxis tickFormatter={(v) => `$${v}`} width={52} {...axis} />
+          <YAxis tickFormatter={(v) => `$${compact(Number(v))}`} width={46} domain={["auto", "auto"]} {...axis} />
           <Tooltip
             contentStyle={{
               background: "var(--color-popover)",
