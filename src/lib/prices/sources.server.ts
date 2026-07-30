@@ -6,7 +6,8 @@
  * report `live: false` with a reason when the credential is missing instead of
  * inventing a number.
  *
- * - TCGplayer / Cardmarket : api.pokemontcg.io (real market prices, EN)
+ * - TCGplayer              : api.pokemontcg.io (real market prices, EN)
+ * - Cardmarket             : api.tcgdex.net (real EN + JP prices, no API key)
  * - eBay                   : Browse API (needs EBAY_CLIENT_ID + EBAY_CLIENT_SECRET)
  * - PriceCharting          : api /product (needs PRICECHARTING_API_TOKEN)
  * - snkrdunk               : no public API — needs SNKRDUNK_API_TOKEN partner feed
@@ -282,8 +283,8 @@ export async function quoteSnkrdunk(query: string): Promise<Quote> {
 /** Sources that apply to a card, by language. */
 export function sourcesFor(language: string): PriceSource[] {
   return language === "JP"
-    ? ["ebay", "snkrdunk"]
-    : ["tcgplayer", "ebay", "pricecharting"];
+    ? ["cardmarket", "ebay", "snkrdunk"]
+    : ["tcgplayer", "cardmarket", "ebay", "pricecharting"];
 }
 
 export async function quoteAll(card: {
@@ -297,6 +298,7 @@ export async function quoteAll(card: {
   const wanted = sourcesFor(card.language);
   const runners: Record<PriceSource, () => Promise<Quote>> = {
     tcgplayer: () => quoteTcgplayer(card.id),
+    cardmarket: () => quoteCardmarket(card.id),
     ebay: () => quoteEbay(query),
     pricecharting: () => quotePriceCharting(query),
     snkrdunk: () => quoteSnkrdunk(query),

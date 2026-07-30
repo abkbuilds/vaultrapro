@@ -9,7 +9,12 @@
 import { supabase } from "@/integrations/supabase/client";
 import type { PriceSource, TimeRange } from "@/lib/tcg/types";
 import { RANGE_DAYS } from "@/lib/tcg/types";
-import { quoteAll, sourcesFor, type Quote } from "./sources.server";
+import {
+  cardmarketHistorySeeds,
+  quoteAll,
+  sourcesFor,
+  type Quote,
+} from "./sources.server";
 
 export interface SeriesBySource {
   source: PriceSource;
@@ -150,17 +155,33 @@ export async function snapshotCard(card: CardLike) {
   if (!quotes.length) return 0;
   const today = new Date().toISOString().slice(0, 10);
 
-  await supabaseAdmin.from("card_price_points").upsert(
-    quotes.map((q) => ({
+  const rowsToStore = quotes.map((q) => ({
+    card_id: card.id,
+    source: q.source,
+    condition: "Near Mint",
+    price: q.price,
+    currency: q.currency,
+    captured_on: today,
+  }));
+
+  // Cardmarket publishes 1/7/30 day averages, so a brand new card immediately
+  // gets three real dated readings instead of waiting a month for snapshots.
+  for (const seed of await cardmarketHistorySeeds(card.id)) {
+    const d = new Date();
+    d.setDate(d.getDate() - seed.daysAgo);
+    rowsToStore.push({
       card_id: card.id,
-      source: q.source,
+      source: "cardmarket",
       condition: "Near Mint",
-      price: q.price,
-      currency: q.currency,
-      captured_on: today,
-    })),
-    { onConflict: "card_id,source,condition,captured_on" },
-  );
+      price: seed.price,
+      currency: "EUR",
+      captured_on: d.toISOString().slice(0, 10),
+    });
+  }
+
+  await supabaseAdmin
+    .from("card_price_points")
+    .upsert(rowsToStore, { onConflict: "card_id,source,condition,captured_on" });
 
   const history = await loadStored(card.id, 40);
   const rows = quotes.map((q) => {
