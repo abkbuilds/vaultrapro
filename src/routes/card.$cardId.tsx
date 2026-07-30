@@ -18,8 +18,8 @@ import { useCollection } from "@/lib/tcg/collection";
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/card/$cardId")({
-  loader: ({ params }) => {
-    const card = getCard(params.cardId);
+  loader: async ({ params }) => {
+    const card = (await fetchCardById(params.cardId)) ?? getCard(params.cardId);
     if (!card) throw notFound();
     return { card };
   },
