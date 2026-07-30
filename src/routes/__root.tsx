@@ -142,7 +142,7 @@ function RootComponent() {
           <Outlet />
         </div>
         <BottomNav />
-        <Toaster position="top-center" />
+        <Toaster position="top-center" theme="dark" offset={16} />
       </CollectionProvider>
     </QueryClientProvider>
   );
