@@ -86,7 +86,7 @@ export function TrendAreaChart({
   return (
     <div style={{ height }} className="w-full">
       <ResponsiveContainer width="100%" height="100%">
-        <AreaChart data={data} margin={{ top: 8, right: 4, left: -22, bottom: 0 }}>
+        <AreaChart data={data} margin={{ top: 8, right: 4, left: 0, bottom: 0 }}>
           <defs>
             <linearGradient id={id} x1="0" y1="0" x2="0" y2="1">
               <stop offset="0%" stopColor={color} stopOpacity={0.45} />
@@ -94,7 +94,13 @@ export function TrendAreaChart({
             </linearGradient>
           </defs>
           <XAxis dataKey="date" tickFormatter={(v) => fmtDate(String(v))} minTickGap={40} {...axis} />
-          <YAxis width={48} tickFormatter={(v) => `${prefix}${Math.round(Number(v))}`} {...axis} />
+          <YAxis
+            width={46}
+            domain={["auto", "auto"]}
+            tickFormatter={(v) => `${prefix}${compact(Number(v))}`}
+            {...axis}
+          />
+
           <Tooltip
             contentStyle={{
               background: "var(--color-popover)",
