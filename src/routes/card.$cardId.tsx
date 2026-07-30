@@ -163,8 +163,17 @@ function CardDetail() {
             <div className="grid h-52 place-items-center text-muted-foreground">
               <Loader2 className="size-5 animate-spin" />
             </div>
-          ) : (
+          ) : prices.isError ? (
+            <div className="grid h-52 place-items-center px-6 text-center text-sm text-destructive">
+              Couldn't reach the price sources. Try again in a moment.
+            </div>
+          ) : hasHistory ? (
             <MultiSourceChart data={chartData} sources={shown} currencies={currencyBySource} />
+          ) : (
+            <div className="grid h-52 place-items-center px-6 text-center text-sm text-muted-foreground">
+              No recorded price history for this window yet. Only real, source-backed
+              readings are charted — nothing is estimated.
+            </div>
           )}
           <div className="mt-2 flex flex-wrap gap-1.5">
             {allSources.map((s) => {
@@ -191,12 +200,10 @@ function CardDetail() {
           <div className="mt-2">
             <RangeToggle value={range} onChange={setRange} ranges={ALL_RANGES} />
           </div>
-          {anyModelled && (
-            <p className="mt-2 text-[11px] text-muted-foreground">
-              Sources marked “modelled” below don't have enough captured history for this
-              window yet — the curve is estimated from the live quote.
-            </p>
-          )}
+          <p className="mt-2 text-[11px] text-muted-foreground">
+            Charted from real marketplace readings only — gaps are left as gaps, never
+            smoothed or predicted.
+          </p>
         </div>
       </section>
 
