@@ -137,14 +137,16 @@ function RootComponent() {
 
   return (
     <QueryClientProvider client={queryClient}>
-      <CollectionProvider>
-        <div className="mx-auto min-h-screen w-full max-w-lg pb-24">
-          {/* Required: nested routes render here. */}
-          <Outlet />
-        </div>
-        <BottomNav />
-        <Toaster position="top-center" theme="dark" offset={16} />
-      </CollectionProvider>
+      <AuthProvider>
+        <CollectionProvider>
+          <div className="mx-auto min-h-screen w-full max-w-lg pb-24">
+            {/* Required: nested routes render here. */}
+            <Outlet />
+          </div>
+          <BottomNav />
+          <Toaster position="top-center" theme="dark" offset={16} />
+        </CollectionProvider>
+      </AuthProvider>
     </QueryClientProvider>
   );
 }
