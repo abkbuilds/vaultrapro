@@ -137,7 +137,9 @@ async function loadStored(cardId: string, days: number) {
 /** Capture today's quotes for a card and refresh its latest/change rollup. */
 export async function snapshotCard(card: CardLike) {
   const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-  const quotes = (await quoteAll(card)).filter((q) => q.price != null);
+  const quotes = (await quoteAll(card))
+    .filter((q) => q.price != null)
+    .map((q) => ({ ...q, price: q.price as number }));
   if (!quotes.length) return 0;
   const today = new Date().toISOString().slice(0, 10);
 
@@ -162,7 +164,7 @@ export async function snapshotCard(card: CardLike) {
       return prior.at(-1)?.value ?? null;
     };
     const pct = (old: number | null) =>
-      old && old > 0 ? Number((((q.price! - old) / old) * 100).toFixed(2)) : null;
+      old && old > 0 ? Number((((q.price - old) / old) * 100).toFixed(2)) : null;
     return {
       card_id: card.id,
       source: q.source,
