@@ -91,7 +91,7 @@ function CardDetail() {
     return [...rows.values()].sort((a, b) => String(a.date).localeCompare(String(b.date)));
   }, [series]);
 
-  const anyModelled = series.some((s) => s.modelled);
+  const hasHistory = chartData.length > 1;
 
   return (
     <main>
