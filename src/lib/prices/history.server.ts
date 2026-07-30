@@ -1,10 +1,10 @@
 /**
  * Price history assembly (server-only).
  *
- * Real readings live in `card_price_points`, captured by the snapshot endpoint.
- * Until a card has enough captured readings for the requested window we return
- * a modelled series anchored to the live quote, and flag it as modelled so the
- * UI never presents an estimate as a real observation.
+ * Every number returned here comes from a real, source-backed reading:
+ * live marketplace quotes, or readings captured into `card_price_points`
+ * by the snapshot endpoint. Nothing is modelled, smoothed or interpolated —
+ * when a source has no data, it is simply absent and the UI says "no data".
  */
 import { supabase } from "@/integrations/supabase/client";
 import type { PriceSource, TimeRange } from "@/lib/tcg/types";
@@ -20,7 +20,6 @@ export interface SeriesBySource {
   source: PriceSource;
   currency: string;
   live: boolean;
-  modelled: boolean;
   note?: string;
   points: { date: string; value: number }[];
 }
@@ -31,41 +30,6 @@ export interface CardPricePayload {
   fetchedAt: string;
   series: SeriesBySource[];
   quotes: Quote[];
-}
-
-function hash(str: string) {
-  let h = 2166136261;
-  for (let i = 0; i < str.length; i++) {
-    h ^= str.charCodeAt(i);
-    h = Math.imul(h, 16777619);
-  }
-  return Math.abs(h);
-}
-function rng(seed: number) {
-  let s = seed % 2147483647;
-  if (s <= 0) s += 2147483646;
-  return () => {
-    s = (s * 16807) % 2147483647;
-    return (s - 1) / 2147483646;
-  };
-}
-
-function modelSeries(seed: string, anchor: number, range: TimeRange) {
-  const days = RANGE_DAYS[range];
-  const steps = range === "1D" ? 24 : Math.min(days, 120);
-  const rand = rng(hash(seed));
-  const drift = ((hash(seed) % 1600) - 700) / 10000;
-  let value = anchor / (1 + drift * (days / 30));
-  const out: { date: string; value: number }[] = [];
-  for (let i = steps; i >= 0; i--) {
-    const d = new Date();
-    if (range === "1D") d.setHours(d.getHours() - i);
-    else d.setDate(d.getDate() - Math.round((i * days) / steps));
-    value += (anchor - value) / Math.max(2, i + 1) + (rand() - 0.5) * anchor * 0.02;
-    out.push({ date: d.toISOString(), value: Math.max(0.05, Number(value.toFixed(2))) });
-  }
-  out[out.length - 1].value = Number(anchor.toFixed(2));
-  return out;
 }
 
 export interface CardLike {
@@ -86,35 +50,38 @@ export async function getCardPrices(
     loadStored(card.id, RANGE_DAYS[range]),
   ]);
 
-  const series: SeriesBySource[] = sourcesFor(card.language).flatMap((source): SeriesBySource[] => {
-    const quote = quotes.find((q) => q.source === source);
-    const points = stored.get(source) ?? [];
-    const anchor = quote?.price ?? points.at(-1)?.value ?? card.marketPrice;
-    if (points.length >= 3) {
+  const today = new Date().toISOString().slice(0, 10);
+
+  const series: SeriesBySource[] = sourcesFor(card.language).flatMap(
+    (source): SeriesBySource[] => {
+      const quote = quotes.find((q) => q.source === source);
+      const points = [...(stored.get(source) ?? [])];
+
+      // A live quote is a real observation for right now, so it belongs on the
+      // chart — but only once per day, replacing today's captured reading.
+      if (quote?.price != null) {
+        const withoutToday = points.filter((p) => p.date.slice(0, 10) !== today);
+        withoutToday.push({ date: new Date().toISOString(), value: quote.price });
+        points.length = 0;
+        points.push(...withoutToday);
+      }
+
+      // No captured history and no live quote: charting anything would be
+      // invented data, so the source is reported as unavailable instead.
+      if (!points.length) return [];
+
+      points.sort((a, b) => a.date.localeCompare(b.date));
       return [
         {
           source,
           currency: quote?.currency ?? "USD",
-          live: true,
-          modelled: false,
+          live: Boolean(quote?.price != null),
+          note: quote?.note,
           points,
         },
       ];
-    }
-    // No live quote and no captured history: charting anything here would be
-    // invented data, so the source is reported as unavailable instead.
-    if (!quote?.price) return [];
-    return [
-      {
-        source,
-        currency: quote.currency,
-        live: true,
-        modelled: true,
-        note: quote.note,
-        points: modelSeries(card.id + source + range, anchor, range),
-      },
-    ];
-  });
+    },
+  );
 
   return {
     cardId: card.id,
@@ -164,8 +131,8 @@ export async function snapshotCard(card: CardLike) {
     captured_on: today,
   }));
 
-  // Cardmarket publishes 1/7/30 day averages, so a brand new card immediately
-  // gets three real dated readings instead of waiting a month for snapshots.
+  // Cardmarket publishes real 1/7/30 day averages, so a brand new card
+  // immediately gets three genuine dated readings.
   for (const seed of await cardmarketHistorySeeds(card.id)) {
     const d = new Date();
     d.setDate(d.getDate() - seed.daysAgo);
@@ -198,9 +165,9 @@ export async function snapshotCard(card: CardLike) {
       source: q.source,
       price: q.price,
       currency: q.currency,
-      change_24h: pct(1),
-      change_7d: pct(7),
-      change_30d: pct(30),
+      change_24h: pct(at(1)),
+      change_7d: pct(at(7)),
+      change_30d: pct(at(30)),
       updated_at: new Date().toISOString(),
     };
   });
@@ -222,7 +189,6 @@ export interface MoverRow {
   image: string | null;
   price: number;
   change: number;
-  estimated: boolean;
 }
 
 const COL: Record<MoverWindow, "change_24h" | "change_7d" | "change_30d"> = {
@@ -267,54 +233,106 @@ export async function getMovers(opts: {
       image: r.tcg_cards.image_large ?? r.tcg_cards.image_small,
       price: Number(r.price),
       change: Number(r[col]),
-      estimated: false,
     }));
 
-  if (up.length || down.length) {
-    return {
-      gainers: map(up).filter((m) => m.change > 0),
-      losers: map(down).filter((m) => m.change < 0),
-      estimated: false,
-    };
-  }
-  return { ...(await estimatedMovers(opts, limit)), estimated: true };
+  // Real readings only. When the captured history does not yet cover this
+  // window the lists come back empty and the UI shows "no data".
+  return {
+    gainers: map(up).filter((m) => m.change > 0),
+    losers: map(down).filter((m) => m.change < 0),
+  };
 }
 
-/** Deterministic stand-in while the daily snapshot history is still filling. */
-async function estimatedMovers(
-  opts: { window: MoverWindow; language: "EN" | "JP"; cardIds?: string[] },
-  limit: number,
-) {
-  let q = supabase
-    .from("tcg_cards")
-    .select("id,name,set_name,set_code,number,language,image_small,image_large,market_price")
-    .eq("language", opts.language)
-    .not("market_price", "is", null)
-    .order("market_price", { ascending: false })
-    .limit(opts.cardIds?.length ? 400 : 240);
-  if (opts.cardIds?.length) q = q.in("id", opts.cardIds);
-  const { data } = await q;
-  const factor = opts.window === "24h" ? 0.35 : opts.window === "7d" ? 1 : 2.6;
-  const rows: MoverRow[] = ((data ?? []) as any[]).map((r) => {
-    const seed = hash(r.id + opts.window);
-    return {
-      cardId: r.id,
-      name: r.name,
-      setName: r.set_name,
-      setCode: r.set_code,
-      number: r.number,
-      language: r.language,
-      image: r.image_large ?? r.image_small,
-      price: Number(r.market_price ?? 0),
-      change: Number(((((seed % 1800) - 850) / 100) * factor).toFixed(2)),
-      estimated: true,
-    };
-  });
-  const sorted = [...rows].sort((a, b) => b.change - a.change);
+/* ------------------------------ market pulse ------------------------------ */
+
+export interface MarketPulse {
+  language: "EN" | "JP";
+  window: MoverWindow;
+  /** Average observed % change across every card with a captured reading. */
+  averageChange: number | null;
+  tracked: number;
+}
+
+export async function getMarketPulse(
+  language: "EN" | "JP",
+  window: MoverWindow,
+): Promise<MarketPulse> {
+  const col = COL[window];
+  const { data } = await supabase
+    .from("card_price_latest")
+    .select(`${col},tcg_cards!inner(language)`)
+    .not(col, "is", null)
+    .eq("tcg_cards.language", language)
+    .limit(5000);
+
+  const values = ((data ?? []) as any[]).map((r) => Number(r[col])).filter(Number.isFinite);
+  if (!values.length) return { language, window, averageChange: null, tracked: 0 };
+  const avg = values.reduce((s, v) => s + v, 0) / values.length;
   return {
-    gainers: sorted.filter((m) => m.change > 0).slice(0, limit),
-    losers: [...sorted].reverse().filter((m) => m.change < 0).slice(0, limit),
+    language,
+    window,
+    averageChange: Number(avg.toFixed(2)),
+    tracked: values.length,
   };
+}
+
+/* ---------------------------- portfolio history --------------------------- */
+
+export interface Holding {
+  cardId: string;
+  quantity: number;
+  /** Condition multiplier applied to the observed market reading. */
+  multiplier: number;
+}
+
+/**
+ * Portfolio value over time, assembled purely from captured readings.
+ * Days without any reading for a card carry that card's last real reading
+ * forward (no synthetic values are created); before a card's first reading it
+ * simply contributes nothing.
+ */
+export async function getPortfolioSeries(holdings: Holding[], days: number) {
+  if (!holdings.length) return [] as { date: string; value: number }[];
+  const since = new Date();
+  since.setDate(since.getDate() - days);
+  const ids = [...new Set(holdings.map((h) => h.cardId))];
+
+  const { data } = await supabase
+    .from("card_price_points")
+    .select("card_id,price,captured_on")
+    .in("card_id", ids)
+    .gte("captured_on", since.toISOString().slice(0, 10))
+    .order("captured_on", { ascending: true })
+    .limit(20000);
+
+  const rows = (data ?? []) as { card_id: string; price: number; captured_on: string }[];
+  if (!rows.length) return [];
+
+  // Average the sources observed for a card on a given day.
+  const byDay = new Map<string, Map<string, { sum: number; n: number }>>();
+  for (const r of rows) {
+    const day = r.captured_on.slice(0, 10);
+    const cards = byDay.get(day) ?? new Map();
+    const acc = cards.get(r.card_id) ?? { sum: 0, n: 0 };
+    acc.sum += Number(r.price);
+    acc.n += 1;
+    cards.set(r.card_id, acc);
+    byDay.set(day, cards);
+  }
+
+  const last = new Map<string, number>();
+  const out: { date: string; value: number }[] = [];
+  for (const day of [...byDay.keys()].sort()) {
+    for (const [cardId, acc] of byDay.get(day)!) last.set(cardId, acc.sum / acc.n);
+    let total = 0;
+    for (const h of holdings) {
+      const price = last.get(h.cardId);
+      if (price == null) continue;
+      total += price * h.quantity * h.multiplier;
+    }
+    out.push({ date: new Date(day).toISOString(), value: Number(total.toFixed(2)) });
+  }
+  return out;
 }
 
 /** Load the minimal card shape the adapters need. */

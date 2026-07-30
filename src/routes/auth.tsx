@@ -83,7 +83,7 @@ function AuthPage() {
     setBusy(true);
     try {
       if (mode === "signup") {
-        const { error } = await supabase.auth.signUp({
+        const { data, error } = await supabase.auth.signUp({
           email,
           password,
           options: {
@@ -92,7 +92,8 @@ function AuthPage() {
           },
         });
         if (error) throw error;
-        toast.success("Account created — you're signed in.");
+        if (data.session) toast.success("Account created — you're signed in.");
+        else toast.success("Check your inbox to verify your email address.");
       } else {
         const { error } = await supabase.auth.signInWithPassword({ email, password });
         if (error) throw error;
@@ -100,6 +101,25 @@ function AuthPage() {
       }
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Something went wrong");
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function forgotPassword() {
+    if (!email) {
+      toast.error("Enter your email address first.");
+      return;
+    }
+    setBusy(true);
+    try {
+      const { error } = await supabase.auth.resetPasswordForEmail(email, {
+        redirectTo: `${window.location.origin}/reset-password`,
+      });
+      if (error) throw error;
+      toast.success("Password reset link sent — check your inbox.");
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Couldn't send reset email");
     } finally {
       setBusy(false);
     }
@@ -203,13 +223,27 @@ function AuthPage() {
 
         <button
           type="button"
+          onClick={forgotPassword}
+          disabled={busy}
+          className="mt-3 w-full text-center text-xs font-semibold text-primary disabled:opacity-60"
+        >
+          Forgot your password?
+        </button>
+
+        <button
+          type="button"
           onClick={() => setMode(mode === "signin" ? "signup" : "signin")}
-          className="mt-4 w-full text-center text-xs text-muted-foreground"
+          className="mt-3 w-full text-center text-xs text-muted-foreground"
         >
           {mode === "signin"
             ? "New here? Create an account"
             : "Already have an account? Sign in"}
         </button>
+
+        <p className="mt-3 text-center text-[11px] text-muted-foreground">
+          New accounts get a verification email. You can resend it any time from your
+          account page.
+        </p>
       </div>
     </main>
   );

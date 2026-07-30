@@ -30,7 +30,25 @@ export function CardImage({
   );
 }
 
-export function PriceDelta({ value, className }: { value: number; className?: string }) {
+export function PriceDelta({
+  value,
+  className,
+}: {
+  value: number | null | undefined;
+  className?: string;
+}) {
+  if (value == null) {
+    return (
+      <span
+        className={cn(
+          "inline-flex items-center rounded-md bg-surface-2 px-1.5 py-0.5 text-xs font-semibold text-muted-foreground",
+          className,
+        )}
+      >
+        No data
+      </span>
+    );
+  }
   const up = value >= 0;
   return (
     <span
@@ -53,6 +71,14 @@ export function money(n: number, currency = "USD") {
   });
 }
 
+/** Renders a real price, or an explicit "no data" marker when none exists. */
+export function Price({ value, currency }: { value: number | null | undefined; currency?: string }) {
+  if (value == null || value <= 0) {
+    return <span className="text-xs text-muted-foreground">No data</span>;
+  }
+  return <span className="tabular-nums">{money(value, currency)}</span>;
+}
+
 export function CardTile({ card, sub }: { card: TcgCard; sub?: string }) {
   return (
     <Link
@@ -70,7 +96,9 @@ export function CardTile({ card, sub }: { card: TcgCard; sub?: string }) {
           {card.setCode} — {card.number} · {card.language}
         </p>
         <div className="flex items-center justify-between pt-0.5">
-          <span className="text-sm font-bold tabular-nums">{money(card.marketPrice)}</span>
+          <span className="text-sm font-bold">
+            <Price value={card.marketPrice} />
+          </span>
           <PriceDelta value={card.change7d} />
         </div>
         {sub ? <p className="text-[11px] text-muted-foreground">{sub}</p> : null}

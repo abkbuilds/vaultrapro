@@ -2,16 +2,13 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import { Flame, Loader2, Snowflake } from "lucide-react";
+import { Loader2 } from "lucide-react";
 import { PageHeader, PriceDelta, money } from "@/components/tcg/CardBits";
 import { TcgLogo } from "@/components/tcg/TcgLogo";
-import { TrendAreaChart } from "@/components/tcg/Charts";
-import { RangeToggle } from "@/components/tcg/RangeToggle";
-import { getAllIndices, getMarketIndex } from "@/lib/tcg/trends";
-import { fetchMovers } from "@/lib/prices/prices.functions";
+import { fetchMarketPulse, fetchMovers } from "@/lib/prices/prices.functions";
 import type { MoverRow } from "@/lib/prices/history.server";
 import { useCollection } from "@/lib/tcg/collection";
-import { GAMES, type GameId, type TimeRange } from "@/lib/tcg/types";
+import { GAMES } from "@/lib/tcg/types";
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/trends")({
@@ -21,7 +18,7 @@ export const Route = createFileRoute("/trends")({
       {
         name: "description",
         content:
-          "Market indices for Pokémon, Magic, One Piece, Lorcana and Yu-Gi-Oh! plus daily, weekly and monthly top movers for English and Japanese cards.",
+          "Real, source-backed Pokémon market movement for English and Japanese cards — daily, weekly and monthly gainers and losers from recorded marketplace readings.",
       },
       { property: "og:title", content: "TCG Market Trends & Top Movers — Vaultra" },
       {
@@ -41,25 +38,23 @@ const WINDOWS = [
   { id: "30d", label: "This month" },
 ] as const;
 
-const ALL_RANGES: TimeRange[] = ["1D", "1W", "1M", "3M", "1Y", "5Y", "ALL"];
-
 function TrendsPage() {
-  const [range, setRange] = useState<TimeRange>("1W");
-  const [game, setGame] = useState<GameId>("pokemon");
   const [win, setWin] = useState<(typeof WINDOWS)[number]["id"]>("24h");
   const [lang, setLang] = useState<"EN" | "JP">("EN");
   const [scope, setScope] = useState<"market" | "portfolio">("market");
   const { entries } = useCollection();
 
-  const indices = useMemo(() => getAllIndices(range), [range]);
-  const active = useMemo(() => getMarketIndex(game, range), [game, range]);
-  const hot = indices[0];
-  const cold = indices[indices.length - 1];
-
   const portfolioIds = useMemo(
     () => [...new Set(entries.map((e) => e.cardId))],
     [entries],
   );
+
+  const getPulse = useServerFn(fetchMarketPulse);
+  const pulse = useQuery({
+    queryKey: ["market-pulse", win],
+    queryFn: () => getPulse({ data: { window: win } }),
+    staleTime: 5 * 60 * 1000,
+  });
 
   const getMovers = useServerFn(fetchMovers);
   const movers = useQuery({
@@ -76,130 +71,111 @@ function TrendsPage() {
     staleTime: 5 * 60 * 1000,
   });
 
+  const windowLabel = WINDOWS.find((w) => w.id === win)!.label.toLowerCase();
+
   return (
     <main>
-      <PageHeader title="Market" subtitle="Indices and movers across every tracked TCG" />
+      <PageHeader
+        title="Market"
+        subtitle="Movement measured from recorded marketplace readings"
+      />
 
-      <section className="grid grid-cols-2 gap-3 px-4">
-        <div className="rounded-2xl bg-success/10 p-3 ring-1 ring-success/25">
-          <p className="flex items-center gap-1.5 text-[11px] font-semibold text-success">
-            <Flame className="size-3.5" /> Hot this week
-          </p>
-          <p className="mt-1 text-sm font-bold">{hot.name}</p>
-          <PriceDelta value={hot.change} className="mt-1" />
-        </div>
-        <div className="rounded-2xl bg-destructive/10 p-3 ring-1 ring-destructive/25">
-          <p className="flex items-center gap-1.5 text-[11px] font-semibold text-destructive">
-            <Snowflake className="size-3.5" /> Cooling off
-          </p>
-          <p className="mt-1 text-sm font-bold">{cold.name}</p>
-          <PriceDelta value={cold.change} className="mt-1" />
-        </div>
-      </section>
-
-      <section className="mt-5 px-4">
+      <section className="mt-1 px-4">
         <h2 className="pb-2 font-display text-lg font-semibold">Price index</h2>
-        <div className="space-y-1.5">
-          {indices.map((i) => (
+        <div className="flex gap-1 rounded-xl bg-surface-2/70 p-1">
+          {WINDOWS.map((w) => (
             <button
-              key={i.game}
+              key={w.id}
               type="button"
-              onClick={() => setGame(i.game)}
+              onClick={() => setWin(w.id)}
               className={cn(
-                "flex w-full items-center gap-3 rounded-2xl bg-surface p-3 text-left transition-colors",
-                game === i.game && "ring-1 ring-primary/60",
+                "flex-1 rounded-lg py-1.5 text-xs font-semibold transition-colors",
+                win === w.id ? "bg-primary text-primary-foreground" : "text-muted-foreground",
               )}
             >
-              <TcgLogo game={i.game} />
-              <span className="min-w-0 flex-1">
-                <span className="block truncate text-sm font-semibold">{i.name}</span>
-                <span className="block text-[11px] text-muted-foreground">
-                  Index {i.index.toLocaleString()}
-                </span>
-              </span>
-              <PriceDelta value={i.change} />
+              {w.label}
             </button>
           ))}
         </div>
-        <p className="mt-2 text-[11px] text-muted-foreground">
-          Indices are weighted baskets of the most traded singles per game, rebased to 1,000
-          at launch. Pokémon uses live catalogue pricing; other games are modelled until
-          their catalogues are ingested.
-        </p>
-      </section>
 
-      <section className="mt-5 px-4">
-        <div className="glass-panel rounded-3xl p-4">
-          <div className="flex items-end justify-between">
-            <div className="flex items-center gap-2.5">
-              <TcgLogo game={active.game} />
-              <div>
-                <p className="text-xs text-muted-foreground">{active.name} index</p>
-                <p className="font-display text-3xl font-bold tabular-nums">
-                  {active.index.toLocaleString()}
-                </p>
+        <div className="mt-2 space-y-1.5">
+          {GAMES.map((g) => {
+            const isPokemon = g.id === "pokemon";
+            const en = pulse.data?.en;
+            const jp = pulse.data?.jp;
+            return (
+              <div
+                key={g.id}
+                className="flex items-center gap-3 rounded-2xl bg-surface p-3 text-left"
+              >
+                <TcgLogo game={g.id} />
+                <div className="min-w-0 flex-1">
+                  <p className="truncate text-sm font-semibold">{g.name}</p>
+                  {isPokemon ? (
+                    <p className="text-[11px] text-muted-foreground">
+                      {pulse.isLoading
+                        ? "Loading…"
+                        : (en?.tracked ?? 0) + (jp?.tracked ?? 0) === 0
+                          ? "No recorded readings yet"
+                          : `${((en?.tracked ?? 0) + (jp?.tracked ?? 0)).toLocaleString()} cards with readings ${windowLabel}`}
+                    </p>
+                  ) : (
+                    <p className="text-[11px] text-muted-foreground">
+                      No data — catalogue not tracked yet
+                    </p>
+                  )}
+                </div>
+                {isPokemon ? (
+                  <div className="shrink-0 space-y-1 text-right">
+                    <PulseValue label="EN" change={en?.averageChange ?? null} />
+                    <PulseValue label="JP" change={jp?.averageChange ?? null} />
+                  </div>
+                ) : (
+                  <span className="shrink-0 text-xs text-muted-foreground">—</span>
+                )}
               </div>
-            </div>
-            <PriceDelta value={active.change} />
-          </div>
-          <div className="mt-2">
-            <TrendAreaChart data={active.series} prefix="" />
-          </div>
-          <div className="mt-2">
-            <RangeToggle value={range} onChange={setRange} ranges={ALL_RANGES} />
-          </div>
+            );
+          })}
         </div>
+        <p className="mt-2 text-[11px] text-muted-foreground">
+          The index is the average observed price change across every tracked card with a
+          real recorded reading in the selected window. Games without an ingested
+          catalogue show “no data” rather than an estimate.
+        </p>
       </section>
 
       <section className="mt-6 px-4">
         <h2 className="font-display text-lg font-semibold">Top movers</h2>
-        <div className="mt-2 space-y-2">
-          <div className="flex gap-1 rounded-xl bg-surface-2/70 p-1">
-            {WINDOWS.map((w) => (
+        <div className="mt-2 flex gap-2">
+          <div className="flex flex-1 gap-1 rounded-xl bg-surface-2/70 p-1">
+            {(["EN", "JP"] as const).map((l) => (
               <button
-                key={w.id}
+                key={l}
                 type="button"
-                onClick={() => setWin(w.id)}
+                onClick={() => setLang(l)}
                 className={cn(
                   "flex-1 rounded-lg py-1.5 text-xs font-semibold transition-colors",
-                  win === w.id ? "bg-primary text-primary-foreground" : "text-muted-foreground",
+                  lang === l ? "bg-primary text-primary-foreground" : "text-muted-foreground",
                 )}
               >
-                {w.label}
+                {l === "EN" ? "English" : "Japanese"}
               </button>
             ))}
           </div>
-          <div className="flex gap-2">
-            <div className="flex flex-1 gap-1 rounded-xl bg-surface-2/70 p-1">
-              {(["EN", "JP"] as const).map((l) => (
-                <button
-                  key={l}
-                  type="button"
-                  onClick={() => setLang(l)}
-                  className={cn(
-                    "flex-1 rounded-lg py-1.5 text-xs font-semibold transition-colors",
-                    lang === l ? "bg-primary text-primary-foreground" : "text-muted-foreground",
-                  )}
-                >
-                  {l === "EN" ? "English" : "Japanese"}
-                </button>
-              ))}
-            </div>
-            <div className="flex flex-1 gap-1 rounded-xl bg-surface-2/70 p-1">
-              {(["market", "portfolio"] as const).map((s) => (
-                <button
-                  key={s}
-                  type="button"
-                  onClick={() => setScope(s)}
-                  className={cn(
-                    "flex-1 rounded-lg py-1.5 text-xs font-semibold capitalize transition-colors",
-                    scope === s ? "bg-primary text-primary-foreground" : "text-muted-foreground",
-                  )}
-                >
-                  {s === "market" ? "Market" : "My cards"}
-                </button>
-              ))}
-            </div>
+          <div className="flex flex-1 gap-1 rounded-xl bg-surface-2/70 p-1">
+            {(["market", "portfolio"] as const).map((s) => (
+              <button
+                key={s}
+                type="button"
+                onClick={() => setScope(s)}
+                className={cn(
+                  "flex-1 rounded-lg py-1.5 text-xs font-semibold capitalize transition-colors",
+                  scope === s ? "bg-primary text-primary-foreground" : "text-muted-foreground",
+                )}
+              >
+                {s === "market" ? "Market" : "My cards"}
+              </button>
+            ))}
           </div>
         </div>
 
@@ -207,20 +183,31 @@ function TrendsPage() {
           <div className="grid h-24 place-items-center text-muted-foreground">
             <Loader2 className="size-5 animate-spin" />
           </div>
+        ) : movers.isError ? (
+          <p className="py-8 text-center text-sm text-destructive">
+            Couldn't load market movement. Try again shortly.
+          </p>
         ) : (
           <>
-            {movers.data?.estimated && (
-              <p className="mt-2 text-[11px] text-muted-foreground">
-                Showing modelled moves — daily price snapshots are still building history for
-                this window.
-              </p>
-            )}
             <MoverList title="Gainers" rows={movers.data?.gainers ?? []} />
             <MoverList title="Losers" rows={movers.data?.losers ?? []} />
           </>
         )}
       </section>
     </main>
+  );
+}
+
+function PulseValue({ label, change }: { label: string; change: number | null }) {
+  return (
+    <span className="flex items-center justify-end gap-1.5">
+      <span className="text-[10px] text-muted-foreground">{label}</span>
+      {change == null ? (
+        <span className="text-xs text-muted-foreground">No data</span>
+      ) : (
+        <PriceDelta value={change} />
+      )}
+    </span>
   );
 }
 
@@ -255,7 +242,7 @@ function MoverList({ title, rows }: { title: string; rows: MoverRow[] }) {
         ))}
         {!rows.length && (
           <p className="py-4 text-center text-sm text-muted-foreground">
-            Nothing tracked in this window yet.
+            No data — no recorded price movement in this window yet.
           </p>
         )}
       </div>

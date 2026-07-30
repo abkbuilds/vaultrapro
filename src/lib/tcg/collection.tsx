@@ -7,15 +7,8 @@ import { CONDITION_MULTIPLIER } from "./types";
 const KEY = "vaultcard.collection.v1";
 const WISH_KEY = "vaultcard.wishlist.v1";
 
-const SEED: CollectionEntry[] = [
-  { id: "s1", cardId: "base1-4", quantity: 1, condition: "Lightly Played", purchasePrice: 320, addedAt: "2025-11-02" },
-  { id: "s2", cardId: "swsh7-215", quantity: 1, condition: "Near Mint", purchasePrice: 465, addedAt: "2026-01-18" },
-  { id: "s3", cardId: "swsh4-44", quantity: 3, condition: "Near Mint", purchasePrice: 31.5, addedAt: "2026-03-04" },
-  { id: "s4", cardId: "jp-s9-069", quantity: 2, condition: "Mint", purchasePrice: 52, addedAt: "2026-04-21" },
-  { id: "s5", cardId: "sv2-269", quantity: 1, condition: "Near Mint", purchasePrice: 96, addedAt: "2026-05-30" },
-  { id: "s6", cardId: "sv1-245", quantity: 1, condition: "Near Mint", purchasePrice: 94.5, addedAt: "2026-06-12" },
-  { id: "s7", cardId: "jp-sv2p-091", quantity: 1, condition: "Near Mint", purchasePrice: 108, addedAt: "2026-07-08" },
-];
+/** No demo holdings — the portfolio only ever reflects what the user adds. */
+const SEED: CollectionEntry[] = [];
 
 interface Ctx {
   entries: CollectionEntry[];
@@ -45,7 +38,7 @@ export function CollectionProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     setEntries(read(KEY, SEED));
-    setWishlist(read(WISH_KEY, ["sv8pt5-161"]));
+    setWishlist(read(WISH_KEY, []));
     setHydrated(true);
   }, []);
 
@@ -132,16 +125,11 @@ export function valueEntries(entries: CollectionEntry[]): ValuedEntry[] {
   });
 }
 
-export function portfolioSeries(total: number, days: number) {
-  const out: { date: string; value: number }[] = [];
-  let v = total * 0.78;
-  const steps = Math.min(days, 90);
-  for (let i = steps; i >= 0; i--) {
-    const d = new Date();
-    d.setDate(d.getDate() - (i * days) / steps);
-    v += (total - total * 0.78) / steps + Math.sin(i * 1.7) * total * 0.006;
-    out.push({ date: d.toISOString(), value: Number(v.toFixed(2)) });
-  }
-  out[out.length - 1].value = Number(total.toFixed(2));
-  return out;
+/** Holdings shape the server needs to rebuild real portfolio history. */
+export function holdingsOf(entries: CollectionEntry[]) {
+  return entries.map((e) => ({
+    cardId: e.cardId,
+    quantity: e.quantity,
+    multiplier: CONDITION_MULTIPLIER[e.condition],
+  }));
 }

@@ -35,11 +35,13 @@ const PIE_COLORS = [
   "var(--color-chart-4)",
 ];
 
+/** Real status of each price source wired into the app. */
 const MARKETPLACES = [
-  { name: "TCGplayer", status: "Connected" },
-  { name: "eBay", status: "Connected" },
-  { name: "snkrdunk", status: "Not connected" },
-  { name: "PriceCharting", status: "Connected" },
+  { name: "TCGplayer (EN)", status: "Live" },
+  { name: "Cardmarket (EN + JP)", status: "Live" },
+  { name: "eBay sold", status: "Needs API credentials" },
+  { name: "PriceCharting", status: "Needs API token" },
+  { name: "snkrdunk (JP)", status: "Needs partner feed" },
 ];
 
 function ProfilePage() {
@@ -187,6 +189,17 @@ function ProfilePage() {
           </span>
           <ChevronRight className="size-4 text-muted-foreground" />
         </Link>
+        {user && (
+          <Link
+            to="/account"
+            className="flex items-center justify-between rounded-2xl bg-surface px-4 py-3 text-sm font-medium"
+          >
+            <span className="flex items-center gap-2">
+              <ShieldCheck className="size-4 text-muted-foreground" /> Account & security
+            </span>
+            <ChevronRight className="size-4 text-muted-foreground" />
+          </Link>
+        )}
         {user ? (
           <button
             type="button"

@@ -51,7 +51,8 @@ export interface TcgCard {
   artist?: string;
   image: string;
   marketPrice: number;
-  change7d: number;
+  /** Real observed 7-day change, or null when no reading is available. */
+  change7d: number | null;
   variants?: string[];
 }
 

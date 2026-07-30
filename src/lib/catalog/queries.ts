@@ -36,23 +36,7 @@ export interface DbSet {
 const SELECT =
   "id,language,name,native_name,set_id,set_name,set_code,number,rarity,types,hp,artist,image_small,image_large,market_price,is_promo";
 
-function hash(str: string) {
-  let h = 2166136261;
-  for (let i = 0; i < str.length; i++) {
-    h ^= str.charCodeAt(i);
-    h = Math.imul(h, 16777619);
-  }
-  return Math.abs(h);
-}
-
-/** Deterministic 7-day delta until the live price feeds are wired up. */
-function estimateChange(id: string) {
-  return Number((((hash(id) % 2400) - 1000) / 100).toFixed(1));
-}
-
 export function toTcgCard(row: DbCard): TcgCard {
-  const price =
-    row.market_price != null ? Number(row.market_price) : (hash(row.id) % 4000) / 100 + 0.5;
   return {
     id: row.id,
     name: row.name,
@@ -67,8 +51,9 @@ export function toTcgCard(row: DbCard): TcgCard {
     hp: row.hp ?? undefined,
     artist: row.artist ?? undefined,
     image: row.image_large ?? row.image_small ?? "",
-    marketPrice: Number(price.toFixed(2)),
-    change7d: estimateChange(row.id),
+    // Real catalogue price only — 0 means "no data", never an estimate.
+    marketPrice: row.market_price != null ? Number(Number(row.market_price).toFixed(2)) : 0,
+    change7d: null,
   };
 }
 
