@@ -239,6 +239,11 @@ export const CARDS: TcgCard[] = [
 
 export const CARD_BY_ID = new Map(CARDS.map((c) => [c.id, c]));
 
+/** Cards fetched from the live catalogue are cached here so collection views resolve them. */
+export function registerCards(cards: TcgCard[]) {
+  for (const c of cards) CARD_BY_ID.set(c.id, c);
+}
+
 export function getCard(id: string) {
   return CARD_BY_ID.get(id);
 }

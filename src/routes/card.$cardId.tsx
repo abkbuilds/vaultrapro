@@ -3,6 +3,7 @@ import { useMemo, useState } from "react";
 import { ChevronLeft, Heart, Plus } from "lucide-react";
 import { toast } from "sonner";
 import { getCard } from "@/lib/tcg/cards";
+import { fetchCardById } from "@/lib/catalog/queries";
 import { getCombinedSeries, getRecentListings, sourcesForCard } from "@/lib/tcg/prices";
 import {
   CONDITIONS,
@@ -18,8 +19,8 @@ import { useCollection } from "@/lib/tcg/collection";
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/card/$cardId")({
-  loader: ({ params }) => {
-    const card = getCard(params.cardId);
+  loader: async ({ params }) => {
+    const card = (await fetchCardById(params.cardId)) ?? getCard(params.cardId);
     if (!card) throw notFound();
     return { card };
   },

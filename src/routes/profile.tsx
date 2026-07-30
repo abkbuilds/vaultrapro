@@ -1,10 +1,12 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useMemo } from "react";
 import { Cell, Pie, PieChart, ResponsiveContainer, Tooltip } from "recharts";
-import { Bell, ChevronRight, Heart, LogOut, Plug, ShieldCheck } from "lucide-react";
+import { Bell, ChevronRight, Heart, LogIn, LogOut, Plug, ShieldCheck } from "lucide-react";
+import { toast } from "sonner";
 import { PageHeader, CardRow, money } from "@/components/tcg/CardBits";
 import { useCollection, valueEntries } from "@/lib/tcg/collection";
 import { CARD_BY_ID } from "@/lib/tcg/cards";
+import { useAuth } from "@/lib/auth";
 import { Switch } from "@/components/ui/switch";
 
 export const Route = createFileRoute("/profile")({
@@ -42,6 +44,7 @@ const MARKETPLACES = [
 
 function ProfilePage() {
   const { entries, wishlist } = useCollection();
+  const { user, signOut } = useAuth();
   const valued = useMemo(() => valueEntries(entries), [entries]);
 
   const allocation = useMemo(() => {
@@ -55,7 +58,10 @@ function ProfilePage() {
 
   return (
     <main>
-      <PageHeader title="Profile" subtitle="collector@vaultra.app" />
+      <PageHeader
+        title="Profile"
+        subtitle={user?.email ?? "Not signed in — tap below to sync your vault"}
+      />
 
       <section className="px-4">
         <div className="glass-panel rounded-3xl p-4">
@@ -181,14 +187,31 @@ function ProfilePage() {
           </span>
           <ChevronRight className="size-4 text-muted-foreground" />
         </Link>
-        <button
-          type="button"
-          className="flex w-full items-center justify-between rounded-2xl bg-surface px-4 py-3 text-sm font-medium text-destructive"
-        >
-          <span className="flex items-center gap-2">
-            <LogOut className="size-4" /> Sign out
-          </span>
-        </button>
+        {user ? (
+          <button
+            type="button"
+            onClick={async () => {
+              await signOut();
+              toast("Signed out");
+            }}
+            className="flex w-full items-center justify-between rounded-2xl bg-surface px-4 py-3 text-sm font-medium text-destructive"
+          >
+            <span className="flex items-center gap-2">
+              <LogOut className="size-4" /> Sign out
+            </span>
+          </button>
+        ) : (
+          <Link
+            to="/auth"
+            search={{ redirect: "/profile" }}
+            className="flex items-center justify-between rounded-2xl bg-primary px-4 py-3 text-sm font-semibold text-primary-foreground"
+          >
+            <span className="flex items-center gap-2">
+              <LogIn className="size-4" /> Sign in or create account
+            </span>
+            <ChevronRight className="size-4" />
+          </Link>
+        )}
       </section>
     </main>
   );
