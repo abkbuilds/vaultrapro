@@ -81,7 +81,7 @@ export async function getCardPrices(
     loadStored(card.id, RANGE_DAYS[range]),
   ]);
 
-  const series: SeriesBySource[] = sourcesFor(card.language).flatMap((source) => {
+  const series: SeriesBySource[] = sourcesFor(card.language).flatMap((source): SeriesBySource[] => {
     const quote = quotes.find((q) => q.source === source);
     const points = stored.get(source) ?? [];
     const anchor = quote?.price ?? points.at(-1)?.value ?? card.marketPrice;
