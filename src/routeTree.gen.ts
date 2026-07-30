@@ -17,6 +17,7 @@ import { Route as ProfileRouteImport } from './routes/profile'
 import { Route as ScanRouteImport } from './routes/scan'
 import { Route as TrendsRouteImport } from './routes/trends'
 import { Route as CardCardIdRouteImport } from './routes/card.$cardId'
+import { Route as ApiPublicSyncCatalogRouteImport } from './routes/api/public/sync-catalog'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -58,6 +59,11 @@ const CardCardIdRoute = CardCardIdRouteImport.update({
   path: '/card/$cardId',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiPublicSyncCatalogRoute = ApiPublicSyncCatalogRouteImport.update({
+  id: '/api/public/sync-catalog',
+  path: '/api/public/sync-catalog',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -68,6 +74,7 @@ export interface FileRoutesByFullPath {
   '/scan': typeof ScanRoute
   '/trends': typeof TrendsRoute
   '/card/$cardId': typeof CardCardIdRoute
+  '/api/public/sync-catalog': typeof ApiPublicSyncCatalogRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -78,6 +85,7 @@ export interface FileRoutesByTo {
   '/scan': typeof ScanRoute
   '/trends': typeof TrendsRoute
   '/card/$cardId': typeof CardCardIdRoute
+  '/api/public/sync-catalog': typeof ApiPublicSyncCatalogRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -89,6 +97,7 @@ export interface FileRoutesById {
   '/scan': typeof ScanRoute
   '/trends': typeof TrendsRoute
   '/card/$cardId': typeof CardCardIdRoute
+  '/api/public/sync-catalog': typeof ApiPublicSyncCatalogRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -101,6 +110,7 @@ export interface FileRouteTypes {
     | '/scan'
     | '/trends'
     | '/card/$cardId'
+    | '/api/public/sync-catalog'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -111,6 +121,7 @@ export interface FileRouteTypes {
     | '/scan'
     | '/trends'
     | '/card/$cardId'
+    | '/api/public/sync-catalog'
   id:
     | '__root__'
     | '/'
@@ -121,6 +132,7 @@ export interface FileRouteTypes {
     | '/scan'
     | '/trends'
     | '/card/$cardId'
+    | '/api/public/sync-catalog'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -132,6 +144,7 @@ export interface RootRouteChildren {
   ScanRoute: typeof ScanRoute
   TrendsRoute: typeof TrendsRoute
   CardCardIdRoute: typeof CardCardIdRoute
+  ApiPublicSyncCatalogRoute: typeof ApiPublicSyncCatalogRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -192,6 +205,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof CardCardIdRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/sync-catalog': {
+      id: '/api/public/sync-catalog'
+      path: '/api/public/sync-catalog'
+      fullPath: '/api/public/sync-catalog'
+      preLoaderRoute: typeof ApiPublicSyncCatalogRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -204,6 +224,7 @@ const rootRouteChildren: RootRouteChildren = {
   ScanRoute: ScanRoute,
   TrendsRoute: TrendsRoute,
   CardCardIdRoute: CardCardIdRoute,
+  ApiPublicSyncCatalogRoute: ApiPublicSyncCatalogRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
