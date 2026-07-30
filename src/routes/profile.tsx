@@ -191,7 +191,7 @@ function ProfilePage() {
         </Link>
         {user && (
           <Link
-            to="/_authenticated/account"
+            to="/account"
             className="flex items-center justify-between rounded-2xl bg-surface px-4 py-3 text-sm font-medium"
           >
             <span className="flex items-center gap-2">
