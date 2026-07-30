@@ -220,7 +220,7 @@ function CardDetail() {
             </thead>
             <tbody>
               {(prices.data?.quotes ?? []).map((q) => {
-                const modelled = series.find((s) => s.source === q.source)?.modelled;
+                const captured = series.find((s) => s.source === q.source)?.points.length ?? 0;
                 return (
                   <tr key={q.source} className="border-b border-border/50 last:border-0">
                     <td className="px-3 py-2">
@@ -233,7 +233,9 @@ function CardDetail() {
                       </span>
                     </td>
                     <td className="px-3 py-2 text-muted-foreground">
-                      {q.live ? (modelled ? "Live quote · modelled history" : "Live") : q.note}
+                      {q.live
+                        ? `Live · ${captured} recorded ${captured === 1 ? "reading" : "readings"}`
+                        : (q.note ?? "No data")}
                     </td>
                     <td className="px-3 py-2 text-right font-semibold tabular-nums">
                       {q.price == null
