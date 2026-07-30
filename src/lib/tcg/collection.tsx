@@ -125,16 +125,11 @@ export function valueEntries(entries: CollectionEntry[]): ValuedEntry[] {
   });
 }
 
-export function portfolioSeries(total: number, days: number) {
-  const out: { date: string; value: number }[] = [];
-  let v = total * 0.78;
-  const steps = Math.min(days, 90);
-  for (let i = steps; i >= 0; i--) {
-    const d = new Date();
-    d.setDate(d.getDate() - (i * days) / steps);
-    v += (total - total * 0.78) / steps + Math.sin(i * 1.7) * total * 0.006;
-    out.push({ date: d.toISOString(), value: Number(v.toFixed(2)) });
-  }
-  out[out.length - 1].value = Number(total.toFixed(2));
-  return out;
+/** Holdings shape the server needs to rebuild real portfolio history. */
+export function holdingsOf(entries: CollectionEntry[]) {
+  return entries.map((e) => ({
+    cardId: e.cardId,
+    quantity: e.quantity,
+    multiplier: CONDITION_MULTIPLIER[e.condition],
+  }));
 }
