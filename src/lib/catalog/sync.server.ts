@@ -235,9 +235,9 @@ export async function runCatalogSync(opts: {
     ((counts ?? []) as { set_id: string; n: number }[]).map((r) => [r.set_id, Number(r.n)]),
   );
 
-  const pending = opts.force
-    ? sets
-    : sets.filter((s) => (have.get(s.id) ?? 0) < (s.total ?? 1));
+  // A set counts as ingested once it has any cards — some older sets expose
+  // fewer cards than their printed total, which would otherwise loop forever.
+  const pending = opts.force ? sets : sets.filter((s) => (have.get(s.id) ?? 0) === 0);
 
   const batch = pending.slice(0, limit);
   let cardsUpserted = 0;
