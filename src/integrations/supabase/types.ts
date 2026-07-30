@@ -14,6 +14,75 @@ export type Database = {
   }
   public: {
     Tables: {
+      card_price_latest: {
+        Row: {
+          card_id: string
+          change_24h: number | null
+          change_30d: number | null
+          change_7d: number | null
+          created_at: string
+          currency: string
+          price: number
+          source: string
+          updated_at: string
+        }
+        Insert: {
+          card_id: string
+          change_24h?: number | null
+          change_30d?: number | null
+          change_7d?: number | null
+          created_at?: string
+          currency?: string
+          price: number
+          source: string
+          updated_at?: string
+        }
+        Update: {
+          card_id?: string
+          change_24h?: number | null
+          change_30d?: number | null
+          change_7d?: number | null
+          created_at?: string
+          currency?: string
+          price?: number
+          source?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      card_price_points: {
+        Row: {
+          captured_on: string
+          card_id: string
+          condition: string
+          created_at: string
+          currency: string
+          id: string
+          price: number
+          source: string
+        }
+        Insert: {
+          captured_on?: string
+          card_id: string
+          condition?: string
+          created_at?: string
+          currency?: string
+          id?: string
+          price: number
+          source: string
+        }
+        Update: {
+          captured_on?: string
+          card_id?: string
+          condition?: string
+          created_at?: string
+          currency?: string
+          id?: string
+          price?: number
+          source?: string
+        }
+        Relationships: []
+      }
       catalog_sync_runs: {
         Row: {
           cards_upserted: number

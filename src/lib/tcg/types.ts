@@ -28,7 +28,7 @@ export const CONDITION_MULTIPLIER: Record<Condition, number> = {
 
 export type PriceSource = "tcgplayer" | "ebay" | "snkrdunk" | "pricecharting";
 
-export type TimeRange = "1D" | "1W" | "1M" | "3M" | "1Y" | "ALL";
+export type TimeRange = "1D" | "1W" | "1M" | "3M" | "1Y" | "5Y" | "ALL";
 
 export interface TcgCard {
   id: string;
@@ -109,5 +109,6 @@ export const RANGE_DAYS: Record<TimeRange, number> = {
   "1M": 30,
   "3M": 90,
   "1Y": 365,
-  ALL: 1095,
+  "5Y": 1825,
+  ALL: 3650,
 };
