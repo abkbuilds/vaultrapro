@@ -81,27 +81,34 @@ export async function getCardPrices(
     loadStored(card.id, RANGE_DAYS[range]),
   ]);
 
-  const series: SeriesBySource[] = sourcesFor(card.language).map((source) => {
+  const series: SeriesBySource[] = sourcesFor(card.language).flatMap((source) => {
     const quote = quotes.find((q) => q.source === source);
     const points = stored.get(source) ?? [];
     const anchor = quote?.price ?? points.at(-1)?.value ?? card.marketPrice;
     if (points.length >= 3) {
-      return {
-        source,
-        currency: quote?.currency ?? "USD",
-        live: true,
-        modelled: false,
-        points,
-      };
+      return [
+        {
+          source,
+          currency: quote?.currency ?? "USD",
+          live: true,
+          modelled: false,
+          points,
+        },
+      ];
     }
-    return {
-      source,
-      currency: quote?.currency ?? "USD",
-      live: Boolean(quote?.live),
-      modelled: true,
-      note: quote?.note,
-      points: modelSeries(card.id + source + range, anchor, range),
-    };
+    // No live quote and no captured history: charting anything here would be
+    // invented data, so the source is reported as unavailable instead.
+    if (!quote?.price) return [];
+    return [
+      {
+        source,
+        currency: quote.currency,
+        live: true,
+        modelled: true,
+        note: quote.note,
+        points: modelSeries(card.id + source + range, anchor, range),
+      },
+    ];
   });
 
   return {
