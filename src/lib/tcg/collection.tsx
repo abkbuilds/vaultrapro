@@ -8,12 +8,13 @@ const KEY = "vaultcard.collection.v1";
 const WISH_KEY = "vaultcard.wishlist.v1";
 
 const SEED: CollectionEntry[] = [
-  { id: "s1", cardId: "base1-004", quantity: 1, condition: "Lightly Played", purchasePrice: 320, addedAt: "2025-11-02" },
-  { id: "s2", cardId: "swsh9-069", quantity: 1, condition: "Near Mint", purchasePrice: 465, addedAt: "2026-01-18" },
-  { id: "s3", cardId: "sv3pt5-025", quantity: 3, condition: "Near Mint", purchasePrice: 31.5, addedAt: "2026-03-04" },
-  { id: "s4", cardId: "sv4p-025", quantity: 2, condition: "Mint", purchasePrice: 52, addedAt: "2026-04-21" },
-  { id: "s5", cardId: "sv2-245", quantity: 1, condition: "Near Mint", purchasePrice: 96, addedAt: "2026-05-30" },
-  { id: "s6", cardId: "sv4-232", quantity: 1, condition: "Near Mint", purchasePrice: 94.5, addedAt: "2026-06-12" },
+  { id: "s1", cardId: "base1-4", quantity: 1, condition: "Lightly Played", purchasePrice: 320, addedAt: "2025-11-02" },
+  { id: "s2", cardId: "swsh7-215", quantity: 1, condition: "Near Mint", purchasePrice: 465, addedAt: "2026-01-18" },
+  { id: "s3", cardId: "swsh4-44", quantity: 3, condition: "Near Mint", purchasePrice: 31.5, addedAt: "2026-03-04" },
+  { id: "s4", cardId: "jp-s9-069", quantity: 2, condition: "Mint", purchasePrice: 52, addedAt: "2026-04-21" },
+  { id: "s5", cardId: "sv2-269", quantity: 1, condition: "Near Mint", purchasePrice: 96, addedAt: "2026-05-30" },
+  { id: "s6", cardId: "sv1-245", quantity: 1, condition: "Near Mint", purchasePrice: 94.5, addedAt: "2026-06-12" },
+  { id: "s7", cardId: "jp-sv2p-091", quantity: 1, condition: "Near Mint", purchasePrice: 108, addedAt: "2026-07-08" },
 ];
 
 interface Ctx {
