@@ -16,6 +16,7 @@ import { Route as DatabaseRouteImport } from './routes/database'
 import { Route as OnboardingRouteImport } from './routes/onboarding'
 import { Route as ProfileRouteImport } from './routes/profile'
 import { Route as ScanRouteImport } from './routes/scan'
+import { Route as TradesRouteImport } from './routes/trades'
 import { Route as TrendsRouteImport } from './routes/trends'
 import { Route as CardCardIdRouteImport } from './routes/card.$cardId'
 import { Route as ApiPublicRefreshPricesRouteImport } from './routes/api/public/refresh-prices'
@@ -56,6 +57,11 @@ const ScanRoute = ScanRouteImport.update({
   path: '/scan',
   getParentRoute: () => rootRouteImport,
 } as any)
+const TradesRoute = TradesRouteImport.update({
+  id: '/trades',
+  path: '/trades',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const TrendsRoute = TrendsRouteImport.update({
   id: '/trends',
   path: '/trends',
@@ -85,6 +91,7 @@ export interface FileRoutesByFullPath {
   '/onboarding': typeof OnboardingRoute
   '/profile': typeof ProfileRoute
   '/scan': typeof ScanRoute
+  '/trades': typeof TradesRoute
   '/trends': typeof TrendsRoute
   '/card/$cardId': typeof CardCardIdRoute
   '/api/public/refresh-prices': typeof ApiPublicRefreshPricesRoute
@@ -98,6 +105,7 @@ export interface FileRoutesByTo {
   '/onboarding': typeof OnboardingRoute
   '/profile': typeof ProfileRoute
   '/scan': typeof ScanRoute
+  '/trades': typeof TradesRoute
   '/trends': typeof TrendsRoute
   '/card/$cardId': typeof CardCardIdRoute
   '/api/public/refresh-prices': typeof ApiPublicRefreshPricesRoute
@@ -112,6 +120,7 @@ export interface FileRoutesById {
   '/onboarding': typeof OnboardingRoute
   '/profile': typeof ProfileRoute
   '/scan': typeof ScanRoute
+  '/trades': typeof TradesRoute
   '/trends': typeof TrendsRoute
   '/card/$cardId': typeof CardCardIdRoute
   '/api/public/refresh-prices': typeof ApiPublicRefreshPricesRoute
@@ -127,6 +136,7 @@ export interface FileRouteTypes {
     | '/onboarding'
     | '/profile'
     | '/scan'
+    | '/trades'
     | '/trends'
     | '/card/$cardId'
     | '/api/public/refresh-prices'
@@ -140,6 +150,7 @@ export interface FileRouteTypes {
     | '/onboarding'
     | '/profile'
     | '/scan'
+    | '/trades'
     | '/trends'
     | '/card/$cardId'
     | '/api/public/refresh-prices'
@@ -153,6 +164,7 @@ export interface FileRouteTypes {
     | '/onboarding'
     | '/profile'
     | '/scan'
+    | '/trades'
     | '/trends'
     | '/card/$cardId'
     | '/api/public/refresh-prices'
@@ -167,6 +179,7 @@ export interface RootRouteChildren {
   OnboardingRoute: typeof OnboardingRoute
   ProfileRoute: typeof ProfileRoute
   ScanRoute: typeof ScanRoute
+  TradesRoute: typeof TradesRoute
   TrendsRoute: typeof TrendsRoute
   CardCardIdRoute: typeof CardCardIdRoute
   ApiPublicRefreshPricesRoute: typeof ApiPublicRefreshPricesRoute
@@ -224,6 +237,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ScanRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/trades': {
+      id: '/trades'
+      path: '/trades'
+      fullPath: '/trades'
+      preLoaderRoute: typeof TradesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/trends': {
       id: '/trends'
       path: '/trends'
@@ -263,6 +283,7 @@ const rootRouteChildren: RootRouteChildren = {
   OnboardingRoute: OnboardingRoute,
   ProfileRoute: ProfileRoute,
   ScanRoute: ScanRoute,
+  TradesRoute: TradesRoute,
   TrendsRoute: TrendsRoute,
   CardCardIdRoute: CardCardIdRoute,
   ApiPublicRefreshPricesRoute: ApiPublicRefreshPricesRoute,
