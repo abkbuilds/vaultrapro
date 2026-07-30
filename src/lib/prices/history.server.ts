@@ -288,3 +288,40 @@ async function estimatedMovers(
     losers: [...sorted].reverse().filter((m) => m.change < 0).slice(0, limit),
   };
 }
+
+/** Load the minimal card shape the adapters need. */
+export async function loadCard(cardId: string): Promise<CardLike | null> {
+  const { data } = await supabase
+    .from("tcg_cards")
+    .select("id,name,number,set_name,language,market_price")
+    .eq("id", cardId)
+    .maybeSingle();
+  if (!data) return null;
+  const row = data as any;
+  return {
+    id: row.id,
+    name: row.name,
+    number: row.number,
+    setName: row.set_name,
+    language: row.language,
+    marketPrice: Number(row.market_price ?? 0),
+  };
+}
+
+/** Cards worth snapshotting first: highest market value, both languages. */
+export async function snapshotTargets(limit: number, offset = 0) {
+  const { data } = await supabase
+    .from("tcg_cards")
+    .select("id,name,number,set_name,language,market_price")
+    .not("market_price", "is", null)
+    .order("market_price", { ascending: false })
+    .range(offset, offset + limit - 1);
+  return ((data ?? []) as any[]).map((row) => ({
+    id: row.id,
+    name: row.name,
+    number: row.number,
+    setName: row.set_name,
+    language: row.language,
+    marketPrice: Number(row.market_price ?? 0),
+  })) as CardLike[];
+}
