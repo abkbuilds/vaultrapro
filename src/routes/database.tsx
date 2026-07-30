@@ -6,7 +6,6 @@ import { toast } from "sonner";
 import { useCollection } from "@/lib/tcg/collection";
 import { listRarities, listSets, searchCards } from "@/lib/catalog/queries";
 import { CardTile, PageHeader } from "@/components/tcg/CardBits";
-import type { TcgCard } from "@/lib/tcg/types";
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/database")({
