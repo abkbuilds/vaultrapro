@@ -89,6 +89,78 @@ export async function quoteTcgplayer(cardId: string): Promise<Quote> {
   };
 }
 
+/* ------------------------------- Cardmarket ------------------------------ */
+/**
+ * TCGdex republishes Cardmarket's daily figures for both English and Japanese
+ * printings and needs no API key, so it is the default live source. It also
+ * exposes 1/7/30-day averages, which we replay as real historical readings.
+ */
+const TCGDEX = "https://api.tcgdex.net/v2";
+
+function tcgdexUrl(cardId: string) {
+  const jp = cardId.startsWith("jp-");
+  return `${TCGDEX}/${jp ? "ja" : "en"}/cards/${cardId.replace(/^(jp|en)-/, "")}`;
+}
+
+type CardmarketBlock = Record<string, number | null | string>;
+
+async function cardmarketBlock(cardId: string): Promise<CardmarketBlock | null> {
+  const json = await getJson<{ pricing?: { cardmarket?: CardmarketBlock | null } }>(
+    tcgdexUrl(cardId),
+  );
+  return json?.pricing?.cardmarket ?? null;
+}
+
+function pickNumber(block: CardmarketBlock, keys: string[]) {
+  for (const k of keys) {
+    const v = block[k];
+    if (typeof v === "number" && v > 0) return Number(v.toFixed(2));
+  }
+  return null;
+}
+
+export async function quoteCardmarket(cardId: string): Promise<Quote> {
+  const block = await cardmarketBlock(cardId);
+  if (!block) {
+    return {
+      source: "cardmarket",
+      price: null,
+      currency: "EUR",
+      live: false,
+      note: "No Cardmarket listing for this printing",
+    };
+  }
+  const price = pickNumber(block, ["trend-holo", "trend", "avg-holo", "avg", "low"]);
+  return {
+    source: "cardmarket",
+    price,
+    currency: "EUR",
+    live: price != null,
+    note: price == null ? "Cardmarket has no price yet" : "Cardmarket trend price",
+  };
+}
+
+/**
+ * Real dated readings we can backfill immediately: Cardmarket's 1, 7 and 30 day
+ * averages. Returned oldest-first as `{ daysAgo, price }`.
+ */
+export async function cardmarketHistorySeeds(cardId: string) {
+  const block = await cardmarketBlock(cardId);
+  if (!block) return [];
+  const holo = typeof block["trend-holo"] === "number" && (block["trend-holo"] as number) > 0;
+  const key = (base: string) => (holo ? `${base}-holo` : base);
+  const seeds: { daysAgo: number; price: number }[] = [];
+  for (const [daysAgo, base] of [
+    [30, "avg30"],
+    [7, "avg7"],
+    [1, "avg1"],
+  ] as const) {
+    const v = pickNumber(block, [key(base), base]);
+    if (v != null) seeds.push({ daysAgo, price: v });
+  }
+  return seeds;
+}
+
 /* --------------------------------- eBay --------------------------------- */
 
 let ebayToken: { value: string; expires: number } | null = null;
