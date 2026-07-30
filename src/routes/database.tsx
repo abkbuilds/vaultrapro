@@ -1,9 +1,12 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
 import { keepPreviousData, useQuery } from "@tanstack/react-query";
-import { Loader2, Search } from "lucide-react";
+import { Loader2, Plus, Search } from "lucide-react";
+import { toast } from "sonner";
+import { useCollection } from "@/lib/tcg/collection";
 import { listRarities, listSets, searchCards } from "@/lib/catalog/queries";
 import { CardTile, PageHeader } from "@/components/tcg/CardBits";
+import type { TcgCard } from "@/lib/tcg/types";
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/database")({
@@ -35,6 +38,7 @@ function DatabasePage() {
   const [rarity, setRarity] = useState("all");
   const [promoOnly, setPromoOnly] = useState(false);
   const [page, setPage] = useState(0);
+  const { add } = useCollection();
 
   const setsQuery = useQuery({
     queryKey: ["sets", lang],
@@ -57,6 +61,14 @@ function DatabasePage() {
   const sets = setsQuery.data ?? [];
   const selectedSet = useMemo(() => sets.find((s) => s.id === setId), [sets, setId]);
   const cards = results.data?.cards ?? [];
+  const term = q.trim().toLowerCase();
+  const matchingSets = useMemo(
+    () =>
+      term.length > 1 && setId === "all"
+        ? sets.filter((s) => s.name.toLowerCase().includes(term)).slice(0, 6)
+        : [],
+    [sets, term, setId],
+  );
   const total = results.data?.total ?? 0;
 
   function reset<T>(fn: (v: T) => void) {
@@ -177,9 +189,47 @@ function DatabasePage() {
         </div>
       )}
 
+      {matchingSets.length > 0 && (
+        <div className="mt-4 px-4">
+          <p className="pb-1.5 text-[11px] font-semibold text-muted-foreground">
+            Jump to a full set
+          </p>
+          <div className="no-scrollbar flex gap-1.5 overflow-x-auto">
+            {matchingSets.map((s) => (
+              <button
+                key={s.id}
+                type="button"
+                onClick={() => {
+                  setSetId(s.id);
+                  setQ("");
+                  setPage(0);
+                }}
+                className="shrink-0 rounded-full bg-surface px-3.5 py-1.5 text-xs font-semibold"
+              >
+                {s.language} · {s.name}
+                {s.total ? ` (${s.total})` : ""}
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
+
       <section className="mt-4 grid grid-cols-2 gap-x-3 gap-y-5 px-4">
         {cards.map((c) => (
-          <CardTile key={c.id} card={c} sub={c.rarity} />
+          <div key={c.id} className="relative">
+            <CardTile card={c} sub={c.rarity} />
+            <button
+              type="button"
+              aria-label={`Add ${c.name} to portfolio`}
+              onClick={() => {
+                add(c.id, "Near Mint");
+                toast.success(`${c.name} added to your portfolio`);
+              }}
+              className="absolute top-2 right-2 grid size-8 place-items-center rounded-xl bg-background/75 text-primary backdrop-blur-md active:scale-95"
+            >
+              <Plus className="size-4" />
+            </button>
+          </div>
         ))}
       </section>
 
