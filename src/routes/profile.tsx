@@ -189,6 +189,17 @@ function ProfilePage() {
           </span>
           <ChevronRight className="size-4 text-muted-foreground" />
         </Link>
+        {user && (
+          <Link
+            to="/_authenticated/account"
+            className="flex items-center justify-between rounded-2xl bg-surface px-4 py-3 text-sm font-medium"
+          >
+            <span className="flex items-center gap-2">
+              <ShieldCheck className="size-4 text-muted-foreground" /> Account & security
+            </span>
+            <ChevronRight className="size-4 text-muted-foreground" />
+          </Link>
+        )}
         {user ? (
           <button
             type="button"
