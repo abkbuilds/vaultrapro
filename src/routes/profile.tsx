@@ -58,7 +58,10 @@ function ProfilePage() {
 
   return (
     <main>
-      <PageHeader title="Profile" subtitle="collector@vaultra.app" />
+      <PageHeader
+        title="Profile"
+        subtitle={user?.email ?? "Not signed in — tap below to sync your vault"}
+      />
 
       <section className="px-4">
         <div className="glass-panel rounded-3xl p-4">
