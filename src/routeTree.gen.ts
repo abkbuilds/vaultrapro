@@ -16,6 +16,7 @@ import { Route as CollectionRouteImport } from './routes/collection'
 import { Route as DatabaseRouteImport } from './routes/database'
 import { Route as OnboardingRouteImport } from './routes/onboarding'
 import { Route as ProfileRouteImport } from './routes/profile'
+import { Route as ResetPasswordRouteImport } from './routes/reset-password'
 import { Route as ScanRouteImport } from './routes/scan'
 import { Route as TradesRouteImport } from './routes/trades'
 import { Route as TrendsRouteImport } from './routes/trends'
@@ -56,6 +57,11 @@ const OnboardingRoute = OnboardingRouteImport.update({
 const ProfileRoute = ProfileRouteImport.update({
   id: '/profile',
   path: '/profile',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ResetPasswordRoute = ResetPasswordRouteImport.update({
+  id: '/reset-password',
+  path: '/reset-password',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ScanRoute = ScanRouteImport.update({
@@ -101,6 +107,7 @@ export interface FileRoutesByFullPath {
   '/database': typeof DatabaseRoute
   '/onboarding': typeof OnboardingRoute
   '/profile': typeof ProfileRoute
+  '/reset-password': typeof ResetPasswordRoute
   '/scan': typeof ScanRoute
   '/trades': typeof TradesRoute
   '/trends': typeof TrendsRoute
@@ -116,6 +123,7 @@ export interface FileRoutesByTo {
   '/database': typeof DatabaseRoute
   '/onboarding': typeof OnboardingRoute
   '/profile': typeof ProfileRoute
+  '/reset-password': typeof ResetPasswordRoute
   '/scan': typeof ScanRoute
   '/trades': typeof TradesRoute
   '/trends': typeof TrendsRoute
@@ -133,6 +141,7 @@ export interface FileRoutesById {
   '/database': typeof DatabaseRoute
   '/onboarding': typeof OnboardingRoute
   '/profile': typeof ProfileRoute
+  '/reset-password': typeof ResetPasswordRoute
   '/scan': typeof ScanRoute
   '/trades': typeof TradesRoute
   '/trends': typeof TrendsRoute
@@ -150,6 +159,7 @@ export interface FileRouteTypes {
     | '/database'
     | '/onboarding'
     | '/profile'
+    | '/reset-password'
     | '/scan'
     | '/trades'
     | '/trends'
@@ -165,6 +175,7 @@ export interface FileRouteTypes {
     | '/database'
     | '/onboarding'
     | '/profile'
+    | '/reset-password'
     | '/scan'
     | '/trades'
     | '/trends'
@@ -181,6 +192,7 @@ export interface FileRouteTypes {
     | '/database'
     | '/onboarding'
     | '/profile'
+    | '/reset-password'
     | '/scan'
     | '/trades'
     | '/trends'
@@ -198,6 +210,7 @@ export interface RootRouteChildren {
   DatabaseRoute: typeof DatabaseRoute
   OnboardingRoute: typeof OnboardingRoute
   ProfileRoute: typeof ProfileRoute
+  ResetPasswordRoute: typeof ResetPasswordRoute
   ScanRoute: typeof ScanRoute
   TradesRoute: typeof TradesRoute
   TrendsRoute: typeof TrendsRoute
@@ -255,6 +268,13 @@ declare module '@tanstack/react-router' {
       path: '/profile'
       fullPath: '/profile'
       preLoaderRoute: typeof ProfileRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/reset-password': {
+      id: '/reset-password'
+      path: '/reset-password'
+      fullPath: '/reset-password'
+      preLoaderRoute: typeof ResetPasswordRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/scan': {
@@ -328,6 +348,7 @@ const rootRouteChildren: RootRouteChildren = {
   DatabaseRoute: DatabaseRoute,
   OnboardingRoute: OnboardingRoute,
   ProfileRoute: ProfileRoute,
+  ResetPasswordRoute: ResetPasswordRoute,
   ScanRoute: ScanRoute,
   TradesRoute: TradesRoute,
   TrendsRoute: TrendsRoute,
