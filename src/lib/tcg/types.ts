@@ -109,5 +109,6 @@ export const RANGE_DAYS: Record<TimeRange, number> = {
   "1M": 30,
   "3M": 90,
   "1Y": 365,
-  ALL: 1095,
+  "5Y": 1825,
+  ALL: 3650,
 };

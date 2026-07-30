@@ -83,13 +83,13 @@ export interface Mover {
 }
 
 export function getMovers(game: GameId, range: TimeRange) {
-  const factor = { "1D": 0.2, "1W": 1, "1M": 2.4, "3M": 4.1, "1Y": 7.5, ALL: 11 }[range];
+  const factor: Record<TimeRange, number> = { "1D": 0.2, "1W": 1, "1M": 2.4, "3M": 4.1, "1Y": 7.5, "5Y": 9.4, ALL: 11 };
   const pool = CARDS.filter((c) => c.game === game);
   const scored: Mover[] = pool.map((card) => {
     const rand = rng(hash(card.id + range));
     return {
       card,
-      change: Number((card.change7d * factor * (0.7 + rand() * 0.7)).toFixed(2)),
+      change: Number((card.change7d * factor[range] * (0.7 + rand() * 0.7)).toFixed(2)),
     };
   });
   const sorted = [...scored].sort((a, b) => b.change - a.change);
