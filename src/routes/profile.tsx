@@ -181,14 +181,31 @@ function ProfilePage() {
           </span>
           <ChevronRight className="size-4 text-muted-foreground" />
         </Link>
-        <button
-          type="button"
-          className="flex w-full items-center justify-between rounded-2xl bg-surface px-4 py-3 text-sm font-medium text-destructive"
-        >
-          <span className="flex items-center gap-2">
-            <LogOut className="size-4" /> Sign out
-          </span>
-        </button>
+        {user ? (
+          <button
+            type="button"
+            onClick={async () => {
+              await signOut();
+              toast("Signed out");
+            }}
+            className="flex w-full items-center justify-between rounded-2xl bg-surface px-4 py-3 text-sm font-medium text-destructive"
+          >
+            <span className="flex items-center gap-2">
+              <LogOut className="size-4" /> Sign out
+            </span>
+          </button>
+        ) : (
+          <Link
+            to="/auth"
+            search={{ redirect: "/profile" }}
+            className="flex items-center justify-between rounded-2xl bg-primary px-4 py-3 text-sm font-semibold text-primary-foreground"
+          >
+            <span className="flex items-center gap-2">
+              <LogIn className="size-4" /> Sign in or create account
+            </span>
+            <ChevronRight className="size-4" />
+          </Link>
+        )}
       </section>
     </main>
   );
