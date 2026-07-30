@@ -3,6 +3,7 @@ import { useMemo, useState } from "react";
 import { ChevronLeft, Heart, Plus } from "lucide-react";
 import { toast } from "sonner";
 import { getCard } from "@/lib/tcg/cards";
+import { fetchCardById } from "@/lib/catalog/queries";
 import { getCombinedSeries, getRecentListings, sourcesForCard } from "@/lib/tcg/prices";
 import {
   CONDITIONS,
