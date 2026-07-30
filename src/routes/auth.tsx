@@ -223,13 +223,27 @@ function AuthPage() {
 
         <button
           type="button"
+          onClick={forgotPassword}
+          disabled={busy}
+          className="mt-3 w-full text-center text-xs font-semibold text-primary disabled:opacity-60"
+        >
+          Forgot your password?
+        </button>
+
+        <button
+          type="button"
           onClick={() => setMode(mode === "signin" ? "signup" : "signin")}
-          className="mt-4 w-full text-center text-xs text-muted-foreground"
+          className="mt-3 w-full text-center text-xs text-muted-foreground"
         >
           {mode === "signin"
             ? "New here? Create an account"
             : "Already have an account? Sign in"}
         </button>
+
+        <p className="mt-3 text-center text-[11px] text-muted-foreground">
+          New accounts get a verification email. You can resend it any time from your
+          account page.
+        </p>
       </div>
     </main>
   );
