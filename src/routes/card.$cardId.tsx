@@ -68,6 +68,7 @@ function CardDetail() {
   const series = prices.data?.series ?? [];
   const allSources = series.map((s) => s.source);
   const shown = allSources.filter((s) => !hidden.includes(s));
+  const currencyBySource = Object.fromEntries(series.map((s) => [s.source, s.currency]));
 
   const chartData = useMemo(() => {
     const rows = new Map<string, Record<string, string | number>>();
