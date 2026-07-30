@@ -30,7 +30,25 @@ export function CardImage({
   );
 }
 
-export function PriceDelta({ value, className }: { value: number; className?: string }) {
+export function PriceDelta({
+  value,
+  className,
+}: {
+  value: number | null | undefined;
+  className?: string;
+}) {
+  if (value == null) {
+    return (
+      <span
+        className={cn(
+          "inline-flex items-center rounded-md bg-surface-2 px-1.5 py-0.5 text-xs font-semibold text-muted-foreground",
+          className,
+        )}
+      >
+        No data
+      </span>
+    );
+  }
   const up = value >= 0;
   return (
     <span
@@ -51,6 +69,14 @@ export function money(n: number, currency = "USD") {
     currency,
     maximumFractionDigits: currency === "JPY" || n >= 1000 ? 0 : 2,
   });
+}
+
+/** Renders a real price, or an explicit "no data" marker when none exists. */
+export function Price({ value, currency }: { value: number | null | undefined; currency?: string }) {
+  if (value == null || value <= 0) {
+    return <span className="text-xs text-muted-foreground">No data</span>;
+  }
+  return <span className="tabular-nums">{money(value, currency)}</span>;
 }
 
 export function CardTile({ card, sub }: { card: TcgCard; sub?: string }) {
