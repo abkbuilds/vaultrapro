@@ -237,7 +237,22 @@ export async function runCatalogSync(opts: {
 
   // A set counts as ingested once it has any cards — some older sets expose
   // fewer cards than their printed total, which would otherwise loop forever.
-  const pending = opts.force ? sets : sets.filter((s) => (have.get(s.id) ?? 0) === 0);
+  // Some sets legitimately return no cards upstream. Skip them after 3 tries so
+  // the resumable loop can finish instead of retrying them forever.
+  const { data: attemptRows } = await supabaseAdmin
+    .from("tcg_sets")
+    .select("id,sync_attempts")
+    .eq("language", language);
+  const attempts = new Map<string, number>(
+    ((attemptRows ?? []) as { id: string; sync_attempts: number | null }[]).map((r) => [
+      r.id,
+      Number(r.sync_attempts ?? 0),
+    ]),
+  );
+
+  const pending = opts.force
+    ? sets
+    : sets.filter((s) => (have.get(s.id) ?? 0) === 0 && (attempts.get(s.id) ?? 0) < 3);
 
   const batch = pending.slice(0, limit);
   let cardsUpserted = 0;
@@ -261,8 +276,19 @@ export async function runCatalogSync(opts: {
       }
       cardsUpserted += cards.length;
       processed.push(set.id);
+      await supabaseAdmin
+        .from("tcg_sets")
+        .update({
+          sync_attempts: (attempts.get(set.id) ?? 0) + 1,
+          synced_at: new Date().toISOString(),
+        })
+        .eq("id", set.id);
     } catch (e) {
       console.error(`sync failed for ${set.id}`, e);
+      await supabaseAdmin
+        .from("tcg_sets")
+        .update({ sync_attempts: (attempts.get(set.id) ?? 0) + 1 })
+        .eq("id", set.id);
     }
   }
 

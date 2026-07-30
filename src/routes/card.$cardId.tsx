@@ -1,10 +1,12 @@
 import { createFileRoute, Link, notFound } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
-import { ChevronLeft, Heart, Plus } from "lucide-react";
+import { useQuery } from "@tanstack/react-query";
+import { useServerFn } from "@tanstack/react-start";
+import { ChevronLeft, Handshake, Heart, Loader2, Plus } from "lucide-react";
 import { toast } from "sonner";
 import { getCard } from "@/lib/tcg/cards";
 import { fetchCardById } from "@/lib/catalog/queries";
-import { getCombinedSeries, getRecentListings, sourcesForCard } from "@/lib/tcg/prices";
+import { fetchCardPrices } from "@/lib/prices/prices.functions";
 import {
   CONDITIONS,
   SOURCE_META,
@@ -47,17 +49,39 @@ export const Route = createFileRoute("/card/$cardId")({
   component: CardDetail,
 });
 
+const ALL_RANGES: TimeRange[] = ["1D", "1W", "1M", "3M", "1Y", "5Y", "ALL"];
+
 function CardDetail() {
   const { card } = Route.useLoaderData();
   const { add, toggleWishlist, isWishlisted } = useCollection();
   const [range, setRange] = useState<TimeRange>("3M");
   const [condition, setCondition] = useState<Condition>("Near Mint");
-  const allSources = useMemo(() => sourcesForCard(card), [card]);
   const [hidden, setHidden] = useState<PriceSource[]>([]);
 
-  const data = useMemo(() => getCombinedSeries(card, range), [card, range]);
-  const listings = useMemo(() => getRecentListings(card), [card]);
+  const getPrices = useServerFn(fetchCardPrices);
+  const prices = useQuery({
+    queryKey: ["card-prices", card.id, range],
+    queryFn: () => getPrices({ data: { cardId: card.id, range } }),
+    staleTime: 5 * 60 * 1000,
+  });
+
+  const series = prices.data?.series ?? [];
+  const allSources = series.map((s) => s.source);
   const shown = allSources.filter((s) => !hidden.includes(s));
+
+  const chartData = useMemo(() => {
+    const rows = new Map<string, Record<string, string | number>>();
+    for (const s of series) {
+      for (const p of s.points) {
+        const row = rows.get(p.date) ?? { date: p.date };
+        row[s.source] = p.value;
+        rows.set(p.date, row);
+      }
+    }
+    return [...rows.values()].sort((a, b) => String(a.date).localeCompare(String(b.date)));
+  }, [series]);
+
+  const anyModelled = series.some((s) => s.modelled);
 
   return (
     <main>
@@ -112,9 +136,7 @@ function CardDetail() {
               <PriceDelta value={card.change7d} className="mb-1" />
             </div>
             {card.artist && (
-              <p className="mt-1 text-[11px] text-muted-foreground">
-                Illus. {card.artist}
-              </p>
+              <p className="mt-1 text-[11px] text-muted-foreground">Illus. {card.artist}</p>
             )}
           </div>
         </div>
@@ -122,7 +144,13 @@ function CardDetail() {
 
       <section className="mt-5 px-4">
         <div className="glass-panel rounded-3xl p-3">
-          <MultiSourceChart data={data} sources={shown} />
+          {prices.isLoading ? (
+            <div className="grid h-52 place-items-center text-muted-foreground">
+              <Loader2 className="size-5 animate-spin" />
+            </div>
+          ) : (
+            <MultiSourceChart data={chartData} sources={shown} />
+          )}
           <div className="mt-2 flex flex-wrap gap-1.5">
             {allSources.map((s) => {
               const off = hidden.includes(s);
@@ -130,9 +158,7 @@ function CardDetail() {
                 <button
                   key={s}
                   type="button"
-                  onClick={() =>
-                    setHidden((p) => (off ? p.filter((x) => x !== s) : [...p, s]))
-                  }
+                  onClick={() => setHidden((p) => (off ? p.filter((x) => x !== s) : [...p, s]))}
                   className={cn(
                     "flex items-center gap-1.5 rounded-full px-2.5 py-1.5 text-[11px] font-semibold transition-opacity",
                     off ? "bg-surface-2 opacity-45" : "bg-surface-2",
@@ -148,8 +174,64 @@ function CardDetail() {
             })}
           </div>
           <div className="mt-2">
-            <RangeToggle value={range} onChange={setRange} />
+            <RangeToggle value={range} onChange={setRange} ranges={ALL_RANGES} />
           </div>
+          {anyModelled && (
+            <p className="mt-2 text-[11px] text-muted-foreground">
+              Sources marked “modelled” below don't have enough captured history for this
+              window yet — the curve is estimated from the live quote.
+            </p>
+          )}
+        </div>
+      </section>
+
+      <section className="mt-5 px-4">
+        <h2 className="pb-2 font-display text-lg font-semibold">Live quotes</h2>
+        <div className="overflow-hidden rounded-2xl bg-surface">
+          <table className="w-full text-left text-xs">
+            <thead className="text-muted-foreground">
+              <tr className="border-b border-border">
+                <th className="px-3 py-2 font-medium">Source</th>
+                <th className="px-3 py-2 font-medium">Status</th>
+                <th className="px-3 py-2 text-right font-medium">Price</th>
+              </tr>
+            </thead>
+            <tbody>
+              {(prices.data?.quotes ?? []).map((q) => {
+                const modelled = series.find((s) => s.source === q.source)?.modelled;
+                return (
+                  <tr key={q.source} className="border-b border-border/50 last:border-0">
+                    <td className="px-3 py-2">
+                      <span className="flex items-center gap-1.5">
+                        <span
+                          className="size-2 shrink-0 rounded-full"
+                          style={{ background: SOURCE_META[q.source].color }}
+                        />
+                        {SOURCE_META[q.source].label}
+                      </span>
+                    </td>
+                    <td className="px-3 py-2 text-muted-foreground">
+                      {q.live ? (modelled ? "Live quote · modelled history" : "Live") : q.note}
+                    </td>
+                    <td className="px-3 py-2 text-right font-semibold tabular-nums">
+                      {q.price == null
+                        ? "—"
+                        : q.currency === "JPY"
+                          ? `¥${q.price.toLocaleString()}`
+                          : money(q.price)}
+                    </td>
+                  </tr>
+                );
+              })}
+              {!prices.data?.quotes.length && !prices.isLoading && (
+                <tr>
+                  <td colSpan={3} className="px-3 py-4 text-center text-muted-foreground">
+                    No quotes available for this printing.
+                  </td>
+                </tr>
+              )}
+            </tbody>
+          </table>
         </div>
       </section>
 
@@ -182,50 +264,12 @@ function CardDetail() {
         >
           <Plus className="size-4" /> Add {condition} copy
         </button>
-      </section>
-
-      <section className="mt-6 px-4">
-        <h2 className="pb-2 font-display text-lg font-semibold">Recent sales & listings</h2>
-        <div className="overflow-hidden rounded-2xl bg-surface">
-          <table className="w-full text-left text-xs">
-            <thead className="text-muted-foreground">
-              <tr className="border-b border-border">
-                <th className="px-3 py-2 font-medium">Date</th>
-                <th className="px-3 py-2 font-medium">Source</th>
-                <th className="px-3 py-2 font-medium">Cond.</th>
-                <th className="px-3 py-2 text-right font-medium">Price</th>
-              </tr>
-            </thead>
-            <tbody>
-              {listings.map((l) => (
-                <tr key={l.id} className="border-b border-border/50 last:border-0">
-                  <td className="px-3 py-2 whitespace-nowrap text-muted-foreground">
-                    {new Date(l.date).toLocaleDateString("en-US", {
-                      month: "short",
-                      day: "numeric",
-                    })}
-                  </td>
-                  <td className="px-3 py-2">
-                    <span className="flex items-center gap-1.5">
-                      <span
-                        className="size-2 shrink-0 rounded-full"
-                        style={{ background: SOURCE_META[l.source].color }}
-                      />
-                      <span className="truncate">{SOURCE_META[l.source].label}</span>
-                    </span>
-                    <span className="text-[10px] text-muted-foreground capitalize">
-                      {l.kind}
-                    </span>
-                  </td>
-                  <td className="px-3 py-2 text-muted-foreground">{l.condition}</td>
-                  <td className="px-3 py-2 text-right font-semibold tabular-nums">
-                    {money(l.price)}
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+        <Link
+          to="/trades"
+          className="mt-2 flex w-full items-center justify-center gap-2 rounded-xl bg-surface py-3 text-sm font-semibold"
+        >
+          <Handshake className="size-4" /> Log a sale or trade
+        </Link>
       </section>
     </main>
   );

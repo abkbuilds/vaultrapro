@@ -239,6 +239,8 @@ export type Database = {
           release_date: string | null
           series: string | null
           symbol_url: string | null
+          sync_attempts: number
+          synced_at: string | null
           total: number | null
         }
         Insert: {
@@ -253,6 +255,8 @@ export type Database = {
           release_date?: string | null
           series?: string | null
           symbol_url?: string | null
+          sync_attempts?: number
+          synced_at?: string | null
           total?: number | null
         }
         Update: {
@@ -267,6 +271,8 @@ export type Database = {
           release_date?: string | null
           series?: string | null
           symbol_url?: string | null
+          sync_attempts?: number
+          synced_at?: string | null
           total?: number | null
         }
         Relationships: []

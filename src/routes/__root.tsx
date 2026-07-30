@@ -13,6 +13,7 @@ import appCss from "../styles.css?url";
 import { reportLovableError } from "../lib/lovable-error-reporting";
 import { BottomNav } from "@/components/BottomNav";
 import { CollectionProvider } from "@/lib/tcg/collection";
+import { TradeProvider } from "@/lib/tcg/trades";
 import { AuthProvider } from "@/lib/auth";
 import { Toaster } from "@/components/ui/sonner";
 
@@ -139,12 +140,14 @@ function RootComponent() {
     <QueryClientProvider client={queryClient}>
       <AuthProvider>
         <CollectionProvider>
+          <TradeProvider>
           <div className="mx-auto min-h-screen w-full max-w-lg pb-24">
             {/* Required: nested routes render here. */}
             <Outlet />
           </div>
           <BottomNav />
           <Toaster position="top-center" theme="dark" offset={16} />
+          </TradeProvider>
         </CollectionProvider>
       </AuthProvider>
     </QueryClientProvider>

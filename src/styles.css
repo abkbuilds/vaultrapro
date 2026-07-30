@@ -161,3 +161,14 @@
     display: none;
   }
 }
+
+@utility input-bare {
+  width: 100%;
+  border-radius: 0.75rem;
+  background: var(--color-surface);
+  padding: 0.625rem 0.75rem;
+  font-size: 0.8125rem;
+  font-weight: 500;
+  color: var(--color-foreground);
+  outline: none;
+}
