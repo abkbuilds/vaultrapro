@@ -45,7 +45,7 @@ export function CollectionProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     setEntries(read(KEY, SEED));
-    setWishlist(read(WISH_KEY, ["swsh12pt5-160"]));
+    setWishlist(read(WISH_KEY, ["sv8pt5-161"]));
     setHydrated(true);
   }, []);
 
