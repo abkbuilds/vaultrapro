@@ -105,6 +105,24 @@ function tcgdexUrl(cardId: string) {
 
 type CardmarketBlock = Record<string, number | null | string>;
 
+/**
+ * Cardmarket quotes in EUR. Charts and portfolio totals are USD, so convert
+ * with the ECB daily reference rate (Frankfurter, keyless), cached for 6h.
+ */
+let eurUsd: { rate: number; expires: number } | null = null;
+async function eurToUsd(): Promise<number> {
+  if (eurUsd && eurUsd.expires > Date.now()) return eurUsd.rate;
+  const json = await getJson<{ rates?: { USD?: number } }>(
+    "https://api.frankfurter.app/latest?from=EUR&to=USD",
+  );
+  const rate = json?.rates?.USD;
+  if (typeof rate === "number" && rate > 0) {
+    eurUsd = { rate, expires: Date.now() + 6 * 3600_000 };
+    return rate;
+  }
+  return eurUsd?.rate ?? 1.08;
+}
+
 async function cardmarketBlock(cardId: string): Promise<CardmarketBlock | null> {
   const json = await getJson<{ pricing?: { cardmarket?: CardmarketBlock | null } }>(
     tcgdexUrl(cardId),
@@ -131,13 +149,18 @@ export async function quoteCardmarket(cardId: string): Promise<Quote> {
       note: "No Cardmarket listing for this printing",
     };
   }
-  const price = pickNumber(block, ["trend-holo", "trend", "avg-holo", "avg", "low"]);
+  const eur = pickNumber(block, ["trend-holo", "trend", "avg-holo", "avg", "low"]);
+  const rate = await eurToUsd();
+  const price = eur == null ? null : Number((eur * rate).toFixed(2));
   return {
     source: "cardmarket",
     price,
-    currency: "EUR",
+    currency: "USD",
     live: price != null,
-    note: price == null ? "Cardmarket has no price yet" : "Cardmarket trend price",
+    note:
+      eur == null
+        ? "Cardmarket has no price yet"
+        : `Cardmarket trend \u20ac${eur.toFixed(2)} at ECB ${rate.toFixed(3)}`,
   };
 }
 
@@ -150,6 +173,7 @@ export async function cardmarketHistorySeeds(cardId: string) {
   if (!block) return [];
   const holo = typeof block["trend-holo"] === "number" && (block["trend-holo"] as number) > 0;
   const key = (base: string) => (holo ? `${base}-holo` : base);
+  const rate = await eurToUsd();
   const seeds: { daysAgo: number; price: number }[] = [];
   for (const [daysAgo, base] of [
     [30, "avg30"],
@@ -157,7 +181,7 @@ export async function cardmarketHistorySeeds(cardId: string) {
     [1, "avg1"],
   ] as const) {
     const v = pickNumber(block, [key(base), base]);
-    if (v != null) seeds.push({ daysAgo, price: v });
+    if (v != null) seeds.push({ daysAgo, price: Number((v * rate).toFixed(2)) });
   }
   return seeds;
 }

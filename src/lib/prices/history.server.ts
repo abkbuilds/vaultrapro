@@ -174,7 +174,7 @@ export async function snapshotCard(card: CardLike) {
       source: "cardmarket",
       condition: "Near Mint",
       price: seed.price,
-      currency: "EUR",
+      currency: "USD",
       captured_on: d.toISOString().slice(0, 10),
     });
   }
