@@ -69,7 +69,7 @@ function AccountPage() {
     await queryClient.cancelQueries();
     queryClient.clear();
     await supabase.auth.signOut();
-    await router.navigate({ to: "/auth", replace: true });
+    await router.navigate({ to: "/auth", search: { redirect: undefined }, replace: true });
   }
 
   return (
