@@ -96,7 +96,9 @@ export function CardTile({ card, sub }: { card: TcgCard; sub?: string }) {
           {card.setCode} — {card.number} · {card.language}
         </p>
         <div className="flex items-center justify-between pt-0.5">
-          <span className="text-sm font-bold tabular-nums">{money(card.marketPrice)}</span>
+          <span className="text-sm font-bold">
+            <Price value={card.marketPrice} />
+          </span>
           <PriceDelta value={card.change7d} />
         </div>
         {sub ? <p className="text-[11px] text-muted-foreground">{sub}</p> : null}
