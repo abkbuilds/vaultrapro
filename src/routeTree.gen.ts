@@ -24,6 +24,7 @@ import { Route as AuthenticatedAccountRouteImport } from './routes/_authenticate
 import { Route as CardCardIdRouteImport } from './routes/card.$cardId'
 import { Route as ApiPublicRefreshPricesRouteImport } from './routes/api/public/refresh-prices'
 import { Route as ApiPublicSyncCatalogRouteImport } from './routes/api/public/sync-catalog'
+import { Route as ApiPublicSyncJpEnglishRouteImport } from './routes/api/public/sync-jp-english'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -99,6 +100,11 @@ const ApiPublicSyncCatalogRoute = ApiPublicSyncCatalogRouteImport.update({
   path: '/api/public/sync-catalog',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiPublicSyncJpEnglishRoute = ApiPublicSyncJpEnglishRouteImport.update({
+  id: '/api/public/sync-jp-english',
+  path: '/api/public/sync-jp-english',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -115,6 +121,7 @@ export interface FileRoutesByFullPath {
   '/card/$cardId': typeof CardCardIdRoute
   '/api/public/refresh-prices': typeof ApiPublicRefreshPricesRoute
   '/api/public/sync-catalog': typeof ApiPublicSyncCatalogRoute
+  '/api/public/sync-jp-english': typeof ApiPublicSyncJpEnglishRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -131,6 +138,7 @@ export interface FileRoutesByTo {
   '/card/$cardId': typeof CardCardIdRoute
   '/api/public/refresh-prices': typeof ApiPublicRefreshPricesRoute
   '/api/public/sync-catalog': typeof ApiPublicSyncCatalogRoute
+  '/api/public/sync-jp-english': typeof ApiPublicSyncJpEnglishRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -149,6 +157,7 @@ export interface FileRoutesById {
   '/card/$cardId': typeof CardCardIdRoute
   '/api/public/refresh-prices': typeof ApiPublicRefreshPricesRoute
   '/api/public/sync-catalog': typeof ApiPublicSyncCatalogRoute
+  '/api/public/sync-jp-english': typeof ApiPublicSyncJpEnglishRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -167,6 +176,7 @@ export interface FileRouteTypes {
     | '/card/$cardId'
     | '/api/public/refresh-prices'
     | '/api/public/sync-catalog'
+    | '/api/public/sync-jp-english'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -183,6 +193,7 @@ export interface FileRouteTypes {
     | '/card/$cardId'
     | '/api/public/refresh-prices'
     | '/api/public/sync-catalog'
+    | '/api/public/sync-jp-english'
   id:
     | '__root__'
     | '/'
@@ -200,6 +211,7 @@ export interface FileRouteTypes {
     | '/card/$cardId'
     | '/api/public/refresh-prices'
     | '/api/public/sync-catalog'
+    | '/api/public/sync-jp-english'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -217,6 +229,7 @@ export interface RootRouteChildren {
   CardCardIdRoute: typeof CardCardIdRoute
   ApiPublicRefreshPricesRoute: typeof ApiPublicRefreshPricesRoute
   ApiPublicSyncCatalogRoute: typeof ApiPublicSyncCatalogRoute
+  ApiPublicSyncJpEnglishRoute: typeof ApiPublicSyncJpEnglishRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -326,6 +339,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicSyncCatalogRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/sync-jp-english': {
+      id: '/api/public/sync-jp-english'
+      path: '/api/public/sync-jp-english'
+      fullPath: '/api/public/sync-jp-english'
+      preLoaderRoute: typeof ApiPublicSyncJpEnglishRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -355,6 +375,7 @@ const rootRouteChildren: RootRouteChildren = {
   CardCardIdRoute: CardCardIdRoute,
   ApiPublicRefreshPricesRoute: ApiPublicRefreshPricesRoute,
   ApiPublicSyncCatalogRoute: ApiPublicSyncCatalogRoute,
+  ApiPublicSyncJpEnglishRoute: ApiPublicSyncJpEnglishRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

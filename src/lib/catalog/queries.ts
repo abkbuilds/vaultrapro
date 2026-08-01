@@ -19,6 +19,8 @@ export interface DbCard {
   image_large: string | null;
   market_price: number | null;
   is_promo: boolean;
+  english_name: string | null;
+  english_set_name: string | null;
 }
 
 export interface DbSet {
@@ -31,19 +33,22 @@ export interface DbSet {
   release_date: string | null;
   logo_url: string | null;
   symbol_url: string | null;
+  english_name: string | null;
 }
 
 const SELECT =
-  "id,language,name,native_name,set_id,set_name,set_code,number,rarity,types,hp,artist,image_small,image_large,market_price,is_promo";
+  "id,language,name,english_name,native_name,set_id,set_name,english_set_name,set_code,number,rarity,types,hp,artist,image_small,image_large,market_price,is_promo";
 
 export function toTcgCard(row: DbCard): TcgCard {
   return {
     id: row.id,
-    name: row.name,
-    nativeName: row.native_name ?? undefined,
+    // Japanese cards are surfaced under their English name; the printed
+    // Japanese name is kept alongside it.
+    name: row.english_name ?? row.name,
+    nativeName: row.native_name ?? (row.english_name ? row.name : undefined),
     game: "pokemon",
     language: (row.language as Language) ?? "EN",
-    setName: row.set_name,
+    setName: row.english_set_name ?? row.set_name,
     setCode: row.set_code ?? "",
     number: row.number,
     rarity: row.rarity ?? "—",
@@ -63,6 +68,8 @@ export interface SearchArgs {
   setId?: string;
   rarity?: string;
   promoOnly?: boolean;
+  minPrice?: number | null;
+  maxPrice?: number | null;
   page?: number;
   pageSize?: number;
 }
@@ -83,6 +90,8 @@ export async function searchCards(args: SearchArgs) {
   if (args.setId && args.setId !== "all") q = q.eq("set_id", args.setId);
   if (args.rarity && args.rarity !== "all") q = q.eq("rarity", args.rarity);
   if (args.promoOnly) q = q.eq("is_promo", true);
+  if (args.minPrice != null) q = q.gte("market_price", args.minPrice);
+  if (args.maxPrice != null) q = q.lte("market_price", args.maxPrice);
 
   const { data, error, count } = await q;
   if (error) throw error;
@@ -94,7 +103,7 @@ export async function searchCards(args: SearchArgs) {
 export async function listSets(language: "all" | Language = "all") {
   let q = supabase
     .from("tcg_sets")
-    .select("id,language,name,code,series,total,release_date,logo_url,symbol_url")
+    .select("id,language,name,english_name,code,series,total,release_date,logo_url,symbol_url")
     .order("release_date", { ascending: false, nullsFirst: false })
     .limit(1000);
   if (language !== "all") q = q.eq("language", language);

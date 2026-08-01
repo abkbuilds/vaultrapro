@@ -4,9 +4,23 @@ import { keepPreviousData, useQuery } from "@tanstack/react-query";
 import { Loader2, Plus, Search } from "lucide-react";
 import { toast } from "sonner";
 import { useCollection } from "@/lib/tcg/collection";
-import { listRarities, listSets, searchCards } from "@/lib/catalog/queries";
+import { listRarities, listSets, searchCards, type DbSet } from "@/lib/catalog/queries";
 import { CardTile, PageHeader } from "@/components/tcg/CardBits";
 import { cn } from "@/lib/utils";
+
+const PRICE_BANDS: { id: string; label: string; min: number | null; max: number | null }[] = [
+  { id: "all", label: "Any market price", min: null, max: null },
+  { id: "u5", label: "Under $5", min: null, max: 5 },
+  { id: "5-25", label: "$5 – $25", min: 5, max: 25 },
+  { id: "25-100", label: "$25 – $100", min: 25, max: 100 },
+  { id: "100-500", label: "$100 – $500", min: 100, max: 500 },
+  { id: "500+", label: "$500 and up", min: 500, max: null },
+];
+
+/** Japanese sets are labelled with their English name where we have one. */
+function setLabel(s: DbSet) {
+  return s.english_name ?? s.name;
+}
 
 export const Route = createFileRoute("/database")({
   head: () => ({
@@ -36,6 +50,7 @@ function DatabasePage() {
   const [setId, setSetId] = useState("all");
   const [rarity, setRarity] = useState("all");
   const [promoOnly, setPromoOnly] = useState(false);
+  const [priceBand, setPriceBand] = useState("all");
   const [page, setPage] = useState(0);
   const { add } = useCollection();
 
@@ -50,7 +65,18 @@ function DatabasePage() {
     staleTime: 60 * 60 * 1000,
   });
 
-  const args = { query: q, language: lang, setId, rarity, promoOnly, page, pageSize: 40 };
+  const band = PRICE_BANDS.find((b) => b.id === priceBand);
+  const args = {
+    query: q,
+    language: lang,
+    setId,
+    rarity,
+    promoOnly,
+    minPrice: band?.min ?? null,
+    maxPrice: band?.max ?? null,
+    page,
+    pageSize: 40,
+  };
   const results = useQuery({
     queryKey: ["cards", args],
     queryFn: () => searchCards(args),
@@ -64,7 +90,9 @@ function DatabasePage() {
   const matchingSets = useMemo(
     () =>
       term.length > 1 && setId === "all"
-        ? sets.filter((s) => s.name.toLowerCase().includes(term)).slice(0, 6)
+        ? sets
+            .filter((s) => setLabel(s).toLowerCase().includes(term))
+            .slice(0, 6)
         : [],
     [sets, term, setId],
   );
@@ -85,7 +113,7 @@ function DatabasePage() {
           results.isLoading
             ? "Searching…"
             : selectedSet
-              ? `${selectedSet.name} · ${total.toLocaleString()} cards`
+              ? `${setLabel(selectedSet)} · ${total.toLocaleString()} cards`
               : `${total.toLocaleString()} cards`
         }
       />
@@ -147,7 +175,7 @@ function DatabasePage() {
             <option value="all">All sets ({sets.length})</option>
             {sets.map((s) => (
               <option key={s.id} value={s.id}>
-                {s.language} · {s.name}
+                {s.language} · {setLabel(s)}
                 {s.total ? ` (${s.total})` : ""}
               </option>
             ))}
@@ -164,6 +192,17 @@ function DatabasePage() {
               </option>
             ))}
           </select>
+          <select
+            value={priceBand}
+            onChange={(e) => reset(setPriceBand)(e.target.value)}
+            className="col-span-2 rounded-xl bg-surface px-3 py-2.5 text-xs font-medium outline-none"
+          >
+            {PRICE_BANDS.map((b) => (
+              <option key={b.id} value={b.id}>
+                {b.label}
+              </option>
+            ))}
+          </select>
         </div>
       </div>
 
@@ -172,13 +211,13 @@ function DatabasePage() {
           {selectedSet.logo_url && (
             <img
               src={selectedSet.logo_url}
-              alt={`${selectedSet.name} logo`}
+              alt={`${setLabel(selectedSet)} logo`}
               className="h-10 w-auto max-w-28 object-contain"
               loading="lazy"
             />
           )}
           <div className="min-w-0 text-xs text-muted-foreground">
-            <p className="truncate font-semibold text-foreground">{selectedSet.name}</p>
+            <p className="truncate font-semibold text-foreground">{setLabel(selectedSet)}</p>
             <p className="truncate">
               {[selectedSet.series, selectedSet.release_date, `${selectedSet.total ?? "?"} cards`]
                 .filter(Boolean)
@@ -205,7 +244,7 @@ function DatabasePage() {
                 }}
                 className="shrink-0 rounded-full bg-surface px-3.5 py-1.5 text-xs font-semibold"
               >
-                {s.language} · {s.name}
+                {s.language} · {setLabel(s)}
                 {s.total ? ` (${s.total})` : ""}
               </button>
             ))}

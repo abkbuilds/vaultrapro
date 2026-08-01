@@ -194,6 +194,8 @@ export type Database = {
       tcg_cards: {
         Row: {
           artist: string | null
+          english_name: string | null
+          english_set_name: string | null
           game: string
           hp: number | null
           id: string
@@ -218,6 +220,8 @@ export type Database = {
         }
         Insert: {
           artist?: string | null
+          english_name?: string | null
+          english_set_name?: string | null
           game?: string
           hp?: number | null
           id: string
@@ -242,6 +246,8 @@ export type Database = {
         }
         Update: {
           artist?: string | null
+          english_name?: string | null
+          english_set_name?: string | null
           game?: string
           hp?: number | null
           id?: string
@@ -278,6 +284,7 @@ export type Database = {
         Row: {
           code: string | null
           created_at: string
+          english_name: string | null
           game: string
           id: string
           language: string
@@ -294,6 +301,7 @@ export type Database = {
         Insert: {
           code?: string | null
           created_at?: string
+          english_name?: string | null
           game?: string
           id: string
           language: string
@@ -310,6 +318,7 @@ export type Database = {
         Update: {
           code?: string | null
           created_at?: string
+          english_name?: string | null
           game?: string
           id?: string
           language?: string
