@@ -12,6 +12,23 @@ import {
 
 const rangeSchema = z.enum(["1D", "1W", "1M", "3M", "1Y", "5Y", "ALL"]);
 
+/** Completed sale history + the market price derived from the last 5–10 sales. */
+export const fetchCardSales = createServerFn({ method: "POST" })
+  .inputValidator((data: unknown) =>
+    z.object({ cardId: z.string(), limit: z.number().min(1).max(100).optional() }).parse(data),
+  )
+  .handler(async ({ data }) => {
+    const { getSales, marketPriceFrom, saleSourcesFor } = await import("./sales.server");
+    const card = await loadCard(data.cardId);
+    const sales = await getSales(data.cardId, data.limit ?? 25);
+    return {
+      sales,
+      market: marketPriceFrom(sales),
+      sources: saleSourcesFor(card?.language ?? "EN"),
+    };
+  });
+
+
 export const fetchCardPrices = createServerFn({ method: "POST" })
   .inputValidator((data: unknown) =>
     z.object({ cardId: z.string(), range: rangeSchema }).parse(data),
