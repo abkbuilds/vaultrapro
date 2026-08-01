@@ -83,6 +83,54 @@ export type Database = {
         }
         Relationships: []
       }
+      card_sales: {
+        Row: {
+          card_id: string
+          condition: string | null
+          created_at: string
+          currency: string
+          external_id: string
+          id: string
+          price: number
+          price_usd: number | null
+          sold_at: string
+          source: string
+          title: string | null
+          updated_at: string
+          url: string | null
+        }
+        Insert: {
+          card_id: string
+          condition?: string | null
+          created_at?: string
+          currency?: string
+          external_id: string
+          id?: string
+          price: number
+          price_usd?: number | null
+          sold_at: string
+          source: string
+          title?: string | null
+          updated_at?: string
+          url?: string | null
+        }
+        Update: {
+          card_id?: string
+          condition?: string | null
+          created_at?: string
+          currency?: string
+          external_id?: string
+          id?: string
+          price?: number
+          price_usd?: number | null
+          sold_at?: string
+          source?: string
+          title?: string | null
+          updated_at?: string
+          url?: string | null
+        }
+        Relationships: []
+      }
       catalog_sync_runs: {
         Row: {
           cards_upserted: number

@@ -6,7 +6,7 @@ import { ChevronLeft, Handshake, Heart, Loader2, Plus } from "lucide-react";
 import { toast } from "sonner";
 import { getCard } from "@/lib/tcg/cards";
 import { fetchCardById } from "@/lib/catalog/queries";
-import { fetchCardPrices } from "@/lib/prices/prices.functions";
+import { fetchCardPrices, fetchCardSales } from "@/lib/prices/prices.functions";
 import {
   CONDITIONS,
   SOURCE_META,
@@ -64,6 +64,16 @@ function CardDetail() {
     queryFn: () => getPrices({ data: { cardId: card.id, range } }),
     staleTime: 5 * 60 * 1000,
   });
+
+  const getSales = useServerFn(fetchCardSales);
+  const salesQuery = useQuery({
+    queryKey: ["card-sales", card.id],
+    queryFn: () => getSales({ data: { cardId: card.id, limit: 25 } }),
+    staleTime: 5 * 60 * 1000,
+  });
+  const sales = salesQuery.data?.sales ?? [];
+  const market = salesQuery.data?.market;
+
 
   const series = prices.data?.series ?? [];
   const allSources = series.map((s) => s.source);
@@ -141,15 +151,23 @@ function CardDetail() {
             </div>
             <div className="mt-3 flex items-end gap-2">
               <p className="font-display text-3xl font-bold tabular-nums">
-                {money(headline)}
+                {market?.value != null ? money(market.value) : money(headline)}
               </p>
               <PriceDelta value={card.change7d} className="mb-1" />
             </div>
             <p className="mt-1 text-[11px] text-muted-foreground">
-              {headlineSource
-                ? `${SOURCE_META[headlineSource.source].label} live`
-                : "Last catalogue price"}
+              {market?.value != null
+                ? `Market price · average of last ${market.sampleSize} sale${market.sampleSize === 1 ? "" : "s"}`
+                : headlineSource
+                  ? `${SOURCE_META[headlineSource.source].label} live quote — no completed sales recorded yet`
+                  : "Last catalogue price"}
             </p>
+            {market?.value != null && market.lowConfidence && (
+              <span className="mt-1 inline-block rounded-md bg-surface-2 px-2 py-0.5 text-[10px] font-semibold text-muted-foreground">
+                Low confidence · fewer than 5 sales
+              </span>
+            )}
+
             {card.artist && (
               <p className="mt-1 text-[11px] text-muted-foreground">Illus. {card.artist}</p>
             )}
@@ -258,6 +276,87 @@ function CardDetail() {
           </table>
         </div>
       </section>
+
+      <section className="mt-5 px-4">
+        <div className="flex items-baseline justify-between pb-2">
+          <h2 className="font-display text-lg font-semibold">Sale history</h2>
+          {market?.value != null && (
+            <span className="text-[11px] text-muted-foreground">
+              Market {money(market.value)} · last {market.sampleSize} sale
+              {market.sampleSize === 1 ? "" : "s"}
+              {market.lowConfidence ? " (low confidence)" : ""}
+            </span>
+          )}
+        </div>
+        <div className="overflow-hidden rounded-2xl bg-surface">
+          {salesQuery.isLoading ? (
+            <div className="grid h-24 place-items-center text-muted-foreground">
+              <Loader2 className="size-5 animate-spin" />
+            </div>
+          ) : salesQuery.isError ? (
+            <p className="px-3 py-4 text-center text-xs text-destructive">
+              Couldn't load sale history.
+            </p>
+          ) : sales.length ? (
+            <table className="w-full text-left text-xs">
+              <thead className="text-muted-foreground">
+                <tr className="border-b border-border">
+                  <th className="px-3 py-2 font-medium">Sold</th>
+                  <th className="px-3 py-2 font-medium">Source</th>
+                  <th className="px-3 py-2 font-medium">Condition</th>
+                  <th className="px-3 py-2 text-right font-medium">Price</th>
+                </tr>
+              </thead>
+              <tbody>
+                {sales.map((s) => (
+                  <tr key={s.id} className="border-b border-border/50 last:border-0">
+                    <td className="px-3 py-2 whitespace-nowrap">
+                      {new Date(s.soldAt).toLocaleDateString()}{" "}
+                      <span className="text-muted-foreground">
+                        {new Date(s.soldAt).toLocaleTimeString([], {
+                          hour: "2-digit",
+                          minute: "2-digit",
+                        })}
+                      </span>
+                    </td>
+                    <td className="px-3 py-2">
+                      {s.url ? (
+                        <a
+                          href={s.url}
+                          target="_blank"
+                          rel="noreferrer noopener"
+                          className="underline decoration-dotted"
+                        >
+                          {SOURCE_META[s.source].label}
+                        </a>
+                      ) : (
+                        SOURCE_META[s.source].label
+                      )}
+                    </td>
+                    <td className="px-3 py-2 text-muted-foreground">{s.condition ?? "—"}</td>
+                    <td className="px-3 py-2 text-right font-semibold tabular-nums">
+                      {s.currency === "JPY"
+                        ? `¥${s.price.toLocaleString()}`
+                        : money(s.price, s.currency)}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          ) : (
+            <p className="px-3 py-5 text-center text-xs text-muted-foreground">
+              No completed sales recorded yet for {card.name} ({card.setCode} {card.number}).
+              Sales are ingested from{" "}
+              {(salesQuery.data?.sources ?? [])
+                .map((s) => SOURCE_META[s].label)
+                .join(" and ")}{" "}
+              — nothing is estimated.
+            </p>
+          )}
+        </div>
+      </section>
+
+
 
       <section className="mt-5 px-4">
         <h2 className="pb-2 font-display text-lg font-semibold">Add to collection</h2>
