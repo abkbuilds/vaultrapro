@@ -20,21 +20,30 @@ export const Route = createFileRoute("/api/public/refresh-prices")({
         const { snapshotCard, snapshotTargets } = await import(
           "@/lib/prices/history.server"
         );
+        const { ingestSales } = await import("@/lib/prices/sales.server");
         const cards = await snapshotTargets(limit, offset);
         let written = 0;
+        let sales = 0;
         for (const card of cards) {
           try {
             written += await snapshotCard(card);
           } catch {
             /* keep going; one bad card should not stop the batch */
           }
+          try {
+            sales += (await ingestSales(card)).inserted;
+          } catch {
+            /* sale feeds are best-effort */
+          }
         }
         return Response.json({
           ok: true,
           cards: cards.length,
           rows: written,
+          sales,
           nextOffset: offset + cards.length,
         });
+
       },
     },
   },
