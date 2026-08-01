@@ -79,13 +79,20 @@ export async function searchCards(args: SearchArgs) {
   const page = args.page ?? 0;
   let q = supabase
     .from("tcg_cards")
-    .select(SELECT, { count: "estimated" })
+    // Exact count so the pager always reaches the last card in the catalogue.
+    .select(SELECT, { count: "exact" })
     .order("release_date", { ascending: false, nullsFirst: false })
     .order("number", { ascending: true })
     .range(page * pageSize, page * pageSize + pageSize - 1);
 
   const term = args.query?.trim().toLowerCase();
-  if (term) q = q.ilike("search_text", `%${term}%`);
+  if (term) {
+    // Every word must appear somewhere in the searchable text, so
+    // "umbreon sv4a 205" and "sv4a 205" both land on the right printing.
+    for (const word of term.split(/\s+/).filter(Boolean).slice(0, 6)) {
+      q = q.ilike("search_text", `%${word}%`);
+    }
+  }
   if (args.language && args.language !== "all") q = q.eq("language", args.language);
   if (args.setId && args.setId !== "all") q = q.eq("set_id", args.setId);
   if (args.rarity && args.rarity !== "all") q = q.eq("rarity", args.rarity);
