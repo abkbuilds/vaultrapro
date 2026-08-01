@@ -65,6 +65,16 @@ function CardDetail() {
     staleTime: 5 * 60 * 1000,
   });
 
+  const getSales = useServerFn(fetchCardSales);
+  const salesQuery = useQuery({
+    queryKey: ["card-sales", card.id],
+    queryFn: () => getSales({ data: { cardId: card.id, limit: 25 } }),
+    staleTime: 5 * 60 * 1000,
+  });
+  const sales = salesQuery.data?.sales ?? [];
+  const market = salesQuery.data?.market;
+
+
   const series = prices.data?.series ?? [];
   const allSources = series.map((s) => s.source);
   const shown = allSources.filter((s) => !hidden.includes(s));
