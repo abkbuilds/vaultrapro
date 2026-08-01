@@ -51,44 +51,60 @@ function median(values: number[]) {
 
 /* ------------------------------ TCGplayer ------------------------------- */
 
-export async function quoteTcgplayer(cardId: string): Promise<Quote> {
-  if (!cardId.startsWith("en-")) {
-    return {
-      source: "tcgplayer",
-      price: null,
-      currency: "USD",
-      live: false,
-      note: "TCGplayer does not list Japanese printings",
-    };
-  }
-  const json = await getJson<{ data?: Record<string, any> }>(
-    `${PTCG}/cards/${cardId.replace(/^en-/, "")}`,
-  );
-  const prices = json?.data?.tcgplayer?.prices as Record<string, any> | undefined;
-  if (!prices) {
-    return {
-      source: "tcgplayer",
-      price: null,
-      currency: "USD",
-      live: false,
-      note: "No TCGplayer listing for this printing",
-    };
-  }
-  const order = ["holofoil", "normal", "reverseHolofoil", "1stEditionHolofoil", "unlimitedHolofoil"];
-  for (const k of [...order, ...Object.keys(prices)]) {
-    const v = prices[k]?.market ?? prices[k]?.mid;
-    if (typeof v === "number" && v > 0) {
-      return { source: "tcgplayer", price: Number(v.toFixed(2)), currency: "USD", live: true };
+export async function quoteTcgplayer(card: {
+  id: string;
+  setCode?: string;
+  number?: string;
+  language?: string;
+}): Promise<Quote> {
+  const cardId = card.id;
+  // English cards: the Pokémon TCG API republishes TCGplayer's price block.
+  if (cardId.startsWith("en-")) {
+    const json = await getJson<{ data?: Record<string, any> }>(
+      `${PTCG}/cards/${cardId.replace(/^en-/, "")}`,
+    );
+    const prices = json?.data?.tcgplayer?.prices as Record<string, any> | undefined;
+    if (prices) {
+      const order = [
+        "holofoil",
+        "normal",
+        "reverseHolofoil",
+        "1stEditionHolofoil",
+        "unlimitedHolofoil",
+      ];
+      for (const k of [...order, ...Object.keys(prices)]) {
+        const v = prices[k]?.market ?? prices[k]?.mid;
+        if (typeof v === "number" && v > 0) {
+          return { source: "tcgplayer", price: Number(v.toFixed(2)), currency: "USD", live: true };
+        }
+      }
     }
   }
+
+  // Fallback (and the primary path for Japanese printings): the keyless
+  // tcgcsv.com mirror of the TCGplayer catalogue, which covers both the
+  // English and the Japanese category including promos.
+  if (card.setCode && card.number) {
+    const { tcgplayerMarketPrice } = await import("./tcgcsv.server");
+    const price = await tcgplayerMarketPrice({
+      setCode: card.setCode,
+      number: card.number,
+      language: card.language ?? (cardId.startsWith("jp-") ? "JP" : "EN"),
+    });
+    if (price != null) {
+      return { source: "tcgplayer", price, currency: "USD", live: true };
+    }
+  }
+
   return {
     source: "tcgplayer",
     price: null,
     currency: "USD",
     live: false,
-    note: "TCGplayer has no market price yet",
+    note: "No TCGplayer listing for this printing",
   };
 }
+
 
 /* ------------------------------- Cardmarket ------------------------------ */
 /**
@@ -306,8 +322,10 @@ export async function quoteSnkrdunk(query: string): Promise<Quote> {
 
 /** Sources that apply to a card, by language. */
 export function sourcesFor(language: string): PriceSource[] {
+  // TCGplayer lists Japanese singles too (category 85), reachable keylessly via
+  // tcgcsv.com, so it applies to both languages.
   return language === "JP"
-    ? ["cardmarket", "ebay", "snkrdunk"]
+    ? ["tcgplayer", "cardmarket", "ebay", "snkrdunk"]
     : ["tcgplayer", "cardmarket", "ebay", "pricecharting"];
 }
 
@@ -316,12 +334,19 @@ export async function quoteAll(card: {
   name: string;
   number: string;
   setName: string;
+  setCode?: string;
   language: string;
 }): Promise<Quote[]> {
   const query = `${card.name} ${card.setName} ${card.number} pokemon card`;
   const wanted = sourcesFor(card.language);
   const runners: Record<PriceSource, () => Promise<Quote>> = {
-    tcgplayer: () => quoteTcgplayer(card.id),
+    tcgplayer: () =>
+      quoteTcgplayer({
+        id: card.id,
+        setCode: card.setCode,
+        number: card.number,
+        language: card.language,
+      }),
     cardmarket: () => quoteCardmarket(card.id),
     ebay: () => quoteEbay(query),
     pricecharting: () => quotePriceCharting(query),
@@ -329,3 +354,4 @@ export async function quoteAll(card: {
   } as never;
   return Promise.all(wanted.map((s) => runners[s]()));
 }
+

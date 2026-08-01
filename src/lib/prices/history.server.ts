@@ -37,6 +37,7 @@ export interface CardLike {
   name: string;
   number: string;
   setName: string;
+  setCode?: string;
   language: string;
   marketPrice: number;
 }
@@ -339,7 +340,7 @@ export async function getPortfolioSeries(holdings: Holding[], days: number) {
 export async function loadCard(cardId: string): Promise<CardLike | null> {
   const { data } = await supabase
     .from("tcg_cards")
-    .select("id,name,number,set_name,language,market_price")
+    .select("id,name,number,set_name,set_code,language,market_price")
     .eq("id", cardId)
     .maybeSingle();
   if (!data) return null;
@@ -349,6 +350,7 @@ export async function loadCard(cardId: string): Promise<CardLike | null> {
     name: row.name,
     number: row.number,
     setName: row.set_name,
+    setCode: row.set_code ?? undefined,
     language: row.language,
     marketPrice: Number(row.market_price ?? 0),
   };
@@ -358,7 +360,7 @@ export async function loadCard(cardId: string): Promise<CardLike | null> {
 export async function snapshotTargets(limit: number, offset = 0) {
   const { data } = await supabase
     .from("tcg_cards")
-    .select("id,name,number,set_name,language,market_price")
+    .select("id,name,number,set_name,set_code,language,market_price")
     .not("market_price", "is", null)
     .order("market_price", { ascending: false })
     .range(offset, offset + limit - 1);
@@ -367,6 +369,7 @@ export async function snapshotTargets(limit: number, offset = 0) {
     name: row.name,
     number: row.number,
     setName: row.set_name,
+    setCode: row.set_code ?? undefined,
     language: row.language,
     marketPrice: Number(row.market_price ?? 0),
   })) as CardLike[];
