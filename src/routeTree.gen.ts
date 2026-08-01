@@ -27,6 +27,7 @@ import { Route as ApiPublicSyncCatalogRouteImport } from './routes/api/public/sy
 import { Route as ApiPublicSyncJpEnglishRouteImport } from './routes/api/public/sync-jp-english'
 import { Route as ApiPublicSyncJpImagesRouteImport } from './routes/api/public/sync-jp-images'
 import { Route as ApiPublicSyncJpNamesRouteImport } from './routes/api/public/sync-jp-names'
+import { Route as ApiPublicSyncPricesRouteImport } from './routes/api/public/sync-prices'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -117,6 +118,11 @@ const ApiPublicSyncJpNamesRoute = ApiPublicSyncJpNamesRouteImport.update({
   path: '/api/public/sync-jp-names',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiPublicSyncPricesRoute = ApiPublicSyncPricesRouteImport.update({
+  id: '/api/public/sync-prices',
+  path: '/api/public/sync-prices',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -136,6 +142,7 @@ export interface FileRoutesByFullPath {
   '/api/public/sync-jp-english': typeof ApiPublicSyncJpEnglishRoute
   '/api/public/sync-jp-images': typeof ApiPublicSyncJpImagesRoute
   '/api/public/sync-jp-names': typeof ApiPublicSyncJpNamesRoute
+  '/api/public/sync-prices': typeof ApiPublicSyncPricesRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -155,6 +162,7 @@ export interface FileRoutesByTo {
   '/api/public/sync-jp-english': typeof ApiPublicSyncJpEnglishRoute
   '/api/public/sync-jp-images': typeof ApiPublicSyncJpImagesRoute
   '/api/public/sync-jp-names': typeof ApiPublicSyncJpNamesRoute
+  '/api/public/sync-prices': typeof ApiPublicSyncPricesRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -176,6 +184,7 @@ export interface FileRoutesById {
   '/api/public/sync-jp-english': typeof ApiPublicSyncJpEnglishRoute
   '/api/public/sync-jp-images': typeof ApiPublicSyncJpImagesRoute
   '/api/public/sync-jp-names': typeof ApiPublicSyncJpNamesRoute
+  '/api/public/sync-prices': typeof ApiPublicSyncPricesRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -197,6 +206,7 @@ export interface FileRouteTypes {
     | '/api/public/sync-jp-english'
     | '/api/public/sync-jp-images'
     | '/api/public/sync-jp-names'
+    | '/api/public/sync-prices'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -216,6 +226,7 @@ export interface FileRouteTypes {
     | '/api/public/sync-jp-english'
     | '/api/public/sync-jp-images'
     | '/api/public/sync-jp-names'
+    | '/api/public/sync-prices'
   id:
     | '__root__'
     | '/'
@@ -236,6 +247,7 @@ export interface FileRouteTypes {
     | '/api/public/sync-jp-english'
     | '/api/public/sync-jp-images'
     | '/api/public/sync-jp-names'
+    | '/api/public/sync-prices'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -256,6 +268,7 @@ export interface RootRouteChildren {
   ApiPublicSyncJpEnglishRoute: typeof ApiPublicSyncJpEnglishRoute
   ApiPublicSyncJpImagesRoute: typeof ApiPublicSyncJpImagesRoute
   ApiPublicSyncJpNamesRoute: typeof ApiPublicSyncJpNamesRoute
+  ApiPublicSyncPricesRoute: typeof ApiPublicSyncPricesRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -386,6 +399,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicSyncJpNamesRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/sync-prices': {
+      id: '/api/public/sync-prices'
+      path: '/api/public/sync-prices'
+      fullPath: '/api/public/sync-prices'
+      preLoaderRoute: typeof ApiPublicSyncPricesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -418,6 +438,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiPublicSyncJpEnglishRoute: ApiPublicSyncJpEnglishRoute,
   ApiPublicSyncJpImagesRoute: ApiPublicSyncJpImagesRoute,
   ApiPublicSyncJpNamesRoute: ApiPublicSyncJpNamesRoute,
+  ApiPublicSyncPricesRoute: ApiPublicSyncPricesRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
