@@ -27,6 +27,7 @@ import { Route as ApiPublicSyncCatalogRouteImport } from './routes/api/public/sy
 import { Route as ApiPublicSyncJpEnglishRouteImport } from './routes/api/public/sync-jp-english'
 import { Route as ApiPublicSyncJpImagesRouteImport } from './routes/api/public/sync-jp-images'
 import { Route as ApiPublicSyncJpNamesRouteImport } from './routes/api/public/sync-jp-names'
+import { Route as ApiPublicSyncMissingSetsRouteImport } from './routes/api/public/sync-missing-sets'
 import { Route as ApiPublicSyncPricesRouteImport } from './routes/api/public/sync-prices'
 
 const IndexRoute = IndexRouteImport.update({
@@ -118,6 +119,12 @@ const ApiPublicSyncJpNamesRoute = ApiPublicSyncJpNamesRouteImport.update({
   path: '/api/public/sync-jp-names',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiPublicSyncMissingSetsRoute =
+  ApiPublicSyncMissingSetsRouteImport.update({
+    id: '/api/public/sync-missing-sets',
+    path: '/api/public/sync-missing-sets',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const ApiPublicSyncPricesRoute = ApiPublicSyncPricesRouteImport.update({
   id: '/api/public/sync-prices',
   path: '/api/public/sync-prices',
@@ -142,6 +149,7 @@ export interface FileRoutesByFullPath {
   '/api/public/sync-jp-english': typeof ApiPublicSyncJpEnglishRoute
   '/api/public/sync-jp-images': typeof ApiPublicSyncJpImagesRoute
   '/api/public/sync-jp-names': typeof ApiPublicSyncJpNamesRoute
+  '/api/public/sync-missing-sets': typeof ApiPublicSyncMissingSetsRoute
   '/api/public/sync-prices': typeof ApiPublicSyncPricesRoute
 }
 export interface FileRoutesByTo {
@@ -162,6 +170,7 @@ export interface FileRoutesByTo {
   '/api/public/sync-jp-english': typeof ApiPublicSyncJpEnglishRoute
   '/api/public/sync-jp-images': typeof ApiPublicSyncJpImagesRoute
   '/api/public/sync-jp-names': typeof ApiPublicSyncJpNamesRoute
+  '/api/public/sync-missing-sets': typeof ApiPublicSyncMissingSetsRoute
   '/api/public/sync-prices': typeof ApiPublicSyncPricesRoute
 }
 export interface FileRoutesById {
@@ -184,6 +193,7 @@ export interface FileRoutesById {
   '/api/public/sync-jp-english': typeof ApiPublicSyncJpEnglishRoute
   '/api/public/sync-jp-images': typeof ApiPublicSyncJpImagesRoute
   '/api/public/sync-jp-names': typeof ApiPublicSyncJpNamesRoute
+  '/api/public/sync-missing-sets': typeof ApiPublicSyncMissingSetsRoute
   '/api/public/sync-prices': typeof ApiPublicSyncPricesRoute
 }
 export interface FileRouteTypes {
@@ -206,6 +216,7 @@ export interface FileRouteTypes {
     | '/api/public/sync-jp-english'
     | '/api/public/sync-jp-images'
     | '/api/public/sync-jp-names'
+    | '/api/public/sync-missing-sets'
     | '/api/public/sync-prices'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -226,6 +237,7 @@ export interface FileRouteTypes {
     | '/api/public/sync-jp-english'
     | '/api/public/sync-jp-images'
     | '/api/public/sync-jp-names'
+    | '/api/public/sync-missing-sets'
     | '/api/public/sync-prices'
   id:
     | '__root__'
@@ -247,6 +259,7 @@ export interface FileRouteTypes {
     | '/api/public/sync-jp-english'
     | '/api/public/sync-jp-images'
     | '/api/public/sync-jp-names'
+    | '/api/public/sync-missing-sets'
     | '/api/public/sync-prices'
   fileRoutesById: FileRoutesById
 }
@@ -268,6 +281,7 @@ export interface RootRouteChildren {
   ApiPublicSyncJpEnglishRoute: typeof ApiPublicSyncJpEnglishRoute
   ApiPublicSyncJpImagesRoute: typeof ApiPublicSyncJpImagesRoute
   ApiPublicSyncJpNamesRoute: typeof ApiPublicSyncJpNamesRoute
+  ApiPublicSyncMissingSetsRoute: typeof ApiPublicSyncMissingSetsRoute
   ApiPublicSyncPricesRoute: typeof ApiPublicSyncPricesRoute
 }
 
@@ -399,6 +413,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicSyncJpNamesRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/sync-missing-sets': {
+      id: '/api/public/sync-missing-sets'
+      path: '/api/public/sync-missing-sets'
+      fullPath: '/api/public/sync-missing-sets'
+      preLoaderRoute: typeof ApiPublicSyncMissingSetsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/sync-prices': {
       id: '/api/public/sync-prices'
       path: '/api/public/sync-prices'
@@ -438,6 +459,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiPublicSyncJpEnglishRoute: ApiPublicSyncJpEnglishRoute,
   ApiPublicSyncJpImagesRoute: ApiPublicSyncJpImagesRoute,
   ApiPublicSyncJpNamesRoute: ApiPublicSyncJpNamesRoute,
+  ApiPublicSyncMissingSetsRoute: ApiPublicSyncMissingSetsRoute,
   ApiPublicSyncPricesRoute: ApiPublicSyncPricesRoute,
 }
 export const routeTree = rootRouteImport
