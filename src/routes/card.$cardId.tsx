@@ -151,15 +151,23 @@ function CardDetail() {
             </div>
             <div className="mt-3 flex items-end gap-2">
               <p className="font-display text-3xl font-bold tabular-nums">
-                {money(headline)}
+                {market?.value != null ? money(market.value) : money(headline)}
               </p>
               <PriceDelta value={card.change7d} className="mb-1" />
             </div>
             <p className="mt-1 text-[11px] text-muted-foreground">
-              {headlineSource
-                ? `${SOURCE_META[headlineSource.source].label} live`
-                : "Last catalogue price"}
+              {market?.value != null
+                ? `Market price · average of last ${market.sampleSize} sale${market.sampleSize === 1 ? "" : "s"}`
+                : headlineSource
+                  ? `${SOURCE_META[headlineSource.source].label} live quote — no completed sales recorded yet`
+                  : "Last catalogue price"}
             </p>
+            {market?.value != null && market.lowConfidence && (
+              <span className="mt-1 inline-block rounded-md bg-surface-2 px-2 py-0.5 text-[10px] font-semibold text-muted-foreground">
+                Low confidence · fewer than 5 sales
+              </span>
+            )}
+
             {card.artist && (
               <p className="mt-1 text-[11px] text-muted-foreground">Illus. {card.artist}</p>
             )}
