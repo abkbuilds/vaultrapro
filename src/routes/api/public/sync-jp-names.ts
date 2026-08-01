@@ -1,7 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { z } from "zod";
 
-const bodySchema = z.object({ limit: z.number().int().min(1).max(1000).default(1000) });
+const bodySchema = z.object({ limit: z.number().int().min(1).max(20000).default(5000) });
 
 /** Translates remaining Japanese card names to English via PokéAPI. */
 export const Route = createFileRoute("/api/public/sync-jp-names")({
