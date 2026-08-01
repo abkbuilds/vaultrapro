@@ -12,6 +12,7 @@ import { useEffect, type ReactNode } from "react";
 import appCss from "../styles.css?url";
 import { reportLovableError } from "../lib/lovable-error-reporting";
 import { BottomNav } from "@/components/BottomNav";
+import { TopBar } from "@/components/TopBar";
 import { CollectionProvider } from "@/lib/tcg/collection";
 import { TradeProvider } from "@/lib/tcg/trades";
 import { AuthProvider } from "@/lib/auth";
@@ -141,6 +142,7 @@ function RootComponent() {
       <AuthProvider>
         <CollectionProvider>
           <TradeProvider>
+          <TopBar />
           <div className="mx-auto min-h-screen w-full max-w-lg pb-24">
             {/* Required: nested routes render here. */}
             <Outlet />

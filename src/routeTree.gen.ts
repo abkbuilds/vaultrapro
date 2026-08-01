@@ -25,6 +25,7 @@ import { Route as CardCardIdRouteImport } from './routes/card.$cardId'
 import { Route as ApiPublicRefreshPricesRouteImport } from './routes/api/public/refresh-prices'
 import { Route as ApiPublicSyncCatalogRouteImport } from './routes/api/public/sync-catalog'
 import { Route as ApiPublicSyncJpEnglishRouteImport } from './routes/api/public/sync-jp-english'
+import { Route as ApiPublicSyncJpNamesRouteImport } from './routes/api/public/sync-jp-names'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -105,6 +106,11 @@ const ApiPublicSyncJpEnglishRoute = ApiPublicSyncJpEnglishRouteImport.update({
   path: '/api/public/sync-jp-english',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiPublicSyncJpNamesRoute = ApiPublicSyncJpNamesRouteImport.update({
+  id: '/api/public/sync-jp-names',
+  path: '/api/public/sync-jp-names',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -122,6 +128,7 @@ export interface FileRoutesByFullPath {
   '/api/public/refresh-prices': typeof ApiPublicRefreshPricesRoute
   '/api/public/sync-catalog': typeof ApiPublicSyncCatalogRoute
   '/api/public/sync-jp-english': typeof ApiPublicSyncJpEnglishRoute
+  '/api/public/sync-jp-names': typeof ApiPublicSyncJpNamesRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -139,6 +146,7 @@ export interface FileRoutesByTo {
   '/api/public/refresh-prices': typeof ApiPublicRefreshPricesRoute
   '/api/public/sync-catalog': typeof ApiPublicSyncCatalogRoute
   '/api/public/sync-jp-english': typeof ApiPublicSyncJpEnglishRoute
+  '/api/public/sync-jp-names': typeof ApiPublicSyncJpNamesRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -158,6 +166,7 @@ export interface FileRoutesById {
   '/api/public/refresh-prices': typeof ApiPublicRefreshPricesRoute
   '/api/public/sync-catalog': typeof ApiPublicSyncCatalogRoute
   '/api/public/sync-jp-english': typeof ApiPublicSyncJpEnglishRoute
+  '/api/public/sync-jp-names': typeof ApiPublicSyncJpNamesRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -177,6 +186,7 @@ export interface FileRouteTypes {
     | '/api/public/refresh-prices'
     | '/api/public/sync-catalog'
     | '/api/public/sync-jp-english'
+    | '/api/public/sync-jp-names'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -194,6 +204,7 @@ export interface FileRouteTypes {
     | '/api/public/refresh-prices'
     | '/api/public/sync-catalog'
     | '/api/public/sync-jp-english'
+    | '/api/public/sync-jp-names'
   id:
     | '__root__'
     | '/'
@@ -212,6 +223,7 @@ export interface FileRouteTypes {
     | '/api/public/refresh-prices'
     | '/api/public/sync-catalog'
     | '/api/public/sync-jp-english'
+    | '/api/public/sync-jp-names'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -230,6 +242,7 @@ export interface RootRouteChildren {
   ApiPublicRefreshPricesRoute: typeof ApiPublicRefreshPricesRoute
   ApiPublicSyncCatalogRoute: typeof ApiPublicSyncCatalogRoute
   ApiPublicSyncJpEnglishRoute: typeof ApiPublicSyncJpEnglishRoute
+  ApiPublicSyncJpNamesRoute: typeof ApiPublicSyncJpNamesRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -346,6 +359,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicSyncJpEnglishRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/sync-jp-names': {
+      id: '/api/public/sync-jp-names'
+      path: '/api/public/sync-jp-names'
+      fullPath: '/api/public/sync-jp-names'
+      preLoaderRoute: typeof ApiPublicSyncJpNamesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -376,7 +396,18 @@ const rootRouteChildren: RootRouteChildren = {
   ApiPublicRefreshPricesRoute: ApiPublicRefreshPricesRoute,
   ApiPublicSyncCatalogRoute: ApiPublicSyncCatalogRoute,
   ApiPublicSyncJpEnglishRoute: ApiPublicSyncJpEnglishRoute,
+  ApiPublicSyncJpNamesRoute: ApiPublicSyncJpNamesRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
+
+import type { getRouter } from './router.tsx'
+import type { startInstance } from './start.ts'
+declare module '@tanstack/react-start' {
+  interface Register {
+    ssr: true
+    router: Awaited<ReturnType<typeof getRouter>>
+    config: Awaited<ReturnType<typeof startInstance.getOptions>>
+  }
+}

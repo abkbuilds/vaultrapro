@@ -134,9 +134,6 @@ function CardDetail() {
           <CardImage card={card} className="w-32 shrink-0 shadow-glow" />
           <div className="min-w-0 flex-1">
             <h1 className="text-xl leading-tight font-bold">{card.name}</h1>
-            {card.nativeName && (
-              <p className="text-sm text-muted-foreground">{card.nativeName}</p>
-            )}
             <p className="mt-1 text-xs text-muted-foreground">
               {card.setName} · {card.setCode} — {card.number}
             </p>
