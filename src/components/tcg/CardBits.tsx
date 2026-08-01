@@ -1,4 +1,5 @@
 import { Link } from "@tanstack/react-router";
+import { useEffect, useState } from "react";
 import { cn } from "@/lib/utils";
 import type { TcgCard } from "@/lib/tcg/types";
 
@@ -9,6 +10,10 @@ export function CardImage({
   card: TcgCard;
   className?: string;
 }) {
+  const [failed, setFailed] = useState(false);
+  useEffect(() => setFailed(false), [card.image]);
+  const showArt = Boolean(card.image) && !failed;
+
   return (
     <div
       className={cn(
@@ -16,19 +21,35 @@ export function CardImage({
         className,
       )}
     >
-      <img
-        src={card.image}
-        alt={`${card.name} — ${card.setName} ${card.number}`}
-        loading="lazy"
-        className="size-full object-cover"
-        onError={(e) => {
-          e.currentTarget.style.opacity = "0";
-        }}
-      />
+      {showArt ? (
+        <img
+          src={card.image}
+          alt={`${card.name} — ${card.setName} ${card.number}`}
+          loading="lazy"
+          referrerPolicy="no-referrer"
+          className="size-full object-cover"
+          onError={() => setFailed(true)}
+        />
+      ) : (
+        // No upstream artwork exists for this printing — show the card's real
+        // identity rather than a blank tile.
+        <div className="flex size-full flex-col items-center justify-center gap-1 bg-linear-to-b from-surface-2 to-surface p-2 text-center">
+          <span className="line-clamp-3 text-[10px] font-semibold leading-tight">
+            {card.name}
+          </span>
+          <span className="text-[9px] text-muted-foreground">
+            {card.setCode} {card.number}
+          </span>
+          <span className="text-[8px] uppercase tracking-wide text-muted-foreground/70">
+            No image
+          </span>
+        </div>
+      )}
       <span className="pointer-events-none absolute inset-0 bg-linear-to-t from-black/45 to-transparent opacity-60" />
     </div>
   );
 }
+
 
 export function PriceDelta({
   value,
