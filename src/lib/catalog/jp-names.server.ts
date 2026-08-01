@@ -41,7 +41,7 @@ const ENERGY_TYPES: Record<string, string> = {
   ドラゴン: "Dragon",
 };
 
-/** Suffixes that are already latin/наumeric and should be preserved. */
+/** Suffixes that are already latin or numeric and should be preserved. */
 const SUFFIX = /([\s]?(?:ex|EX|GX|V|VMAX|VSTAR|V-UNION|LV\.X|BREAK|δ|★|Prime)\s*)+$/;
 
 async function buildSpeciesMap(): Promise<Map<string, string>> {
