@@ -112,45 +112,61 @@ export interface JpNameResult {
 }
 
 export async function runJpNameSync(opts: { limit?: number }): Promise<JpNameResult> {
-  const limit = opts.limit ?? 1500;
+  const maxPages = Math.max(1, Math.ceil((opts.limit ?? 5000) / 1000));
   const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-
-  const { data, error, count } = await supabaseAdmin
-    .from("tcg_cards")
-    .select("id,name", { count: "exact" })
-    .eq("language", "JP")
-    .is("english_name", null)
-    .limit(Math.min(limit, 1000));
-  if (error) throw new Error(error.message);
-  const rows = (data ?? []) as { id: string; name: string }[];
-  if (!rows.length) return { candidates: 0, translated: 0, remaining: 0, done: true };
 
   const species = await buildSpeciesMap();
 
+  let candidates = 0;
   let translated = 0;
-  const chunk: { id: string; english_name: string }[] = [];
-  for (const row of rows) {
-    const en = translateName(row.name, species);
-    if (en) chunk.push({ id: row.id, english_name: en });
+  // Untranslatable rows stay NULL, so page through with an offset rather than
+  // re-reading the same first page every call.
+  let offset = 0;
+  for (let page = 0; page < maxPages; page++) {
+    const { data, error } = await supabaseAdmin
+      .from("tcg_cards")
+      .select("id,name")
+      .eq("language", "JP")
+      .is("english_name", null)
+      .order("id")
+      .range(offset, offset + 999);
+    if (error) throw new Error(error.message);
+    const rows = (data ?? []) as { id: string; name: string }[];
+    if (!rows.length) break;
+    candidates += rows.length;
+
+    const updates = rows
+      .map((r) => ({ id: r.id, english_name: translateName(r.name, species) }))
+      .filter((u): u is { id: string; english_name: string } => Boolean(u.english_name));
+
+    for (let i = 0; i < updates.length; i += 200) {
+      await Promise.all(
+        updates
+          .slice(i, i + 200)
+          .map((c) =>
+            supabaseAdmin
+              .from("tcg_cards")
+              .update({ english_name: c.english_name })
+              .eq("id", c.id),
+          ),
+      );
+    }
+    translated += updates.length;
+    // Rows we could not translate remain in the result set, so skip past them.
+    offset += rows.length - updates.length;
+    if (rows.length < 1000) break;
   }
 
-  for (let i = 0; i < chunk.length; i += 200) {
-    await Promise.all(
-      chunk.slice(i, i + 200).map((c) =>
-        supabaseAdmin
-          .from("tcg_cards")
-          .update({ english_name: c.english_name })
-          .eq("id", c.id),
-      ),
-    );
-    translated += Math.min(200, chunk.length - i);
-  }
+  const { count } = await supabaseAdmin
+    .from("tcg_cards")
+    .select("id", { count: "exact", head: true })
+    .eq("language", "JP")
+    .is("english_name", null);
 
-  const remaining = Math.max(0, (count ?? rows.length) - translated);
   return {
-    candidates: rows.length,
+    candidates,
     translated,
-    remaining,
-    done: translated === 0 || remaining === 0,
+    remaining: count ?? 0,
+    done: translated === 0,
   };
 }
