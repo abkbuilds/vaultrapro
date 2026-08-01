@@ -66,8 +66,8 @@ async function buildSpeciesMap(): Promise<Map<string, string>> {
         const en = data.names.find((n) => n.language.name === "en")?.name;
         if (!en) continue;
         for (const n of data.names) {
-          if (n.language.name === "ja" || n.language.name === "ja-Hrkt") {
-            map.set(n.name, en);
+          if (n.language.name === "ja" || n.language.name === "ja-Hrkt" || n.language.name === "roomaji") {
+            map.set(n.name.normalize("NFKC").replace(/\s+/g, ""), en);
           }
         }
       } catch {
@@ -79,8 +79,15 @@ async function buildSpeciesMap(): Promise<Map<string, string>> {
   return map;
 }
 
+function titleCase(s: string) {
+  return s.replace(/\b[a-z]/g, (c) => c.toUpperCase());
+}
+
 export function translateName(raw: string, species: Map<string, string>): string | null {
-  const name = raw.trim();
+  const name = raw.normalize("NFKC").replace(/\s+/g, " ").trim();
+
+  // Some upstream records already carry a latin name (with inconsistent case).
+  if (/^[\x20-\x7E]+$/.test(name)) return titleCase(name);
 
   for (const [re, out] of TERMS) {
     const m = name.match(re);
@@ -96,7 +103,8 @@ export function translateName(raw: string, species: Map<string, string>): string
   // "Trainer's Pokémon" style prefixes, e.g. "サカキのニドキング".
   const owner = base.match(/^(.+?)の(.+)$/);
   const core = owner ? owner[2] : base;
-  const en = species.get(core);
+  const key = core.normalize("NFKC").replace(/\s+/g, "");
+  const en = species.get(key);
   if (!en) return null;
 
   const ownerEn = owner ? species.get(owner[1]) : null;
