@@ -6,7 +6,7 @@ import { ChevronLeft, Handshake, Heart, Loader2, Plus } from "lucide-react";
 import { toast } from "sonner";
 import { getCard } from "@/lib/tcg/cards";
 import { fetchCardById } from "@/lib/catalog/queries";
-import { fetchCardPrices } from "@/lib/prices/prices.functions";
+import { fetchCardPrices, fetchCardSales } from "@/lib/prices/prices.functions";
 import {
   CONDITIONS,
   SOURCE_META,
