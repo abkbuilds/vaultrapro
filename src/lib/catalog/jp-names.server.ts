@@ -83,6 +83,92 @@ function titleCase(s: string) {
   return s.replace(/\b[a-z]/g, (c) => c.toUpperCase());
 }
 
+
+/** Minimal katakana → romaji table for matching transliterated English names. */
+const KANA: Record<string, string> = {
+  ア:"a",イ:"i",ウ:"u",エ:"e",オ:"o",カ:"ka",キ:"ki",ク:"ku",ケ:"ke",コ:"ko",
+  サ:"sa",シ:"shi",ス:"su",セ:"se",ソ:"so",タ:"ta",チ:"chi",ツ:"tsu",テ:"te",ト:"to",
+  ナ:"na",ニ:"ni",ヌ:"nu",ネ:"ne",ノ:"no",ハ:"ha",ヒ:"hi",フ:"fu",ヘ:"he",ホ:"ho",
+  マ:"ma",ミ:"mi",ム:"mu",メ:"me",モ:"mo",ヤ:"ya",ユ:"yu",ヨ:"yo",
+  ラ:"ra",リ:"ri",ル:"ru",レ:"re",ロ:"ro",ワ:"wa",ヲ:"o",ン:"n",
+  ガ:"ga",ギ:"gi",グ:"gu",ゲ:"ge",ゴ:"go",ザ:"za",ジ:"ji",ズ:"zu",ゼ:"ze",ゾ:"zo",
+  ダ:"da",ヂ:"ji",ヅ:"zu",デ:"de",ド:"do",バ:"ba",ビ:"bi",ブ:"bu",ベ:"be",ボ:"bo",
+  パ:"pa",ピ:"pi",プ:"pu",ペ:"pe",ポ:"po",ヴ:"vu",
+};
+const SMALL: Record<string, string> = { ャ:"ya", ュ:"yu", ョ:"yo", ァ:"a", ィ:"i", ゥ:"u", ェ:"e", ォ:"o" };
+
+function romaji(kana: string): string {
+  let out = "";
+  const chars = [...kana];
+  for (let i = 0; i < chars.length; i++) {
+    const c = chars[i]!;
+    if (c === "ー") continue;
+    if (c === "ッ") continue;
+    const small = SMALL[chars[i + 1] ?? ""];
+    const base = KANA[c];
+    if (!base) { out += c.toLowerCase(); continue; }
+    if (small) {
+      out += base.replace(/(sh|ch|j)?[aiueo]$/, (m, d) => (d ? d + small.slice(-1) : base[0] + small));
+      i++;
+    } else {
+      out += base;
+    }
+  }
+  return out;
+}
+
+/** Collapse spelling noise so transliterations compare cleanly. */
+function fold(s: string): string {
+  return s
+    .toLowerCase()
+    .replace(/[^a-z]/g, "")
+    .replace(/l/g, "r")
+    .replace(/([bcdfghjkmnpqrstvwxyz])u(?![aiueo])/g, "$1")
+    .replace(/(.)\1+/g, "$1");
+}
+
+function distance(a: string, b: string): number {
+  const dp = Array.from({ length: b.length + 1 }, (_, j) => j);
+  for (let i = 1; i <= a.length; i++) {
+    let prev = dp[0]!;
+    dp[0] = i;
+    for (let j = 1; j <= b.length; j++) {
+      const tmp = dp[j]!;
+      dp[j] = Math.min(dp[j]! + 1, dp[j - 1]! + 1, prev + (a[i - 1] === b[j - 1] ? 0 : 1));
+      prev = tmp;
+    }
+  }
+  return dp[b.length]!;
+}
+
+let englishIndex: [string, string][] | null = null;
+function buildEnglishIndex(species: Map<string, string>): [string, string][] {
+  if (englishIndex) return englishIndex;
+  const seen = new Set<string>();
+  englishIndex = [];
+  for (const en of species.values()) {
+    if (seen.has(en)) continue;
+    seen.add(en);
+    englishIndex.push([fold(en), en]);
+  }
+  return englishIndex;
+}
+
+/** Matches machine-transliterated katakana (e.g. マグネトン) to "Magneton". */
+function matchTransliteration(core: string, species: Map<string, string>): string | null {
+  if (!/^[ァ-ヴー・]+$/.test(core)) return null;
+  const target = fold(romaji(core));
+  if (target.length < 4) return null;
+  let best: { name: string; d: number } | null = null;
+  for (const [folded, en] of buildEnglishIndex(species)) {
+    const d = distance(target, folded);
+    if (!best || d < best.d) best = { name: en, d };
+    if (d === 0) break;
+  }
+  const tolerance = target.length >= 8 ? 2 : 1;
+  return best && best.d <= tolerance ? best.name : null;
+}
+
 export function translateName(raw: string, species: Map<string, string>): string | null {
   const name = raw.normalize("NFKC").replace(/\s+/g, " ").trim();
 
@@ -104,7 +190,7 @@ export function translateName(raw: string, species: Map<string, string>): string
   const owner = base.match(/^(.+?)の(.+)$/);
   const core = owner ? owner[2] : base;
   const key = core.normalize("NFKC").replace(/\s+/g, "");
-  const en = species.get(key);
+  const en = species.get(key) ?? matchTransliteration(core, species);
   if (!en) return null;
 
   const ownerEn = owner ? species.get(owner[1]) : null;
