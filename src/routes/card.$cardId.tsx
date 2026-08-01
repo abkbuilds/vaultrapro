@@ -278,6 +278,87 @@ function CardDetail() {
       </section>
 
       <section className="mt-5 px-4">
+        <div className="flex items-baseline justify-between pb-2">
+          <h2 className="font-display text-lg font-semibold">Sale history</h2>
+          {market?.value != null && (
+            <span className="text-[11px] text-muted-foreground">
+              Market {money(market.value)} · last {market.sampleSize} sale
+              {market.sampleSize === 1 ? "" : "s"}
+              {market.lowConfidence ? " (low confidence)" : ""}
+            </span>
+          )}
+        </div>
+        <div className="overflow-hidden rounded-2xl bg-surface">
+          {salesQuery.isLoading ? (
+            <div className="grid h-24 place-items-center text-muted-foreground">
+              <Loader2 className="size-5 animate-spin" />
+            </div>
+          ) : salesQuery.isError ? (
+            <p className="px-3 py-4 text-center text-xs text-destructive">
+              Couldn't load sale history.
+            </p>
+          ) : sales.length ? (
+            <table className="w-full text-left text-xs">
+              <thead className="text-muted-foreground">
+                <tr className="border-b border-border">
+                  <th className="px-3 py-2 font-medium">Sold</th>
+                  <th className="px-3 py-2 font-medium">Source</th>
+                  <th className="px-3 py-2 font-medium">Condition</th>
+                  <th className="px-3 py-2 text-right font-medium">Price</th>
+                </tr>
+              </thead>
+              <tbody>
+                {sales.map((s) => (
+                  <tr key={s.id} className="border-b border-border/50 last:border-0">
+                    <td className="px-3 py-2 whitespace-nowrap">
+                      {new Date(s.soldAt).toLocaleDateString()}{" "}
+                      <span className="text-muted-foreground">
+                        {new Date(s.soldAt).toLocaleTimeString([], {
+                          hour: "2-digit",
+                          minute: "2-digit",
+                        })}
+                      </span>
+                    </td>
+                    <td className="px-3 py-2">
+                      {s.url ? (
+                        <a
+                          href={s.url}
+                          target="_blank"
+                          rel="noreferrer noopener"
+                          className="underline decoration-dotted"
+                        >
+                          {SOURCE_META[s.source].label}
+                        </a>
+                      ) : (
+                        SOURCE_META[s.source].label
+                      )}
+                    </td>
+                    <td className="px-3 py-2 text-muted-foreground">{s.condition ?? "—"}</td>
+                    <td className="px-3 py-2 text-right font-semibold tabular-nums">
+                      {s.currency === "JPY"
+                        ? `¥${s.price.toLocaleString()}`
+                        : money(s.price, s.currency)}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          ) : (
+            <p className="px-3 py-5 text-center text-xs text-muted-foreground">
+              No completed sales recorded yet for {card.name} ({card.setCode} {card.number}).
+              Sales are ingested from{" "}
+              {(salesQuery.data?.sources ?? [])
+                .map((s) => SOURCE_META[s].label)
+                .join(" and ")}{" "}
+              — nothing is estimated.
+            </p>
+          )}
+        </div>
+      </section>
+
+
+
+      <section className="mt-5 px-4">
         <h2 className="pb-2 font-display text-lg font-semibold">Add to collection</h2>
         <div className="no-scrollbar flex gap-1.5 overflow-x-auto">
           {CONDITIONS.map((c) => (
