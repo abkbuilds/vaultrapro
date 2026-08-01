@@ -140,11 +140,6 @@ function ScanPage() {
                 <div className="flex items-start justify-between gap-2">
                   <div className="min-w-0">
                     <p className="truncate font-display text-lg font-bold">{card.name}</p>
-                    {card.nativeName && (
-                      <p className="truncate text-xs text-muted-foreground">
-                        {card.nativeName}
-                      </p>
-                    )}
                   </div>
                   <button
                     type="button"
