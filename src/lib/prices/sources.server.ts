@@ -96,6 +96,27 @@ export async function quoteTcgplayer(card: {
     }
   }
 
+  // Last resort: PokéWallet republishes TCGplayer's price block for EN and JP
+  // printings (keyed API), which covers products the keyless mirrors miss.
+  {
+    const { pokewalletLookup } = await import("./pokewallet.server");
+    const match = await pokewalletLookup({
+      id: cardId,
+      name: (card as { name?: string }).name ?? "",
+      number: card.number ?? "",
+      setCode: card.setCode,
+    });
+    if (match?.tcgplayerUsd != null) {
+      return {
+        source: "tcgplayer",
+        price: match.tcgplayerUsd,
+        currency: "USD",
+        live: true,
+        note: "via PokéWallet",
+      };
+    }
+  }
+
   return {
     source: "tcgplayer",
     price: null,
@@ -104,6 +125,7 @@ export async function quoteTcgplayer(card: {
     note: "No TCGplayer listing for this printing",
   };
 }
+
 
 
 /* ------------------------------- Cardmarket ------------------------------ */
