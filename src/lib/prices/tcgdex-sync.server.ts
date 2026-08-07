@@ -90,6 +90,19 @@ async function fetchOne(cardId: string, jp: boolean): Promise<CardPricing | null
   }
 }
 
+type CardRow = { id: string; set_code: string | null; number: string };
+
+/** Tries each plausible TCGdex id until one returns a real Cardmarket reading. */
+async function fetchPricing(card: CardRow): Promise<CardPricing | null> {
+  const jp = card.id.startsWith("jp-");
+  for (const id of tcgdexIds(card)) {
+    const hit = await fetchOne(id, jp);
+    if (hit) return hit;
+  }
+  return null;
+}
+
+
 export interface TcgdexSyncArgs {
   language: "EN" | "JP";
   limit: number;
@@ -107,7 +120,7 @@ export async function runTcgdexSync(args: TcgdexSyncArgs) {
 
   let q = supabaseAdmin
     .from("tcg_cards")
-    .select("id")
+    .select("id,set_code,number")
     .eq("language", args.language)
     .order("id", { ascending: true })
     .range(args.offset, args.offset + args.limit - 1);
@@ -115,7 +128,7 @@ export async function runTcgdexSync(args: TcgdexSyncArgs) {
 
   const { data, error } = await q;
   if (error) return { ok: false, error: error.message };
-  const rows = (data ?? []) as unknown as { id: string }[];
+  const rows = (data ?? []) as unknown as CardRow[];
 
   const rate = await eurToUsd();
   const points: Record<string, unknown>[] = [];
@@ -127,8 +140,9 @@ export async function runTcgdexSync(args: TcgdexSyncArgs) {
   for (let i = 0; i < rows.length; i += CONCURRENCY) {
     const chunk = rows.slice(i, i + CONCURRENCY);
     const results = await Promise.all(
-      chunk.map(async (row) => ({ id: row.id, pricing: await fetchPricing(row.id) })),
+      chunk.map(async (row) => ({ id: row.id, pricing: await fetchPricing(row) })),
     );
+
     for (const { id, pricing } of results) {
       if (!pricing || pricing.now == null) continue;
       const usd = Number((pricing.now * rate).toFixed(2));
