@@ -28,6 +28,7 @@ import { Route as ApiPublicSyncJpEnglishRouteImport } from './routes/api/public/
 import { Route as ApiPublicSyncJpImagesRouteImport } from './routes/api/public/sync-jp-images'
 import { Route as ApiPublicSyncJpNamesRouteImport } from './routes/api/public/sync-jp-names'
 import { Route as ApiPublicSyncMissingSetsRouteImport } from './routes/api/public/sync-missing-sets'
+import { Route as ApiPublicSyncPokewalletRouteImport } from './routes/api/public/sync-pokewallet'
 import { Route as ApiPublicSyncPricesRouteImport } from './routes/api/public/sync-prices'
 
 const IndexRoute = IndexRouteImport.update({
@@ -125,6 +126,11 @@ const ApiPublicSyncMissingSetsRoute =
     path: '/api/public/sync-missing-sets',
     getParentRoute: () => rootRouteImport,
   } as any)
+const ApiPublicSyncPokewalletRoute = ApiPublicSyncPokewalletRouteImport.update({
+  id: '/api/public/sync-pokewallet',
+  path: '/api/public/sync-pokewallet',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiPublicSyncPricesRoute = ApiPublicSyncPricesRouteImport.update({
   id: '/api/public/sync-prices',
   path: '/api/public/sync-prices',
@@ -150,6 +156,7 @@ export interface FileRoutesByFullPath {
   '/api/public/sync-jp-images': typeof ApiPublicSyncJpImagesRoute
   '/api/public/sync-jp-names': typeof ApiPublicSyncJpNamesRoute
   '/api/public/sync-missing-sets': typeof ApiPublicSyncMissingSetsRoute
+  '/api/public/sync-pokewallet': typeof ApiPublicSyncPokewalletRoute
   '/api/public/sync-prices': typeof ApiPublicSyncPricesRoute
 }
 export interface FileRoutesByTo {
@@ -171,6 +178,7 @@ export interface FileRoutesByTo {
   '/api/public/sync-jp-images': typeof ApiPublicSyncJpImagesRoute
   '/api/public/sync-jp-names': typeof ApiPublicSyncJpNamesRoute
   '/api/public/sync-missing-sets': typeof ApiPublicSyncMissingSetsRoute
+  '/api/public/sync-pokewallet': typeof ApiPublicSyncPokewalletRoute
   '/api/public/sync-prices': typeof ApiPublicSyncPricesRoute
 }
 export interface FileRoutesById {
@@ -194,6 +202,7 @@ export interface FileRoutesById {
   '/api/public/sync-jp-images': typeof ApiPublicSyncJpImagesRoute
   '/api/public/sync-jp-names': typeof ApiPublicSyncJpNamesRoute
   '/api/public/sync-missing-sets': typeof ApiPublicSyncMissingSetsRoute
+  '/api/public/sync-pokewallet': typeof ApiPublicSyncPokewalletRoute
   '/api/public/sync-prices': typeof ApiPublicSyncPricesRoute
 }
 export interface FileRouteTypes {
@@ -217,6 +226,7 @@ export interface FileRouteTypes {
     | '/api/public/sync-jp-images'
     | '/api/public/sync-jp-names'
     | '/api/public/sync-missing-sets'
+    | '/api/public/sync-pokewallet'
     | '/api/public/sync-prices'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -238,6 +248,7 @@ export interface FileRouteTypes {
     | '/api/public/sync-jp-images'
     | '/api/public/sync-jp-names'
     | '/api/public/sync-missing-sets'
+    | '/api/public/sync-pokewallet'
     | '/api/public/sync-prices'
   id:
     | '__root__'
@@ -260,6 +271,7 @@ export interface FileRouteTypes {
     | '/api/public/sync-jp-images'
     | '/api/public/sync-jp-names'
     | '/api/public/sync-missing-sets'
+    | '/api/public/sync-pokewallet'
     | '/api/public/sync-prices'
   fileRoutesById: FileRoutesById
 }
@@ -282,6 +294,7 @@ export interface RootRouteChildren {
   ApiPublicSyncJpImagesRoute: typeof ApiPublicSyncJpImagesRoute
   ApiPublicSyncJpNamesRoute: typeof ApiPublicSyncJpNamesRoute
   ApiPublicSyncMissingSetsRoute: typeof ApiPublicSyncMissingSetsRoute
+  ApiPublicSyncPokewalletRoute: typeof ApiPublicSyncPokewalletRoute
   ApiPublicSyncPricesRoute: typeof ApiPublicSyncPricesRoute
 }
 
@@ -420,6 +433,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicSyncMissingSetsRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/sync-pokewallet': {
+      id: '/api/public/sync-pokewallet'
+      path: '/api/public/sync-pokewallet'
+      fullPath: '/api/public/sync-pokewallet'
+      preLoaderRoute: typeof ApiPublicSyncPokewalletRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/sync-prices': {
       id: '/api/public/sync-prices'
       path: '/api/public/sync-prices'
@@ -460,18 +480,9 @@ const rootRouteChildren: RootRouteChildren = {
   ApiPublicSyncJpImagesRoute: ApiPublicSyncJpImagesRoute,
   ApiPublicSyncJpNamesRoute: ApiPublicSyncJpNamesRoute,
   ApiPublicSyncMissingSetsRoute: ApiPublicSyncMissingSetsRoute,
+  ApiPublicSyncPokewalletRoute: ApiPublicSyncPokewalletRoute,
   ApiPublicSyncPricesRoute: ApiPublicSyncPricesRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { startInstance } from './start.ts'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-    config: Awaited<ReturnType<typeof startInstance.getOptions>>
-  }
-}
