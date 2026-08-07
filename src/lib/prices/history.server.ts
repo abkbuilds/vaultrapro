@@ -134,7 +134,13 @@ export async function snapshotCard(card: CardLike) {
 
   // Cardmarket publishes real 1/7/30 day averages, so a brand new card
   // immediately gets three genuine dated readings.
-  for (const seed of await cardmarketHistorySeeds(card.id)) {
+  for (const seed of await cardmarketHistorySeeds({
+    id: card.id,
+    name: card.name,
+    number: card.number,
+    setCode: card.setCode,
+  })) {
+
     const d = new Date();
     d.setDate(d.getDate() - seed.daysAgo);
     rowsToStore.push({

@@ -409,11 +409,19 @@ export async function quoteAll(card: {
     tcgplayer: () =>
       quoteTcgplayer({
         id: card.id,
+        name: card.name,
         setCode: card.setCode,
         number: card.number,
         language: card.language,
       }),
-    cardmarket: () => quoteCardmarket(card.id),
+    cardmarket: () =>
+      quoteCardmarket({
+        id: card.id,
+        name: card.name,
+        number: card.number,
+        setCode: card.setCode,
+      }),
+
     ebay: () => quoteEbay(query),
     pricecharting: () => quotePriceCharting(query),
     snkrdunk: () => quoteSnkrdunk(query),
