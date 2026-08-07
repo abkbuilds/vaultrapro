@@ -43,11 +43,30 @@ interface CardPricing {
   seeds: { daysAgo: number; price: number }[];
 }
 
-async function fetchPricing(cardId: string): Promise<CardPricing | null> {
-  const jp = cardId.startsWith("jp-");
-  const url = `${TCGDEX}/${jp ? "ja" : "en"}/cards/${cardId.replace(/^(jp|en)-/, "")}`;
+/**
+ * TCGdex ids look like `SET-NUMBER`. Our catalogue ids usually match once the
+ * language prefix is stripped, but promos scraped from TCGplayer carry a
+ * synthetic `tp-<productId>` id — for those we rebuild the id from set code
+ * and card number.
+ */
+function tcgdexIds(card: { id: string; set_code: string | null; number: string }): string[] {
+  const bare = card.id.replace(/^(jp|en)-/, "");
+  const ids = [bare];
+  const code = card.set_code?.toUpperCase();
+  if (code) {
+    const num = (card.number.split("/")[0] ?? card.number).trim();
+    ids.push(`${code}-${num}`);
+    const padded = num.replace(/^0+(?=\d)/, "").padStart(3, "0");
+    if (padded !== num) ids.push(`${code}-${padded}`);
+  }
+  return [...new Set(ids.filter((i) => i && !i.startsWith("tp-")))];
+}
+
+async function fetchOne(cardId: string, jp: boolean): Promise<CardPricing | null> {
+  const url = `${TCGDEX}/${jp ? "ja" : "en"}/cards/${cardId}`;
   try {
     const res = await fetch(url, { headers: { accept: "application/json" } });
+
     if (!res.ok) return null;
     const json = (await res.json()) as { pricing?: { cardmarket?: CmBlock | null } };
     const block = json?.pricing?.cardmarket;
