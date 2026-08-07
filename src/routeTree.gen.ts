@@ -30,6 +30,7 @@ import { Route as ApiPublicSyncJpNamesRouteImport } from './routes/api/public/sy
 import { Route as ApiPublicSyncMissingSetsRouteImport } from './routes/api/public/sync-missing-sets'
 import { Route as ApiPublicSyncPokewalletRouteImport } from './routes/api/public/sync-pokewallet'
 import { Route as ApiPublicSyncPricesRouteImport } from './routes/api/public/sync-prices'
+import { Route as ApiPublicSyncTcgdexRouteImport } from './routes/api/public/sync-tcgdex'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -136,6 +137,11 @@ const ApiPublicSyncPricesRoute = ApiPublicSyncPricesRouteImport.update({
   path: '/api/public/sync-prices',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiPublicSyncTcgdexRoute = ApiPublicSyncTcgdexRouteImport.update({
+  id: '/api/public/sync-tcgdex',
+  path: '/api/public/sync-tcgdex',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -158,6 +164,7 @@ export interface FileRoutesByFullPath {
   '/api/public/sync-missing-sets': typeof ApiPublicSyncMissingSetsRoute
   '/api/public/sync-pokewallet': typeof ApiPublicSyncPokewalletRoute
   '/api/public/sync-prices': typeof ApiPublicSyncPricesRoute
+  '/api/public/sync-tcgdex': typeof ApiPublicSyncTcgdexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -180,6 +187,7 @@ export interface FileRoutesByTo {
   '/api/public/sync-missing-sets': typeof ApiPublicSyncMissingSetsRoute
   '/api/public/sync-pokewallet': typeof ApiPublicSyncPokewalletRoute
   '/api/public/sync-prices': typeof ApiPublicSyncPricesRoute
+  '/api/public/sync-tcgdex': typeof ApiPublicSyncTcgdexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -204,6 +212,7 @@ export interface FileRoutesById {
   '/api/public/sync-missing-sets': typeof ApiPublicSyncMissingSetsRoute
   '/api/public/sync-pokewallet': typeof ApiPublicSyncPokewalletRoute
   '/api/public/sync-prices': typeof ApiPublicSyncPricesRoute
+  '/api/public/sync-tcgdex': typeof ApiPublicSyncTcgdexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -228,6 +237,7 @@ export interface FileRouteTypes {
     | '/api/public/sync-missing-sets'
     | '/api/public/sync-pokewallet'
     | '/api/public/sync-prices'
+    | '/api/public/sync-tcgdex'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -250,6 +260,7 @@ export interface FileRouteTypes {
     | '/api/public/sync-missing-sets'
     | '/api/public/sync-pokewallet'
     | '/api/public/sync-prices'
+    | '/api/public/sync-tcgdex'
   id:
     | '__root__'
     | '/'
@@ -273,6 +284,7 @@ export interface FileRouteTypes {
     | '/api/public/sync-missing-sets'
     | '/api/public/sync-pokewallet'
     | '/api/public/sync-prices'
+    | '/api/public/sync-tcgdex'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -296,6 +308,7 @@ export interface RootRouteChildren {
   ApiPublicSyncMissingSetsRoute: typeof ApiPublicSyncMissingSetsRoute
   ApiPublicSyncPokewalletRoute: typeof ApiPublicSyncPokewalletRoute
   ApiPublicSyncPricesRoute: typeof ApiPublicSyncPricesRoute
+  ApiPublicSyncTcgdexRoute: typeof ApiPublicSyncTcgdexRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -447,6 +460,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicSyncPricesRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/sync-tcgdex': {
+      id: '/api/public/sync-tcgdex'
+      path: '/api/public/sync-tcgdex'
+      fullPath: '/api/public/sync-tcgdex'
+      preLoaderRoute: typeof ApiPublicSyncTcgdexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -482,6 +502,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiPublicSyncMissingSetsRoute: ApiPublicSyncMissingSetsRoute,
   ApiPublicSyncPokewalletRoute: ApiPublicSyncPokewalletRoute,
   ApiPublicSyncPricesRoute: ApiPublicSyncPricesRoute,
+  ApiPublicSyncTcgdexRoute: ApiPublicSyncTcgdexRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
