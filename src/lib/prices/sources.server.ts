@@ -53,10 +53,12 @@ function median(values: number[]) {
 
 export async function quoteTcgplayer(card: {
   id: string;
+  name?: string;
   setCode?: string;
   number?: string;
   language?: string;
 }): Promise<Quote> {
+
   const cardId = card.id;
   // English cards: the Pokémon TCG API republishes TCGplayer's price block.
   if (cardId.startsWith("en-")) {
@@ -96,6 +98,27 @@ export async function quoteTcgplayer(card: {
     }
   }
 
+  // Last resort: PokéWallet republishes TCGplayer's price block for EN and JP
+  // printings (keyed API), which covers products the keyless mirrors miss.
+  {
+    const { pokewalletLookup } = await import("./pokewallet.server");
+    const match = await pokewalletLookup({
+      id: cardId,
+      name: (card as { name?: string }).name ?? "",
+      number: card.number ?? "",
+      setCode: card.setCode,
+    });
+    if (match?.tcgplayerUsd != null) {
+      return {
+        source: "tcgplayer",
+        price: match.tcgplayerUsd,
+        currency: "USD",
+        live: true,
+        note: "via PokéWallet",
+      };
+    }
+  }
+
   return {
     source: "tcgplayer",
     price: null,
@@ -104,6 +127,7 @@ export async function quoteTcgplayer(card: {
     note: "No TCGplayer listing for this printing",
   };
 }
+
 
 
 /* ------------------------------- Cardmarket ------------------------------ */
@@ -154,53 +178,95 @@ function pickNumber(block: CardmarketBlock, keys: string[]) {
   return null;
 }
 
-export async function quoteCardmarket(cardId: string): Promise<Quote> {
-  const block = await cardmarketBlock(cardId);
-  if (!block) {
+export interface CardRef {
+  id: string;
+  name?: string;
+  number?: string;
+  setCode?: string;
+}
+
+function refOf(card: string | CardRef): CardRef {
+  return typeof card === "string" ? { id: card } : card;
+}
+
+export async function quoteCardmarket(input: string | CardRef): Promise<Quote> {
+  const card = refOf(input);
+  const block = await cardmarketBlock(card.id);
+  const rate = await eurToUsd();
+  const eur = block ? pickNumber(block, ["trend-holo", "trend", "avg-holo", "avg", "low"]) : null;
+  if (eur != null) {
     return {
       source: "cardmarket",
-      price: null,
-      currency: "EUR",
-      live: false,
-      note: "No Cardmarket listing for this printing",
+      price: Number((eur * rate).toFixed(2)),
+      currency: "USD",
+      live: true,
+      note: `Cardmarket trend \u20ac${eur.toFixed(2)} at ECB ${rate.toFixed(3)}`,
     };
   }
-  const eur = pickNumber(block, ["trend-holo", "trend", "avg-holo", "avg", "low"]);
-  const rate = await eurToUsd();
-  const price = eur == null ? null : Number((eur * rate).toFixed(2));
+
+  // PokéWallet also republishes Cardmarket, and covers printings TCGdex misses.
+  const { pokewalletLookup } = await import("./pokewallet.server");
+  const match = await pokewalletLookup({
+    id: card.id,
+    name: card.name ?? "",
+    number: card.number ?? "",
+    setCode: card.setCode,
+  });
+  if (match?.cardmarketEur != null) {
+    return {
+      source: "cardmarket",
+      price: Number((match.cardmarketEur * rate).toFixed(2)),
+      currency: "USD",
+      live: true,
+      note: `Cardmarket trend \u20ac${match.cardmarketEur.toFixed(2)} via Pok\u00e9Wallet`,
+    };
+  }
+
   return {
     source: "cardmarket",
-    price,
+    price: null,
     currency: "USD",
-    live: price != null,
-    note:
-      eur == null
-        ? "Cardmarket has no price yet"
-        : `Cardmarket trend \u20ac${eur.toFixed(2)} at ECB ${rate.toFixed(3)}`,
+    live: false,
+    note: block ? "Cardmarket has no price yet" : "No Cardmarket listing for this printing",
   };
 }
 
 /**
  * Real dated readings we can backfill immediately: Cardmarket's 1, 7 and 30 day
- * averages. Returned oldest-first as `{ daysAgo, price }`.
+ * averages (from TCGdex, falling back to PokéWallet). Oldest-first.
  */
-export async function cardmarketHistorySeeds(cardId: string) {
-  const block = await cardmarketBlock(cardId);
-  if (!block) return [];
-  const holo = typeof block["trend-holo"] === "number" && (block["trend-holo"] as number) > 0;
-  const key = (base: string) => (holo ? `${base}-holo` : base);
+export async function cardmarketHistorySeeds(input: string | CardRef) {
+  const card = refOf(input);
   const rate = await eurToUsd();
+  const block = await cardmarketBlock(card.id);
   const seeds: { daysAgo: number; price: number }[] = [];
-  for (const [daysAgo, base] of [
-    [30, "avg30"],
-    [7, "avg7"],
-    [1, "avg1"],
-  ] as const) {
-    const v = pickNumber(block, [key(base), base]);
-    if (v != null) seeds.push({ daysAgo, price: Number((v * rate).toFixed(2)) });
+  if (block) {
+    const holo = typeof block["trend-holo"] === "number" && (block["trend-holo"] as number) > 0;
+    const key = (base: string) => (holo ? `${base}-holo` : base);
+    for (const [daysAgo, base] of [
+      [30, "avg30"],
+      [7, "avg7"],
+      [1, "avg1"],
+    ] as const) {
+      const v = pickNumber(block, [key(base), base]);
+      if (v != null) seeds.push({ daysAgo, price: Number((v * rate).toFixed(2)) });
+    }
   }
-  return seeds;
+  if (seeds.length) return seeds;
+
+  const { pokewalletLookup } = await import("./pokewallet.server");
+  const match = await pokewalletLookup({
+    id: card.id,
+    name: card.name ?? "",
+    number: card.number ?? "",
+    setCode: card.setCode,
+  });
+  return (match?.cardmarketSeedsEur ?? []).map((s) => ({
+    daysAgo: s.daysAgo,
+    price: Number((s.price * rate).toFixed(2)),
+  }));
 }
+
 
 /* --------------------------------- eBay --------------------------------- */
 
@@ -343,11 +409,19 @@ export async function quoteAll(card: {
     tcgplayer: () =>
       quoteTcgplayer({
         id: card.id,
+        name: card.name,
         setCode: card.setCode,
         number: card.number,
         language: card.language,
       }),
-    cardmarket: () => quoteCardmarket(card.id),
+    cardmarket: () =>
+      quoteCardmarket({
+        id: card.id,
+        name: card.name,
+        number: card.number,
+        setCode: card.setCode,
+      }),
+
     ebay: () => quoteEbay(query),
     pricecharting: () => quotePriceCharting(query),
     snkrdunk: () => quoteSnkrdunk(query),
