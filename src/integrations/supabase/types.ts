@@ -48,7 +48,15 @@ export type Database = {
           source?: string
           updated_at?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "card_price_latest_card_id_fkey"
+            columns: ["card_id"]
+            isOneToOne: false
+            referencedRelation: "tcg_cards"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       card_price_points: {
         Row: {
