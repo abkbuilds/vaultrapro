@@ -48,7 +48,15 @@ export type Database = {
           source?: string
           updated_at?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "card_price_latest_card_id_fkey"
+            columns: ["card_id"]
+            isOneToOne: false
+            referencedRelation: "tcg_cards"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       card_price_points: {
         Row: {
@@ -339,6 +347,17 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      card_trend: {
+        Args: { _card_id: string }
+        Returns: {
+          from_date: string
+          from_price: number
+          pct: number
+          to_price: number
+          window_days: number
+        }[]
+      }
+      refresh_price_changes: { Args: never; Returns: number }
       set_card_counts: {
         Args: { lang: string }
         Returns: {

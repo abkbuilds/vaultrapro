@@ -1,7 +1,7 @@
 import { cn } from "@/lib/utils";
 import type { TimeRange } from "@/lib/tcg/types";
 
-const RANGES: TimeRange[] = ["1D", "1W", "1M", "3M", "1Y", "ALL"];
+const RANGES: TimeRange[] = ["1D", "1W", "1M", "3M", "1Y", "5Y", "ALL"];
 
 export function RangeToggle({
   value,
