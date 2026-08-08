@@ -384,7 +384,15 @@ export async function quoteAll(card: {
         setCode: card.setCode,
       }),
 
-    ebay: () => quoteEbay(query),
+    ebay: () =>
+      quoteEbay({
+        name: card.name,
+        number: card.number,
+        setName: card.setName,
+        setCode: card.setCode,
+        language: card.language,
+      }),
+
     pricecharting: () => quotePriceCharting(query),
     snkrdunk: () => quoteSnkrdunk(query),
   } as never;
