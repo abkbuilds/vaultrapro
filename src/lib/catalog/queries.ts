@@ -62,6 +62,40 @@ export function toTcgCard(row: DbCard): TcgCard {
   };
 }
 
+const SOURCE_RANK = ["tcgplayer", "cardmarket", "ebay", "snkrdunk"];
+
+/**
+ * Fills in each card's real observed 7-day movement from the recorded
+ * readings. Cards with no earlier reading keep `null` and render "No data".
+ */
+export async function attachChanges(cards: TcgCard[]): Promise<TcgCard[]> {
+  if (!cards.length) return cards;
+  const { data } = await supabase
+    .from("card_price_latest")
+    .select("card_id,source,change_7d")
+    .in(
+      "card_id",
+      cards.map((c) => c.id),
+    )
+    .not("change_7d", "is", null);
+
+  const best = new Map<string, { rank: number; value: number }>();
+  for (const row of (data ?? []) as { card_id: string; source: string; change_7d: number }[]) {
+    const rank = SOURCE_RANK.indexOf(row.source);
+    const cur = best.get(row.card_id);
+    if (!cur || (rank >= 0 && rank < cur.rank)) {
+      best.set(row.card_id, { rank: rank < 0 ? 99 : rank, value: Number(row.change_7d) });
+    }
+  }
+  for (const card of cards) {
+    const hit = best.get(card.id);
+    if (hit) card.change7d = Number(hit.value.toFixed(2));
+  }
+  registerCards(cards);
+  return cards;
+}
+
+
 export interface SearchArgs {
   query?: string;
   language?: "all" | Language;
@@ -103,8 +137,9 @@ export async function searchCards(args: SearchArgs) {
   const { data, error, count } = await q;
   if (error) throw error;
   const cards = ((data ?? []) as unknown as DbCard[]).map(toTcgCard);
-  registerCards(cards);
+  await attachChanges(cards);
   return { cards, total: count ?? cards.length };
+
 }
 
 export async function listSets(language: "all" | Language = "all") {
@@ -136,7 +171,7 @@ export async function fetchCardById(id: string): Promise<TcgCard | null> {
   if (error) throw error;
   if (!data) return null;
   const card = toTcgCard(data as unknown as DbCard);
-  registerCards([card]);
+  await attachChanges([card]);
   return card;
 }
 
@@ -145,8 +180,9 @@ export async function fetchCardsByIds(ids: string[]): Promise<TcgCard[]> {
   const { data, error } = await supabase.from("tcg_cards").select(SELECT).in("id", ids);
   if (error) throw error;
   const cards = ((data ?? []) as unknown as DbCard[]).map(toTcgCard);
-  registerCards(cards);
+  await attachChanges(cards);
   return cards;
+
 }
 
 export async function catalogStats() {

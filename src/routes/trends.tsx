@@ -39,7 +39,10 @@ const WINDOWS = [
 ] as const;
 
 function TrendsPage() {
-  const [win, setWin] = useState<(typeof WINDOWS)[number]["id"]>("24h");
+  // Weekly is the shortest window with broad recorded coverage, so it is the
+  // honest default rather than an empty "today" board.
+  const [win, setWin] = useState<(typeof WINDOWS)[number]["id"]>("7d");
+
   const [lang, setLang] = useState<"EN" | "JP">("EN");
   const [scope, setScope] = useState<"market" | "portfolio">("market");
   const { entries } = useCollection();

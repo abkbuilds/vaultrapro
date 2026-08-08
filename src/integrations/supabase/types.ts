@@ -339,6 +339,17 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      card_trend: {
+        Args: { _card_id: string }
+        Returns: {
+          from_date: string
+          from_price: number
+          pct: number
+          to_price: number
+          window_days: number
+        }[]
+      }
+      refresh_price_changes: { Args: never; Returns: number }
       set_card_counts: {
         Args: { lang: string }
         Returns: {

@@ -39,6 +39,29 @@ export const fetchCardPrices = createServerFn({ method: "POST" })
     return getCardPrices(card, data.range);
   });
 
+/** Real % movement over 1W / 1M / 3M / 1Y / 5Y, plus TCGplayer price tiers. */
+export const fetchCardTrend = createServerFn({ method: "POST" })
+  .inputValidator((data: unknown) => z.object({ cardId: z.string() }).parse(data))
+  .handler(async ({ data }) => {
+    const [{ getCardTrend }, { fetchPriceTiers }] = await Promise.all([
+      import("./trend.server"),
+      import("./tiers.server"),
+    ]);
+    const card = await loadCard(data.cardId);
+    const [windows, tiers] = await Promise.all([
+      getCardTrend(data.cardId),
+      fetchPriceTiers(data.cardId, {
+        setCode: card?.setCode ?? null,
+        number: card?.number ?? null,
+        language: card?.language ?? null,
+      }),
+    ]);
+
+    return { windows, tiers };
+  });
+
+
+
 export const fetchMovers = createServerFn({ method: "POST" })
   .inputValidator((data: unknown) =>
     z

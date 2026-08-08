@@ -35,8 +35,11 @@ interface CsvPrice {
   marketPrice: number | null;
   midPrice: number | null;
   lowPrice: number | null;
+  highPrice?: number | null;
+  directLowPrice?: number | null;
   subTypeName: string | null;
 }
+
 
 async function getJson<T>(url: string): Promise<T> {
   const res = await fetch(url, {
@@ -155,7 +158,60 @@ export async function tcgplayerMarketPrice(card: {
   }
 }
 
+/**
+ * Every published TCGplayer tier (low / mid / high / market / direct low) for a
+ * single printing, one row per foil sub-type. Keyless, and covers EN and JP.
+ */
+export async function tcgplayerTiers(card: {
+  setCode: string;
+  number: string;
+  language: string;
+}): Promise<
+  {
+    variant: string;
+    low: number | null;
+    mid: number | null;
+    high: number | null;
+    market: number | null;
+    directLow: number | null;
+  }[]
+> {
+  const category = card.language === "JP" ? JP_CATEGORY : EN_CATEGORY;
+  const abbr = card.setCode?.toUpperCase();
+  if (!abbr) return [];
+  try {
+    const group = (await groupsByAbbr(category)).get(abbr);
+    if (!group) return [];
+    const [products, prices] = await Promise.all([
+      getJson<{ results: CsvProduct[] }>(`${base(category)}/${group.groupId}/products`),
+      getJson<{ results: CsvPrice[] }>(`${base(category)}/${group.groupId}/prices`),
+    ]);
+    const want = numberKey(card.number);
+    const ids = new Set(
+      products.results
+        .filter((p) => numberKey(baseNumber(ext(p, "Number"))) === want)
+        .map((p) => p.productId),
+    );
+    const norm = (v: number | null | undefined) =>
+      typeof v === "number" && v > 0 ? Number(v.toFixed(2)) : null;
+    return prices.results
+      .filter((p) => ids.has(p.productId))
+      .map((p) => ({
+        variant: p.subTypeName ?? "Normal",
+        low: norm(p.lowPrice),
+        mid: norm(p.midPrice),
+        high: norm(p.highPrice),
+        market: norm(p.marketPrice),
+        directLow: norm(p.directLowPrice),
+      }))
+      .filter((t) => t.low ?? t.mid ?? t.high ?? t.market ?? t.directLow);
+  } catch {
+    return [];
+  }
+}
+
 /* ------------------------------ bulk backfill ----------------------------- */
+
 
 export interface PriceSyncResult {
   language: "EN" | "JP";

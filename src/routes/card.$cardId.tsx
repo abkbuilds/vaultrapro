@@ -6,7 +6,22 @@ import { ChevronLeft, Handshake, Heart, Loader2, Plus } from "lucide-react";
 import { toast } from "sonner";
 import { getCard } from "@/lib/tcg/cards";
 import { fetchCardById } from "@/lib/catalog/queries";
-import { fetchCardPrices, fetchCardSales } from "@/lib/prices/prices.functions";
+import {
+  fetchCardPrices,
+  fetchCardSales,
+  fetchCardTrend,
+} from "@/lib/prices/prices.functions";
+
+interface TrendWindow {
+  days: number;
+  label: string;
+  pct: number;
+  fromPrice: number;
+  toPrice: number;
+  fromDate: string;
+}
+
+
 import {
   CONDITIONS,
   SOURCE_META,
@@ -64,6 +79,13 @@ function CardDetail() {
     queryFn: () => getPrices({ data: { cardId: card.id, range } }),
     staleTime: 5 * 60 * 1000,
   });
+  const getTrend = useServerFn(fetchCardTrend);
+  const trend = useQuery({
+    queryKey: ["card-trend", card.id],
+    queryFn: () => getTrend({ data: { cardId: card.id } }),
+    staleTime: 5 * 60 * 1000,
+  });
+
 
   const getSales = useServerFn(fetchCardSales);
   const salesQuery = useQuery({
@@ -150,7 +172,13 @@ function CardDetail() {
               <p className="font-display text-3xl font-bold tabular-nums">
                 {market?.value != null ? money(market.value) : money(headline)}
               </p>
-              <PriceDelta value={card.change7d} className="mb-1" />
+              <PriceDelta
+                value={
+                  trend.data?.windows.find((w) => w.days === 7)?.pct ?? card.change7d
+                }
+                className="mb-1"
+              />
+
             </div>
             <p className="mt-1 text-[11px] text-muted-foreground">
               {market?.value != null
@@ -171,6 +199,15 @@ function CardDetail() {
           </div>
         </div>
       </section>
+
+      <section className="mt-4 px-4">
+        <TrendStrip
+          windows={trend.data?.windows ?? []}
+          loading={trend.isLoading}
+        />
+      </section>
+
+
 
       <section className="mt-5 px-4">
         <div className="glass-panel rounded-3xl p-3">
@@ -223,7 +260,17 @@ function CardDetail() {
       </section>
 
       <section className="mt-5 px-4">
+        <h2 className="pb-2 font-display text-lg font-semibold">TCGplayer price tiers</h2>
+        <TiersTable
+          tiers={trend.data?.tiers.tiers ?? []}
+          updatedAt={trend.data?.tiers.updatedAt ?? null}
+          note={trend.data?.tiers.note}
+        />
+      </section>
+
+      <section className="mt-5 px-4">
         <h2 className="pb-2 font-display text-lg font-semibold">Live quotes</h2>
+
         <div className="overflow-hidden rounded-2xl bg-surface">
           <table className="w-full text-left text-xs">
             <thead className="text-muted-foreground">
@@ -392,5 +439,138 @@ function CardDetail() {
         </Link>
       </section>
     </main>
+  );
+}
+
+/**
+ * Real observed movement per window. A window only appears when a dated
+ * earlier reading exists — nothing is extrapolated to fill the gaps.
+ */
+function TrendStrip({
+  windows,
+  loading,
+}: {
+  windows: TrendWindow[];
+  loading: boolean;
+}) {
+  const headline =
+    windows.find((w) => w.days === 7) ??
+    windows.find((w) => w.days === 30) ??
+    windows[0];
+
+  return (
+    <div className="glass-panel rounded-3xl p-3">
+      <div className="flex items-center justify-between gap-2">
+        <h2 className="font-display text-sm font-semibold">Price trend</h2>
+        {headline ? (
+          <p className="text-[11px] text-muted-foreground">
+            <span
+              className={cn(
+                "font-semibold",
+                headline.pct >= 0 ? "text-success" : "text-destructive",
+              )}
+            >
+              {headline.pct >= 0 ? "Rising" : "Falling"} {Math.abs(headline.pct).toFixed(1)}%
+            </span>{" "}
+            over {headline.label === "1W" ? "this week" : `the last ${headline.label}`}
+          </p>
+        ) : null}
+      </div>
+
+      {loading ? (
+        <div className="mt-2 grid h-12 place-items-center text-muted-foreground">
+          <Loader2 className="size-4 animate-spin" />
+        </div>
+      ) : windows.length === 0 ? (
+        <p className="mt-2 text-[11px] text-muted-foreground">
+          No earlier recorded reading yet, so no movement can be measured. Readings are
+          captured daily.
+        </p>
+      ) : (
+        <div className="no-scrollbar mt-2 flex gap-1.5 overflow-x-auto">
+          {windows.map((w) => (
+            <div
+              key={w.days}
+              className="min-w-[74px] shrink-0 rounded-xl bg-surface-2/70 px-2.5 py-2 text-center"
+            >
+              <p className="text-[10px] font-semibold text-muted-foreground">{w.label}</p>
+              <p
+                className={cn(
+                  "text-sm font-bold tabular-nums",
+                  w.pct >= 0 ? "text-success" : "text-destructive",
+                )}
+              >
+                {w.pct >= 0 ? "+" : ""}
+                {w.pct.toFixed(1)}%
+              </p>
+              <p className="text-[9px] text-muted-foreground tabular-nums">
+                from {money(w.fromPrice)}
+              </p>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+/** TCGplayer's published low / mid / high / market / direct-low tiers. */
+function TiersTable({
+  tiers,
+  updatedAt,
+  note,
+}: {
+  tiers: {
+    variant: string;
+    low: number | null;
+    mid: number | null;
+    high: number | null;
+    market: number | null;
+    directLow: number | null;
+  }[];
+  updatedAt: string | null;
+  note?: string;
+}) {
+  if (!tiers.length) {
+    return (
+      <p className="rounded-2xl bg-surface p-3 text-xs text-muted-foreground">
+        {note ?? "No TCGplayer tier data for this printing."}
+      </p>
+    );
+  }
+  const cell = (v: number | null) =>
+    v == null ? <span className="text-muted-foreground">—</span> : money(v);
+  return (
+    <div className="overflow-hidden rounded-2xl bg-surface">
+      <table className="w-full text-left text-xs">
+        <thead className="text-muted-foreground">
+          <tr className="border-b border-border">
+            <th className="px-3 py-2 font-medium">Printing</th>
+            <th className="px-2 py-2 text-right font-medium">Low</th>
+            <th className="px-2 py-2 text-right font-medium">Mid</th>
+            <th className="px-2 py-2 text-right font-medium">High</th>
+            <th className="px-3 py-2 text-right font-medium">Market</th>
+          </tr>
+        </thead>
+        <tbody className="tabular-nums">
+          {tiers.map((t) => (
+            <tr key={t.variant} className="border-b border-border/50 last:border-0">
+              <td className="px-3 py-2 font-medium capitalize">
+                {t.variant.replace(/([A-Z])/g, " $1").toLowerCase()}
+              </td>
+              <td className="px-2 py-2 text-right">{cell(t.low)}</td>
+              <td className="px-2 py-2 text-right">{cell(t.mid)}</td>
+              <td className="px-2 py-2 text-right">{cell(t.high)}</td>
+              <td className="px-3 py-2 text-right font-semibold">{cell(t.market)}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+      {updatedAt ? (
+        <p className="border-t border-border/50 px-3 py-2 text-[10px] text-muted-foreground">
+          TCGplayer figures published {updatedAt}
+        </p>
+      ) : null}
+    </div>
   );
 }
