@@ -15,6 +15,7 @@ const BASE = "https://tcgcsv.com/tcgplayer/85";
 interface Group {
   groupId: number;
   abbreviation: string | null;
+  name?: string;
 }
 
 interface Product {
@@ -68,11 +69,29 @@ export async function runJpImageSync(opts: {
   }
   const pendingSets = [...new Set(missing.map((m) => m.set_id).filter(Boolean))] as string[];
 
-  const groups = (await getJson<{ results: Group[] }>(`${BASE}/groups`)).results.filter(
-    (g) => g.abbreviation,
-  );
-  const groupByAbbr = new Map(
-    groups.map((g) => [(g.abbreviation ?? "").toUpperCase(), g.groupId]),
+  const groups = (await getJson<{ results: Group[] }>(`${BASE}/groups`)).results;
+  const norm = (v: string) =>
+    v.toLowerCase().replace(/^[a-z0-9]+:\s*/i, "").replace(/[^a-z0-9]/g, "");
+  const groupByAbbr = new Map<string, number>();
+  const groupByName = new Map<string, number>();
+  for (const g of groups) {
+    const abbr = (g.abbreviation ?? "").toUpperCase();
+    if (abbr && !groupByAbbr.has(abbr)) groupByAbbr.set(abbr, g.groupId);
+    const name = norm((g as Group & { name?: string }).name ?? "");
+    if (name && !groupByName.has(name)) groupByName.set(name, g.groupId);
+  }
+
+  // Vintage Japanese groups on tcgcsv carry no abbreviation, so fall back to
+  // matching on the set's English name.
+  const { data: setRows } = await supabaseAdmin
+    .from("tcg_sets")
+    .select("id,english_name,name")
+    .in("id", pendingSets);
+  const englishBySet = new Map(
+    ((setRows ?? []) as { id: string; english_name: string | null; name: string }[]).map((r) => [
+      r.id,
+      r.english_name ?? r.name,
+    ]),
   );
 
   const batch = pendingSets.slice(offset, offset + limit);
@@ -81,7 +100,9 @@ export async function runJpImageSync(opts: {
 
   for (const setId of batch) {
     const abbr = setId.replace(/^jp-/, "").toUpperCase();
-    const groupId = groupByAbbr.get(abbr);
+    const english = englishBySet.get(setId);
+    const groupId =
+      groupByAbbr.get(abbr) ?? (english ? groupByName.get(norm(english)) : undefined);
     processed.push(abbr);
     if (!groupId) continue;
 

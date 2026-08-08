@@ -9,7 +9,6 @@
  * - TCGplayer              : api.pokemontcg.io (real market prices, EN)
  * - Cardmarket             : api.tcgdex.net (real EN + JP prices, no API key)
  * - eBay                   : Browse API (needs EBAY_CLIENT_ID + EBAY_CLIENT_SECRET)
- * - PriceCharting          : api /product (needs PRICECHARTING_API_TOKEN)
  * - snkrdunk               : no public API — needs SNKRDUNK_API_TOKEN partner feed
  */
 import type { PriceSource } from "@/lib/tcg/types";
@@ -293,33 +292,6 @@ export async function quoteEbay(card: {
 }
 
 
-/* ----------------------------- PriceCharting ---------------------------- */
-
-export async function quotePriceCharting(query: string): Promise<Quote> {
-  const token = process.env.PRICECHARTING_API_TOKEN;
-  if (!token) {
-    return {
-      source: "pricecharting",
-      price: null,
-      currency: "USD",
-      live: false,
-      note: "Add a PriceCharting API token to pull live data",
-    };
-  }
-  const json = await getJson<Record<string, any>>(
-    `https://www.pricecharting.com/api/product?t=${token}&q=${encodeURIComponent(query)}`,
-  );
-  const cents = json?.["loose-price"] ?? json?.["cib-price"];
-  const price = typeof cents === "number" && cents > 0 ? Number((cents / 100).toFixed(2)) : null;
-  return {
-    source: "pricecharting",
-    price,
-    currency: "USD",
-    live: price != null,
-    note: price == null ? "No PriceCharting match" : undefined,
-  };
-}
-
 /* -------------------------------- snkrdunk ------------------------------ */
 
 export async function quoteSnkrdunk(query: string): Promise<Quote> {
@@ -354,7 +326,7 @@ export function sourcesFor(language: string): PriceSource[] {
   // tcgcsv.com, so it applies to both languages.
   return language === "JP"
     ? ["tcgplayer", "cardmarket", "ebay", "snkrdunk"]
-    : ["tcgplayer", "cardmarket", "ebay", "pricecharting"];
+    : ["tcgplayer", "cardmarket", "ebay"];
 }
 
 export async function quoteAll(card: {
@@ -393,7 +365,6 @@ export async function quoteAll(card: {
         language: card.language,
       }),
 
-    pricecharting: () => quotePriceCharting(query),
     snkrdunk: () => quoteSnkrdunk(query),
   } as never;
   return Promise.all(wanted.map((s) => runners[s]()));

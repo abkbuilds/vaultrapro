@@ -134,73 +134,6 @@ async function ebaySales(card: CardLike): Promise<SaleFeed> {
   }
 }
 
-/* ------------------------------ PriceCharting ---------------------------- */
-
-async function priceChartingSales(card: CardLike): Promise<SaleFeed> {
-  const token = process.env.PRICECHARTING_API_TOKEN;
-  if (!token) {
-    return {
-      source: "pricecharting",
-      sales: [],
-      unavailable: "Add a PriceCharting API token to ingest completed sales",
-    };
-  }
-  const q = `${card.name} ${card.setName} ${card.number} pokemon card`;
-  try {
-    const res = await fetch(
-      `https://www.pricecharting.com/api/product?t=${token}&q=${encodeURIComponent(q)}`,
-    );
-    if (!res.ok) {
-      return {
-        source: "pricecharting",
-        sales: [],
-        unavailable: `PriceCharting returned ${res.status}`,
-      };
-    }
-    const product = (await res.json()) as Record<string, any>;
-    const id = product?.id;
-    if (!id) {
-      return { source: "pricecharting", sales: [], unavailable: "No PriceCharting match" };
-    }
-    const salesRes = await fetch(
-      `https://www.pricecharting.com/api/sales?t=${token}&id=${encodeURIComponent(id)}`,
-    );
-    if (!salesRes.ok) {
-      return {
-        source: "pricecharting",
-        sales: [],
-        unavailable: "PriceCharting sales feed unavailable on this plan",
-      };
-    }
-    const json = (await salesRes.json()) as { sales?: any[] };
-    const sales: RawSale[] = [];
-    for (const s of json.sales ?? []) {
-      const cents = Number(s?.price ?? s?.["sale-price"]);
-      const date = s?.date ?? s?.["sale-date"];
-      if (!Number.isFinite(cents) || cents <= 0 || !date) continue;
-      const price = Number((cents / 100).toFixed(2));
-      sales.push({
-        source: "pricecharting",
-        externalId: String(s.id ?? `${id}-${date}-${cents}`),
-        soldAt: new Date(date).toISOString(),
-        price,
-        currency: "USD",
-        priceUsd: price,
-        condition: s?.condition ?? null,
-        title: product?.["product-name"] ?? null,
-        url: `https://www.pricecharting.com/game/${id}`,
-      });
-    }
-    return {
-      source: "pricecharting",
-      sales,
-      unavailable: sales.length ? undefined : "No recent PriceCharting sales",
-    };
-  } catch {
-    return { source: "pricecharting", sales: [], unavailable: "PriceCharting request failed" };
-  }
-}
-
 /* -------------------------------- snkrdunk ------------------------------- */
 
 async function snkrdunkSales(card: CardLike): Promise<SaleFeed> {
@@ -253,14 +186,14 @@ export const SALE_ADAPTERS: Record<
   ((card: CardLike) => Promise<SaleFeed>) | null
 > = {
   ebay: ebaySales,
-  pricecharting: priceChartingSales,
+  pricecharting: null, // removed — no live PriceCharting feed
   snkrdunk: snkrdunkSales,
   tcgplayer: null, // aggregate market data only, no per-sale feed
   cardmarket: null,
 };
 
 export function saleSourcesFor(language: string): PriceSource[] {
-  return language === "JP" ? ["ebay", "snkrdunk"] : ["ebay", "pricecharting"];
+  return language === "JP" ? ["ebay", "snkrdunk"] : ["ebay"];
 }
 
 /* -------------------------------- ingestion ------------------------------ */
