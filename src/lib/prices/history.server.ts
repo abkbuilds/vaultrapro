@@ -46,17 +46,31 @@ export async function getCardPrices(
   card: CardLike,
   range: TimeRange,
 ): Promise<CardPricePayload> {
-  const [quotes, stored] = await Promise.all([
+  const [quotes, inRange, saleSeries] = await Promise.all([
     quoteAll(card),
     loadStored(card.id, RANGE_DAYS[range]),
+    loadSalePoints(card.id, RANGE_DAYS[range]),
   ]);
+
+  // Every card should be able to show a trend line. When the selected window
+  // has no captured readings, fall back to the card's full recorded history
+  // rather than an empty chart — still 100% real, dated observations.
+  const inRangeCount = [...inRange.values()].reduce((n, p) => n + p.length, 0);
+  const stored =
+    inRangeCount >= 2 ? inRange : await loadStored(card.id, RANGE_DAYS.ALL);
 
   const today = new Date().toISOString().slice(0, 10);
 
   const series: SeriesBySource[] = sourcesFor(card.language).flatMap(
     (source): SeriesBySource[] => {
       const quote = quotes.find((q) => q.source === source);
-      const points = [...(stored.get(source) ?? [])];
+      const byDate = new Map<string, { date: string; value: number }>();
+      for (const p of stored.get(source) ?? []) byDate.set(p.date.slice(0, 10), p);
+      // Completed sales are real dated observations too.
+      for (const p of saleSeries.get(source) ?? []) {
+        if (!byDate.has(p.date.slice(0, 10))) byDate.set(p.date.slice(0, 10), p);
+      }
+      const points = [...byDate.values()];
 
       // A live quote is a real observation for right now, so it belongs on the
       // chart — but only once per day, replacing today's captured reading.
@@ -84,6 +98,7 @@ export async function getCardPrices(
     },
   );
 
+
   return {
     cardId: card.id,
     range,
@@ -93,7 +108,54 @@ export async function getCardPrices(
   };
 }
 
+/** Completed sales, averaged per day per source — real observations. */
+async function loadSalePoints(cardId: string, days: number) {
+  const since = new Date();
+  since.setDate(since.getDate() - days);
+  const { data } = await supabase
+    .from("card_sales")
+    .select("source,price,price_usd,sold_at")
+    .eq("card_id", cardId)
+    .gte("sold_at", since.toISOString())
+    .order("sold_at", { ascending: true })
+    .limit(2000);
+
+  const acc = new Map<PriceSource, Map<string, { sum: number; n: number }>>();
+  for (const row of (data ?? []) as {
+    source: string;
+    price: number;
+    price_usd: number | null;
+    sold_at: string;
+  }[]) {
+    const value = Number(row.price_usd ?? row.price);
+    if (!Number.isFinite(value) || value <= 0) continue;
+    const key = row.source as PriceSource;
+    const day = row.sold_at.slice(0, 10);
+    const days_ = acc.get(key) ?? new Map();
+    const cur = days_.get(day) ?? { sum: 0, n: 0 };
+    cur.sum += value;
+    cur.n += 1;
+    days_.set(day, cur);
+    acc.set(key, days_);
+  }
+
+  const map = new Map<PriceSource, { date: string; value: number }[]>();
+  for (const [source, byDay] of acc) {
+    map.set(
+      source,
+      [...byDay.entries()]
+        .map(([day, v]) => ({
+          date: new Date(`${day}T00:00:00.000Z`).toISOString(),
+          value: Number((v.sum / v.n).toFixed(2)),
+        }))
+        .sort((a, b) => a.date.localeCompare(b.date)),
+    );
+  }
+  return map;
+}
+
 async function loadStored(cardId: string, days: number) {
+
   const since = new Date();
   since.setDate(since.getDate() - days);
   const { data } = await supabase

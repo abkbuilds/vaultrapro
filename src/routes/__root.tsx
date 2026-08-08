@@ -90,7 +90,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       {
         name: "description",
         content:
-          "Scan Pokémon cards with AI, track TCGplayer, eBay, snkrdunk and PriceCharting prices, and follow your collection's value.",
+          "Scan Pokémon cards with AI, track TCGplayer, Cardmarket, eBay and snkrdunk prices, and follow your collection's value.",
       },
       { name: "author", content: "Vaultra" },
       { property: "og:title", content: "Vaultra — TCG Scanner & Price Tracker" },
