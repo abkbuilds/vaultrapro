@@ -270,66 +270,28 @@ export async function cardmarketHistorySeeds(input: string | CardRef) {
 
 /* --------------------------------- eBay --------------------------------- */
 
-let ebayToken: { value: string; expires: number } | null = null;
-
-async function ebayAccessToken(): Promise<string | null> {
-  const id = process.env.EBAY_CLIENT_ID;
-  const secret = process.env.EBAY_CLIENT_SECRET;
-  if (!id || !secret) return null;
-  if (ebayToken && ebayToken.expires > Date.now() + 30_000) return ebayToken.value;
-  try {
-    const res = await fetch("https://api.ebay.com/identity/v1/oauth2/token", {
-      method: "POST",
-      headers: {
-        authorization: `Basic ${btoa(`${id}:${secret}`)}`,
-        "content-type": "application/x-www-form-urlencoded",
-      },
-      body: "grant_type=client_credentials&scope=https%3A%2F%2Fapi.ebay.com%2Foauth%2Fapi_scope",
-    });
-    if (!res.ok) return null;
-    const json = (await res.json()) as { access_token: string; expires_in: number };
-    ebayToken = {
-      value: json.access_token,
-      expires: Date.now() + json.expires_in * 1000,
-    };
-    return ebayToken.value;
-  } catch {
-    return null;
-  }
-}
-
-export async function quoteEbay(query: string): Promise<Quote> {
-  const token = await ebayAccessToken();
-  if (!token) {
-    return {
-      source: "ebay",
-      price: null,
-      currency: "USD",
-      live: false,
-      note: "Add eBay API keys to pull live sold data",
-    };
-  }
-  const url =
-    "https://api.ebay.com/buy/browse/v1/item_summary/search?limit=50&filter=buyingOptions:{FIXED_PRICE}&q=" +
-    encodeURIComponent(query);
-  const json = await getJson<{ itemSummaries?: any[] }>(url, {
-    headers: {
-      authorization: `Bearer ${token}`,
-      "X-EBAY-C-MARKETPLACE-ID": "EBAY_US",
-    },
-  });
-  const values = (json?.itemSummaries ?? [])
-    .map((i) => Number(i?.price?.value))
-    .filter((n) => Number.isFinite(n) && n > 0);
-  const price = median(values);
+/**
+ * Live eBay reading. Delegates to the shared Browse adapter so the per-card
+ * quote and the bulk backfill always agree on matching and median rules.
+ */
+export async function quoteEbay(card: {
+  name: string;
+  number: string;
+  setName?: string;
+  setCode?: string;
+  language?: string;
+}): Promise<Quote> {
+  const { ebayCardQuote } = await import("./ebay.server");
+  const q = await ebayCardQuote(card);
   return {
     source: "ebay",
-    price,
-    currency: "USD",
-    live: price != null,
-    note: price == null ? "No matching eBay listings" : `Median of ${values.length} listings`,
+    price: q.price,
+    currency: q.currency,
+    live: q.live,
+    note: q.note,
   };
 }
+
 
 /* ----------------------------- PriceCharting ---------------------------- */
 
@@ -422,7 +384,15 @@ export async function quoteAll(card: {
         setCode: card.setCode,
       }),
 
-    ebay: () => quoteEbay(query),
+    ebay: () =>
+      quoteEbay({
+        name: card.name,
+        number: card.number,
+        setName: card.setName,
+        setCode: card.setCode,
+        language: card.language,
+      }),
+
     pricecharting: () => quotePriceCharting(query),
     snkrdunk: () => quoteSnkrdunk(query),
   } as never;

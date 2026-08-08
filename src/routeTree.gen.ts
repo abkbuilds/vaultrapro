@@ -24,6 +24,7 @@ import { Route as AuthenticatedAccountRouteImport } from './routes/_authenticate
 import { Route as CardCardIdRouteImport } from './routes/card.$cardId'
 import { Route as ApiPublicRefreshPricesRouteImport } from './routes/api/public/refresh-prices'
 import { Route as ApiPublicSyncCatalogRouteImport } from './routes/api/public/sync-catalog'
+import { Route as ApiPublicSyncEbayRouteImport } from './routes/api/public/sync-ebay'
 import { Route as ApiPublicSyncJpEnglishRouteImport } from './routes/api/public/sync-jp-english'
 import { Route as ApiPublicSyncJpImagesRouteImport } from './routes/api/public/sync-jp-images'
 import { Route as ApiPublicSyncJpNamesRouteImport } from './routes/api/public/sync-jp-names'
@@ -106,6 +107,11 @@ const ApiPublicSyncCatalogRoute = ApiPublicSyncCatalogRouteImport.update({
   path: '/api/public/sync-catalog',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiPublicSyncEbayRoute = ApiPublicSyncEbayRouteImport.update({
+  id: '/api/public/sync-ebay',
+  path: '/api/public/sync-ebay',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiPublicSyncJpEnglishRoute = ApiPublicSyncJpEnglishRouteImport.update({
   id: '/api/public/sync-jp-english',
   path: '/api/public/sync-jp-english',
@@ -158,6 +164,7 @@ export interface FileRoutesByFullPath {
   '/card/$cardId': typeof CardCardIdRoute
   '/api/public/refresh-prices': typeof ApiPublicRefreshPricesRoute
   '/api/public/sync-catalog': typeof ApiPublicSyncCatalogRoute
+  '/api/public/sync-ebay': typeof ApiPublicSyncEbayRoute
   '/api/public/sync-jp-english': typeof ApiPublicSyncJpEnglishRoute
   '/api/public/sync-jp-images': typeof ApiPublicSyncJpImagesRoute
   '/api/public/sync-jp-names': typeof ApiPublicSyncJpNamesRoute
@@ -181,6 +188,7 @@ export interface FileRoutesByTo {
   '/card/$cardId': typeof CardCardIdRoute
   '/api/public/refresh-prices': typeof ApiPublicRefreshPricesRoute
   '/api/public/sync-catalog': typeof ApiPublicSyncCatalogRoute
+  '/api/public/sync-ebay': typeof ApiPublicSyncEbayRoute
   '/api/public/sync-jp-english': typeof ApiPublicSyncJpEnglishRoute
   '/api/public/sync-jp-images': typeof ApiPublicSyncJpImagesRoute
   '/api/public/sync-jp-names': typeof ApiPublicSyncJpNamesRoute
@@ -206,6 +214,7 @@ export interface FileRoutesById {
   '/card/$cardId': typeof CardCardIdRoute
   '/api/public/refresh-prices': typeof ApiPublicRefreshPricesRoute
   '/api/public/sync-catalog': typeof ApiPublicSyncCatalogRoute
+  '/api/public/sync-ebay': typeof ApiPublicSyncEbayRoute
   '/api/public/sync-jp-english': typeof ApiPublicSyncJpEnglishRoute
   '/api/public/sync-jp-images': typeof ApiPublicSyncJpImagesRoute
   '/api/public/sync-jp-names': typeof ApiPublicSyncJpNamesRoute
@@ -231,6 +240,7 @@ export interface FileRouteTypes {
     | '/card/$cardId'
     | '/api/public/refresh-prices'
     | '/api/public/sync-catalog'
+    | '/api/public/sync-ebay'
     | '/api/public/sync-jp-english'
     | '/api/public/sync-jp-images'
     | '/api/public/sync-jp-names'
@@ -254,6 +264,7 @@ export interface FileRouteTypes {
     | '/card/$cardId'
     | '/api/public/refresh-prices'
     | '/api/public/sync-catalog'
+    | '/api/public/sync-ebay'
     | '/api/public/sync-jp-english'
     | '/api/public/sync-jp-images'
     | '/api/public/sync-jp-names'
@@ -278,6 +289,7 @@ export interface FileRouteTypes {
     | '/card/$cardId'
     | '/api/public/refresh-prices'
     | '/api/public/sync-catalog'
+    | '/api/public/sync-ebay'
     | '/api/public/sync-jp-english'
     | '/api/public/sync-jp-images'
     | '/api/public/sync-jp-names'
@@ -302,6 +314,7 @@ export interface RootRouteChildren {
   CardCardIdRoute: typeof CardCardIdRoute
   ApiPublicRefreshPricesRoute: typeof ApiPublicRefreshPricesRoute
   ApiPublicSyncCatalogRoute: typeof ApiPublicSyncCatalogRoute
+  ApiPublicSyncEbayRoute: typeof ApiPublicSyncEbayRoute
   ApiPublicSyncJpEnglishRoute: typeof ApiPublicSyncJpEnglishRoute
   ApiPublicSyncJpImagesRoute: typeof ApiPublicSyncJpImagesRoute
   ApiPublicSyncJpNamesRoute: typeof ApiPublicSyncJpNamesRoute
@@ -418,6 +431,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicSyncCatalogRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/sync-ebay': {
+      id: '/api/public/sync-ebay'
+      path: '/api/public/sync-ebay'
+      fullPath: '/api/public/sync-ebay'
+      preLoaderRoute: typeof ApiPublicSyncEbayRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/sync-jp-english': {
       id: '/api/public/sync-jp-english'
       path: '/api/public/sync-jp-english'
@@ -496,6 +516,7 @@ const rootRouteChildren: RootRouteChildren = {
   CardCardIdRoute: CardCardIdRoute,
   ApiPublicRefreshPricesRoute: ApiPublicRefreshPricesRoute,
   ApiPublicSyncCatalogRoute: ApiPublicSyncCatalogRoute,
+  ApiPublicSyncEbayRoute: ApiPublicSyncEbayRoute,
   ApiPublicSyncJpEnglishRoute: ApiPublicSyncJpEnglishRoute,
   ApiPublicSyncJpImagesRoute: ApiPublicSyncJpImagesRoute,
   ApiPublicSyncJpNamesRoute: ApiPublicSyncJpNamesRoute,
@@ -507,13 +528,3 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { startInstance } from './start.ts'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-    config: Awaited<ReturnType<typeof startInstance.getOptions>>
-  }
-}
