@@ -6,18 +6,19 @@
  * every card eBay actually lists. Cards with no match are left untouched so
  * they keep honestly reporting "no data".
  *
- * eBay's Browse API allows ~5,000 application calls per day, so this is
- * deliberately resumable: call it repeatedly with an increasing `offset`
- * (or on a cron) until `done` is true.
+ * eBay's Browse API allows ~5,000 application calls per day, so the daily
+ * budget is spent where it buys the most: cards no other feed can price, then
+ * the most valuable cards without an eBay reading, then the stalest readings.
  */
 import { ebayCardQuote } from "./ebay.server";
+
+export type EbayStrategy = "unpriced" | "missing-ebay" | "refresh";
 
 export interface EbaySyncArgs {
   language: "EN" | "JP";
   limit: number;
-  offset: number;
-  /** Only price cards that have no eBay reading yet. */
-  onlyMissing: boolean;
+  /** Which slice of the catalogue this call should spend eBay calls on. */
+  strategy: EbayStrategy;
 }
 
 type CardRow = {
@@ -30,39 +31,27 @@ type CardRow = {
   language: string;
 };
 
+/** eBay throttles bursts; this window stays comfortably inside the limits. */
+const CONCURRENCY = 8;
+
 export async function runEbaySync(args: EbaySyncArgs) {
   const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
 
-  const { data, error } = await supabaseAdmin
-    .from("tcg_cards")
-    .select("id,name,english_name,number,set_name,set_code,language")
-    .eq("language", args.language)
-    .order("id", { ascending: true })
-    .range(args.offset, args.offset + args.limit - 1);
+  const { data, error } = await supabaseAdmin.rpc("ebay_sync_candidates" as never, {
+    _language: args.language,
+    _strategy: args.strategy,
+    _limit: args.limit,
+  } as never);
   if (error) return { ok: false, error: error.message };
 
-  let rows = (data ?? []) as unknown as CardRow[];
-  const scanned = rows.length;
-
-  if (args.onlyMissing && rows.length) {
-    const { data: existing } = await supabaseAdmin
-      .from("card_price_latest")
-      .select("card_id")
-      .eq("source", "ebay")
-      .in(
-        "card_id",
-        rows.map((r) => r.id),
-      );
-    const seen = new Set(((existing ?? []) as { card_id: string }[]).map((r) => r.card_id));
-    rows = rows.filter((r) => !seen.has(r.id));
-  }
+  const rows = (data ?? []) as unknown as CardRow[];
 
   const today = new Date().toISOString().slice(0, 10);
   const points: Record<string, unknown>[] = [];
   const latest: Record<string, unknown>[] = [];
 
-  // eBay throttles hard on bursts; a small window keeps us well inside limits.
-  const CONCURRENCY = 4;
+  const probes: Record<string, unknown>[] = [];
+
   for (let i = 0; i < rows.length; i += CONCURRENCY) {
     const chunk = rows.slice(i, i + CONCURRENCY);
     const results = await Promise.all(
@@ -80,6 +69,11 @@ export async function runEbaySync(args: EbaySyncArgs) {
     );
 
     for (const { row, quote } of results) {
+      probes.push({
+        card_id: row.id,
+        probed_at: new Date().toISOString(),
+        matched: quote.price != null,
+      });
       if (quote.price == null) continue;
       points.push({
         card_id: row.id,
@@ -99,6 +93,15 @@ export async function runEbaySync(args: EbaySyncArgs) {
     }
   }
 
+  // Remember every attempt so the daily eBay quota isn't spent re-checking
+  // cards eBay simply doesn't list.
+  for (let i = 0; i < probes.length; i += 500) {
+    await supabaseAdmin
+      .from("ebay_probe_log")
+      .upsert(probes.slice(i, i + 500) as never, { onConflict: "card_id" });
+  }
+
+
   for (let i = 0; i < points.length; i += 500) {
     await supabaseAdmin.from("card_price_points").upsert(points.slice(i, i + 500) as never, {
       onConflict: "card_id,source,condition,captured_on",
@@ -113,10 +116,11 @@ export async function runEbaySync(args: EbaySyncArgs) {
 
   return {
     ok: true,
-    scanned,
+    strategy: args.strategy,
     attempted: rows.length,
     priced: latest.length,
-    nextOffset: args.offset + scanned,
-    done: scanned < args.limit,
+    /** eBay calls consumed by this batch, for daily budget tracking. */
+    calls: rows.length,
+    done: rows.length === 0,
   };
 }

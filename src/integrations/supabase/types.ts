@@ -172,6 +172,24 @@ export type Database = {
         }
         Relationships: []
       }
+      ebay_probe_log: {
+        Row: {
+          card_id: string
+          matched: boolean
+          probed_at: string
+        }
+        Insert: {
+          card_id: string
+          matched?: boolean
+          probed_at?: string
+        }
+        Update: {
+          card_id?: string
+          matched?: boolean
+          probed_at?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           avatar_url: string | null
@@ -355,6 +373,18 @@ export type Database = {
           pct: number
           to_price: number
           window_days: number
+        }[]
+      }
+      ebay_sync_candidates: {
+        Args: { _language: string; _limit: number; _strategy: string }
+        Returns: {
+          english_name: string
+          id: string
+          language: string
+          name: string
+          number: string
+          set_code: string
+          set_name: string
         }[]
       }
       refresh_price_changes: { Args: never; Returns: number }

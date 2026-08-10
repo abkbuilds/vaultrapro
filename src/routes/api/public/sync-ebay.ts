@@ -4,9 +4,9 @@ import { z } from "zod";
 const bodySchema = z.object({
   language: z.enum(["EN", "JP"]).default("EN"),
   limit: z.number().int().min(1).max(200).default(40),
-  offset: z.number().int().min(0).default(0),
-  onlyMissing: z.boolean().default(true),
+  strategy: z.enum(["unpriced", "missing-ebay", "refresh"]).default("unpriced"),
 });
+
 
 /**
  * Backfills real eBay readings (trimmed median of live raw singles listings)
