@@ -50,6 +50,8 @@ export async function runEbaySync(args: EbaySyncArgs) {
   const points: Record<string, unknown>[] = [];
   const latest: Record<string, unknown>[] = [];
 
+  const probes: Record<string, unknown>[] = [];
+
   for (let i = 0; i < rows.length; i += CONCURRENCY) {
     const chunk = rows.slice(i, i + CONCURRENCY);
     const results = await Promise.all(
@@ -67,6 +69,11 @@ export async function runEbaySync(args: EbaySyncArgs) {
     );
 
     for (const { row, quote } of results) {
+      probes.push({
+        card_id: row.id,
+        probed_at: new Date().toISOString(),
+        matched: quote.price != null,
+      });
       if (quote.price == null) continue;
       points.push({
         card_id: row.id,
@@ -85,6 +92,15 @@ export async function runEbaySync(args: EbaySyncArgs) {
       });
     }
   }
+
+  // Remember every attempt so the daily eBay quota isn't spent re-checking
+  // cards eBay simply doesn't list.
+  for (let i = 0; i < probes.length; i += 500) {
+    await supabaseAdmin
+      .from("ebay_probe_log")
+      .upsert(probes.slice(i, i + 500) as never, { onConflict: "card_id" });
+  }
+
 
   for (let i = 0; i < points.length; i += 500) {
     await supabaseAdmin.from("card_price_points").upsert(points.slice(i, i + 500) as never, {
