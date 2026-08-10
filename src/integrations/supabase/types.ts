@@ -172,6 +172,24 @@ export type Database = {
         }
         Relationships: []
       }
+      ebay_probe_log: {
+        Row: {
+          card_id: string
+          matched: boolean
+          probed_at: string
+        }
+        Insert: {
+          card_id: string
+          matched?: boolean
+          probed_at?: string
+        }
+        Update: {
+          card_id?: string
+          matched?: boolean
+          probed_at?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           avatar_url: string | null
