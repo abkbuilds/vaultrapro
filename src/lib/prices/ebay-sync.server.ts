@@ -44,7 +44,7 @@ export async function runEbaySync(args: EbaySyncArgs) {
   } as never);
   if (error) return { ok: false, error: error.message };
 
-  const rows = ((data ?? []) as unknown as CardRow[]) ?? [];
+  const rows = (data ?? []) as unknown as CardRow[];
 
   const today = new Date().toISOString().slice(0, 10);
   const points: Record<string, unknown>[] = [];
