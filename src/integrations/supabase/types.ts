@@ -357,6 +357,18 @@ export type Database = {
           window_days: number
         }[]
       }
+      ebay_sync_candidates: {
+        Args: { _language: string; _limit: number; _strategy: string }
+        Returns: {
+          english_name: string
+          id: string
+          language: string
+          name: string
+          number: string
+          set_code: string
+          set_name: string
+        }[]
+      }
       refresh_price_changes: { Args: never; Returns: number }
       set_card_counts: {
         Args: { lang: string }
