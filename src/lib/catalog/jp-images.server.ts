@@ -140,7 +140,9 @@ export async function runJpImageSync(opts: {
     const abbr = setId.replace(/^jp-/, "").toUpperCase();
     const english = englishBySet.get(setId);
     const groupId =
-      groupByAbbr.get(abbr) ?? (english ? groupByName.get(norm(english)) : undefined);
+      GROUP_BY_SET[setId] ??
+      groupByAbbr.get(abbr) ??
+      (english ? groupByName.get(norm(english)) : undefined);
     processed.push(abbr);
     if (!groupId) continue;
 
@@ -148,24 +150,34 @@ export async function runJpImageSync(opts: {
       const products = (await getJson<{ results: Product[] }>(`${BASE}/${groupId}/products`))
         .results;
       const byNumber = new Map<string, Product>();
+      const byName = new Map<string, Product | null>();
       for (const p of products) {
+        if (!p.imageUrl) continue;
         const num = baseNumber(
           p.extendedData?.find((e) => e.name === "Number")?.value ?? null,
         );
-        if (num && p.imageUrl) byNumber.set(numberKey(num), p);
+        if (num) byNumber.set(numberKey(num), p);
+        // Vintage groups carry no collector number; fall back to the English
+        // card name, but only when it is unambiguous within the set.
+        const nk = nameKey(p.name.replace(/\s*-\s*\d+\/.*$/, ""));
+        byName.set(nk, byName.has(nk) ? null : p);
       }
-      if (!byNumber.size) continue;
+      if (!byNumber.size && !byName.size) continue;
 
-      const rows: { id: string; number: string }[] = [];
+      const rows: { id: string; number: string; english_name: string | null }[] = [];
       for (let from = 0; ; from += 1000) {
         const { data } = await supabaseAdmin
           .from("tcg_cards")
-          .select("id,number")
+          .select("id,number,english_name")
           .eq("set_id", setId)
           .is("image_small", null)
           .is("image_large", null)
           .range(from, from + 999);
-        const page = (data ?? []) as { id: string; number: string }[];
+        const page = (data ?? []) as {
+          id: string;
+          number: string;
+          english_name: string | null;
+        }[];
         rows.push(...page);
         if (page.length < 1000) break;
       }
@@ -174,7 +186,9 @@ export async function runJpImageSync(opts: {
         const chunk = rows.slice(i, i + 200);
         await Promise.all(
           chunk.map(async (row) => {
-            const p = byNumber.get(numberKey(row.number));
+            const p =
+              byNumber.get(numberKey(row.number)) ??
+              (row.english_name ? byName.get(nameKey(row.english_name)) : null);
             if (!p) return;
             const { error } = await supabaseAdmin
               .from("tcg_cards")
@@ -192,6 +206,7 @@ export async function runJpImageSync(opts: {
       console.error(`jp image sync failed for ${abbr}`, e);
     }
   }
+
 
   return {
     setsProcessed: processed,
