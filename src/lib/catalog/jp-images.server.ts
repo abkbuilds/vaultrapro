@@ -38,6 +38,44 @@ function sized(url: string | null, size: "200w" | "400w"): string | null {
   return url.replace(/_\d+w\.jpg$/, `_${size}.jpg`);
 }
 
+/**
+ * Vintage Japanese groups on tcgcsv carry neither an abbreviation nor a name
+ * that matches our set names, so they are pinned explicitly.
+ */
+const GROUP_BY_SET: Record<string, number> = {
+  "jp-PMCG1": 23721,
+  "jp-PMCG2": 23722,
+  "jp-PMCG3": 23723,
+  "jp-PMCG4": 23724,
+  "jp-PMCG5": 23725,
+  "jp-PMCG6": 23726,
+  "jp-neo1": 23727,
+  "jp-neo2": 23728,
+  "jp-neo3": 23720,
+  "jp-neo4": 23729,
+  "jp-VS1": 24180,
+  "jp-web1": 24141,
+  "jp-E1": 23730,
+  "jp-E2": 23731,
+  "jp-E3": 23732,
+  "jp-E4": 23733,
+  "jp-E5": 23734,
+  "jp-PCG1": 24117,
+  "jp-PCG2": 24128,
+  "jp-PCG3": 24135,
+  "jp-PCG4": 24103,
+  "jp-PCG5": 24101,
+  "jp-PCG6": 24085,
+  "jp-PCG7": 24084,
+  "jp-PCG8": 24099,
+  "jp-PCG9": 24090,
+  "jp-MC": 24567,
+  "jp-M-P": 24423,
+};
+
+const nameKey = (s: string) => s.toLowerCase().replace(/[^a-z0-9]/g, "");
+
+
 export interface JpImageResult {
   setsProcessed: string[];
   cardsUpdated: number;
@@ -102,7 +140,9 @@ export async function runJpImageSync(opts: {
     const abbr = setId.replace(/^jp-/, "").toUpperCase();
     const english = englishBySet.get(setId);
     const groupId =
-      groupByAbbr.get(abbr) ?? (english ? groupByName.get(norm(english)) : undefined);
+      GROUP_BY_SET[setId] ??
+      groupByAbbr.get(abbr) ??
+      (english ? groupByName.get(norm(english)) : undefined);
     processed.push(abbr);
     if (!groupId) continue;
 
@@ -110,24 +150,34 @@ export async function runJpImageSync(opts: {
       const products = (await getJson<{ results: Product[] }>(`${BASE}/${groupId}/products`))
         .results;
       const byNumber = new Map<string, Product>();
+      const byName = new Map<string, Product | null>();
       for (const p of products) {
+        if (!p.imageUrl) continue;
         const num = baseNumber(
           p.extendedData?.find((e) => e.name === "Number")?.value ?? null,
         );
-        if (num && p.imageUrl) byNumber.set(numberKey(num), p);
+        if (num) byNumber.set(numberKey(num), p);
+        // Vintage groups carry no collector number; fall back to the English
+        // card name, but only when it is unambiguous within the set.
+        const nk = nameKey(p.name.replace(/\s*-\s*\d+\/.*$/, ""));
+        byName.set(nk, byName.has(nk) ? null : p);
       }
-      if (!byNumber.size) continue;
+      if (!byNumber.size && !byName.size) continue;
 
-      const rows: { id: string; number: string }[] = [];
+      const rows: { id: string; number: string; english_name: string | null }[] = [];
       for (let from = 0; ; from += 1000) {
         const { data } = await supabaseAdmin
           .from("tcg_cards")
-          .select("id,number")
+          .select("id,number,english_name")
           .eq("set_id", setId)
           .is("image_small", null)
           .is("image_large", null)
           .range(from, from + 999);
-        const page = (data ?? []) as { id: string; number: string }[];
+        const page = (data ?? []) as {
+          id: string;
+          number: string;
+          english_name: string | null;
+        }[];
         rows.push(...page);
         if (page.length < 1000) break;
       }
@@ -136,7 +186,9 @@ export async function runJpImageSync(opts: {
         const chunk = rows.slice(i, i + 200);
         await Promise.all(
           chunk.map(async (row) => {
-            const p = byNumber.get(numberKey(row.number));
+            const p =
+              byNumber.get(numberKey(row.number)) ??
+              (row.english_name ? byName.get(nameKey(row.english_name)) : null);
             if (!p) return;
             const { error } = await supabaseAdmin
               .from("tcg_cards")
@@ -154,6 +206,7 @@ export async function runJpImageSync(opts: {
       console.error(`jp image sync failed for ${abbr}`, e);
     }
   }
+
 
   return {
     setsProcessed: processed,
