@@ -38,6 +38,44 @@ function sized(url: string | null, size: "200w" | "400w"): string | null {
   return url.replace(/_\d+w\.jpg$/, `_${size}.jpg`);
 }
 
+/**
+ * Vintage Japanese groups on tcgcsv carry neither an abbreviation nor a name
+ * that matches our set names, so they are pinned explicitly.
+ */
+const GROUP_BY_SET: Record<string, number> = {
+  "jp-PMCG1": 23721,
+  "jp-PMCG2": 23722,
+  "jp-PMCG3": 23723,
+  "jp-PMCG4": 23724,
+  "jp-PMCG5": 23725,
+  "jp-PMCG6": 23726,
+  "jp-neo1": 23727,
+  "jp-neo2": 23728,
+  "jp-neo3": 23720,
+  "jp-neo4": 23729,
+  "jp-VS1": 24180,
+  "jp-web1": 24141,
+  "jp-E1": 23730,
+  "jp-E2": 23731,
+  "jp-E3": 23732,
+  "jp-E4": 23733,
+  "jp-E5": 23734,
+  "jp-PCG1": 24117,
+  "jp-PCG2": 24128,
+  "jp-PCG3": 24135,
+  "jp-PCG4": 24103,
+  "jp-PCG5": 24101,
+  "jp-PCG6": 24085,
+  "jp-PCG7": 24084,
+  "jp-PCG8": 24099,
+  "jp-PCG9": 24090,
+  "jp-MC": 24567,
+  "jp-M-P": 24423,
+};
+
+const nameKey = (s: string) => s.toLowerCase().replace(/[^a-z0-9]/g, "");
+
+
 export interface JpImageResult {
   setsProcessed: string[];
   cardsUpdated: number;
