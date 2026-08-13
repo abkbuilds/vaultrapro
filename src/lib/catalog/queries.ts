@@ -166,13 +166,14 @@ export async function listSets(language: "all" | Language = "all") {
   return (data ?? []) as unknown as DbSet[];
 }
 
-export async function listRarities(language: "all" | Language = "all") {
-  let q = supabase.from("tcg_cards").select("rarity").not("rarity", "is", null).limit(5000);
-  if (language !== "all") q = q.eq("language", language);
-  const { data, error } = await q;
-  if (error) throw error;
-  return [...new Set((data ?? []).map((r) => (r as { rarity: string }).rarity))].sort();
+/**
+ * Rarity choices for the search filter, expressed the way collectors read them
+ * in each market (English words for EN, printed codes like SAR/CHR for JP).
+ */
+export function listRarities(language: "all" | Language = "all"): RarityBucket[] {
+  return RARITY_BUCKETS.filter((b) => language === "all" || b.language === language);
 }
+
 
 export async function fetchCardById(id: string): Promise<TcgCard | null> {
   const { data, error } = await supabase
