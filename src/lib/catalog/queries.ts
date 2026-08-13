@@ -129,10 +129,20 @@ export async function searchCards(args: SearchArgs) {
   }
   if (args.language && args.language !== "all") q = q.eq("language", args.language);
   if (args.setId && args.setId !== "all") q = q.eq("set_id", args.setId);
-  if (args.rarity && args.rarity !== "all") q = q.eq("rarity", args.rarity);
+  if (args.rarity && args.rarity !== "all") {
+    // Filter ids are market-facing rarity buckets (e.g. "JP:SAR"), each of
+    // which covers one or more raw rarity strings.
+    const bucket = bucketById(args.rarity);
+    if (bucket) {
+      q = q.in("rarity", bucket.values).eq("language", bucket.language);
+    } else {
+      q = q.eq("rarity", args.rarity);
+    }
+  }
   if (args.promoOnly) q = q.eq("is_promo", true);
   if (args.minPrice != null) q = q.gte("market_price", args.minPrice);
   if (args.maxPrice != null) q = q.lte("market_price", args.maxPrice);
+
 
   const { data, error, count } = await q;
   if (error) throw error;
