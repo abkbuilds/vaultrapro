@@ -1,6 +1,8 @@
 import { supabase } from "@/integrations/supabase/client";
 import type { TcgCard, Language } from "@/lib/tcg/types";
 import { registerCards } from "@/lib/tcg/cards";
+import { bucketById, RARITY_BUCKETS, type RarityBucket } from "@/lib/catalog/rarities";
+
 
 export interface DbCard {
   id: string;
