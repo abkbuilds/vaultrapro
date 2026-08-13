@@ -187,10 +187,11 @@ function DatabasePage() {
           >
             <option value="all">All rarities</option>
             {(raritiesQuery.data ?? []).map((r) => (
-              <option key={r} value={r}>
-                {r}
+              <option key={r.id} value={r.id}>
+                {lang === "all" ? `${r.language} · ${r.label}` : r.label}
               </option>
             ))}
+
           </select>
           <select
             value={priceBand}
