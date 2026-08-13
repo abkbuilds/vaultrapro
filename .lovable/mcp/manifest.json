@@ -1,0 +1,199 @@
+{
+  "version": 1,
+  "sdk_version": "0.26.2",
+  "path": "/mcp",
+  "auth": {
+    "type": "none"
+  },
+  "mcp": {
+    "server": {
+      "name": "card-compass",
+      "version": "0.1.0",
+      "title": "Card Compass"
+    },
+    "tools": [
+      {
+        "name": "search_cards",
+        "title": "Search Pokémon cards",
+        "description": "Search the public English and Japanese Pokémon card catalogue by name, set name or set number. Returns card ids, sets, rarities, artwork and the latest market price.",
+        "annotations": {
+          "readOnlyHint": true,
+          "idempotentHint": true,
+          "openWorldHint": false
+        },
+        "inputSchema": {
+          "$schema": "http://json-schema.org/draft-07/schema#",
+          "type": "object",
+          "properties": {
+            "query": {
+              "type": "string",
+              "description": "Card name, set name or number, e.g. 'Umbreon sv4a 205'."
+            },
+            "language": {
+              "type": "string",
+              "enum": [
+                "EN",
+                "JP"
+              ],
+              "description": "Restrict to English or Japanese printings."
+            },
+            "set_id": {
+              "type": "string",
+              "description": "Restrict to one set id, from list_sets."
+            },
+            "promo_only": {
+              "type": "boolean",
+              "description": "Only promo cards."
+            },
+            "limit": {
+              "type": "integer",
+              "minimum": -9007199254740991,
+              "maximum": 9007199254740991,
+              "description": "Max cards to return (1-50, default 20)."
+            }
+          }
+        },
+        "outputSchema": null
+      },
+      {
+        "name": "get_card",
+        "title": "Get card details",
+        "description": "Fetch one Pokémon card by its catalogue id, including set, rarity, artist, artwork and latest market price.",
+        "annotations": {
+          "readOnlyHint": true,
+          "idempotentHint": true,
+          "openWorldHint": false
+        },
+        "inputSchema": {
+          "$schema": "http://json-schema.org/draft-07/schema#",
+          "type": "object",
+          "properties": {
+            "card_id": {
+              "type": "string",
+              "minLength": 1,
+              "description": "Card id returned by search_cards."
+            }
+          },
+          "required": [
+            "card_id"
+          ]
+        },
+        "outputSchema": null
+      },
+      {
+        "name": "get_card_prices",
+        "title": "Get card prices and history",
+        "description": "Real recorded prices for one card: the latest quote per source (TCGplayer, Cardmarket, eBay, snkrdunk) with 24h/7d/30d movement, plus dated price history and recent sales. Only source-backed data is returned; missing readings mean no data.",
+        "annotations": {
+          "readOnlyHint": true,
+          "idempotentHint": true,
+          "openWorldHint": false
+        },
+        "inputSchema": {
+          "$schema": "http://json-schema.org/draft-07/schema#",
+          "type": "object",
+          "properties": {
+            "card_id": {
+              "type": "string",
+              "minLength": 1,
+              "description": "Card id returned by search_cards."
+            },
+            "history_days": {
+              "type": "integer",
+              "minimum": -9007199254740991,
+              "maximum": 9007199254740991,
+              "description": "How far back to include price history, in days (1-1825, default 90)."
+            }
+          },
+          "required": [
+            "card_id"
+          ]
+        },
+        "outputSchema": null
+      },
+      {
+        "name": "top_movers",
+        "title": "Top market movers",
+        "description": "Biggest recorded price gainers or losers across the Pokémon TCG catalogue over the last day, week or month, for English or Japanese cards.",
+        "annotations": {
+          "readOnlyHint": true,
+          "idempotentHint": true,
+          "openWorldHint": false
+        },
+        "inputSchema": {
+          "$schema": "http://json-schema.org/draft-07/schema#",
+          "type": "object",
+          "properties": {
+            "window": {
+              "type": "string",
+              "enum": [
+                "24h",
+                "7d",
+                "30d"
+              ],
+              "description": "Movement window. Defaults to 7d."
+            },
+            "direction": {
+              "type": "string",
+              "enum": [
+                "gainers",
+                "losers"
+              ],
+              "description": "Defaults to gainers."
+            },
+            "language": {
+              "type": "string",
+              "enum": [
+                "EN",
+                "JP"
+              ],
+              "description": "Restrict to English or Japanese printings."
+            },
+            "limit": {
+              "type": "integer",
+              "minimum": -9007199254740991,
+              "maximum": 9007199254740991,
+              "description": "Max cards to return (1-25, default 10)."
+            }
+          }
+        },
+        "outputSchema": null
+      },
+      {
+        "name": "list_sets",
+        "title": "List Pokémon sets",
+        "description": "List English and Japanese Pokémon TCG sets in reverse release order, with set ids usable as the set_id filter in search_cards.",
+        "annotations": {
+          "readOnlyHint": true,
+          "idempotentHint": true,
+          "openWorldHint": false
+        },
+        "inputSchema": {
+          "$schema": "http://json-schema.org/draft-07/schema#",
+          "type": "object",
+          "properties": {
+            "language": {
+              "type": "string",
+              "enum": [
+                "EN",
+                "JP"
+              ],
+              "description": "Restrict to English or Japanese sets."
+            },
+            "query": {
+              "type": "string",
+              "description": "Filter by set name, e.g. 'Surging Sparks'."
+            },
+            "limit": {
+              "type": "integer",
+              "minimum": -9007199254740991,
+              "maximum": 9007199254740991,
+              "description": "Max sets to return (1-100, default 50)."
+            }
+          }
+        },
+        "outputSchema": null
+      }
+    ]
+  }
+}
