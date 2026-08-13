@@ -14,14 +14,18 @@ import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as CollectionRouteImport } from './routes/collection'
 import { Route as DatabaseRouteImport } from './routes/database'
+import { Route as McpRouteImport } from './routes/mcp'
 import { Route as OnboardingRouteImport } from './routes/onboarding'
 import { Route as ProfileRouteImport } from './routes/profile'
 import { Route as ResetPasswordRouteImport } from './routes/reset-password'
 import { Route as ScanRouteImport } from './routes/scan'
 import { Route as TradesRouteImport } from './routes/trades'
 import { Route as TrendsRouteImport } from './routes/trends'
+import { Route as Char91DotmcpChar93ListToolsRouteImport } from './routes/[.mcp]/list-tools'
+import { Route as Char91DotwellKnownChar93OauthProtectedResourceRouteImport } from './routes/[.well-known]/oauth-protected-resource'
 import { Route as AuthenticatedAccountRouteImport } from './routes/_authenticated/account'
 import { Route as CardCardIdRouteImport } from './routes/card.$cardId'
+import { Route as Char91DotmcpChar93InvokeToolToolRouteImport } from './routes/[.mcp]/invoke-tool/$tool'
 import { Route as ApiPublicRefreshPricesRouteImport } from './routes/api/public/refresh-prices'
 import { Route as ApiPublicSyncCatalogRouteImport } from './routes/api/public/sync-catalog'
 import { Route as ApiPublicSyncEbayRouteImport } from './routes/api/public/sync-ebay'
@@ -57,6 +61,11 @@ const DatabaseRoute = DatabaseRouteImport.update({
   path: '/database',
   getParentRoute: () => rootRouteImport,
 } as any)
+const McpRoute = McpRouteImport.update({
+  id: '/mcp',
+  path: '/mcp',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const OnboardingRoute = OnboardingRouteImport.update({
   id: '/onboarding',
   path: '/onboarding',
@@ -87,6 +96,18 @@ const TrendsRoute = TrendsRouteImport.update({
   path: '/trends',
   getParentRoute: () => rootRouteImport,
 } as any)
+const Char91DotmcpChar93ListToolsRoute =
+  Char91DotmcpChar93ListToolsRouteImport.update({
+    id: '/.mcp/list-tools',
+    path: '/.mcp/list-tools',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const Char91DotwellKnownChar93OauthProtectedResourceRoute =
+  Char91DotwellKnownChar93OauthProtectedResourceRouteImport.update({
+    id: '/.well-known/oauth-protected-resource',
+    path: '/.well-known/oauth-protected-resource',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const AuthenticatedAccountRoute = AuthenticatedAccountRouteImport.update({
   id: '/account',
   path: '/account',
@@ -97,6 +118,12 @@ const CardCardIdRoute = CardCardIdRouteImport.update({
   path: '/card/$cardId',
   getParentRoute: () => rootRouteImport,
 } as any)
+const Char91DotmcpChar93InvokeToolToolRoute =
+  Char91DotmcpChar93InvokeToolToolRouteImport.update({
+    id: '/.mcp/invoke-tool/$tool',
+    path: '/.mcp/invoke-tool/$tool',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const ApiPublicRefreshPricesRoute = ApiPublicRefreshPricesRouteImport.update({
   id: '/api/public/refresh-prices',
   path: '/api/public/refresh-prices',
@@ -154,14 +181,18 @@ export interface FileRoutesByFullPath {
   '/auth': typeof AuthRoute
   '/collection': typeof CollectionRoute
   '/database': typeof DatabaseRoute
+  '/mcp': typeof McpRoute
   '/onboarding': typeof OnboardingRoute
   '/profile': typeof ProfileRoute
   '/reset-password': typeof ResetPasswordRoute
   '/scan': typeof ScanRoute
   '/trades': typeof TradesRoute
   '/trends': typeof TrendsRoute
+  '/.mcp/list-tools': typeof Char91DotmcpChar93ListToolsRoute
+  '/.well-known/oauth-protected-resource': typeof Char91DotwellKnownChar93OauthProtectedResourceRoute
   '/account': typeof AuthenticatedAccountRoute
   '/card/$cardId': typeof CardCardIdRoute
+  '/.mcp/invoke-tool/$tool': typeof Char91DotmcpChar93InvokeToolToolRoute
   '/api/public/refresh-prices': typeof ApiPublicRefreshPricesRoute
   '/api/public/sync-catalog': typeof ApiPublicSyncCatalogRoute
   '/api/public/sync-ebay': typeof ApiPublicSyncEbayRoute
@@ -178,14 +209,18 @@ export interface FileRoutesByTo {
   '/auth': typeof AuthRoute
   '/collection': typeof CollectionRoute
   '/database': typeof DatabaseRoute
+  '/mcp': typeof McpRoute
   '/onboarding': typeof OnboardingRoute
   '/profile': typeof ProfileRoute
   '/reset-password': typeof ResetPasswordRoute
   '/scan': typeof ScanRoute
   '/trades': typeof TradesRoute
   '/trends': typeof TrendsRoute
+  '/.mcp/list-tools': typeof Char91DotmcpChar93ListToolsRoute
+  '/.well-known/oauth-protected-resource': typeof Char91DotwellKnownChar93OauthProtectedResourceRoute
   '/account': typeof AuthenticatedAccountRoute
   '/card/$cardId': typeof CardCardIdRoute
+  '/.mcp/invoke-tool/$tool': typeof Char91DotmcpChar93InvokeToolToolRoute
   '/api/public/refresh-prices': typeof ApiPublicRefreshPricesRoute
   '/api/public/sync-catalog': typeof ApiPublicSyncCatalogRoute
   '/api/public/sync-ebay': typeof ApiPublicSyncEbayRoute
@@ -204,14 +239,18 @@ export interface FileRoutesById {
   '/auth': typeof AuthRoute
   '/collection': typeof CollectionRoute
   '/database': typeof DatabaseRoute
+  '/mcp': typeof McpRoute
   '/onboarding': typeof OnboardingRoute
   '/profile': typeof ProfileRoute
   '/reset-password': typeof ResetPasswordRoute
   '/scan': typeof ScanRoute
   '/trades': typeof TradesRoute
   '/trends': typeof TrendsRoute
+  '/.mcp/list-tools': typeof Char91DotmcpChar93ListToolsRoute
+  '/.well-known/oauth-protected-resource': typeof Char91DotwellKnownChar93OauthProtectedResourceRoute
   '/_authenticated/account': typeof AuthenticatedAccountRoute
   '/card/$cardId': typeof CardCardIdRoute
+  '/.mcp/invoke-tool/$tool': typeof Char91DotmcpChar93InvokeToolToolRoute
   '/api/public/refresh-prices': typeof ApiPublicRefreshPricesRoute
   '/api/public/sync-catalog': typeof ApiPublicSyncCatalogRoute
   '/api/public/sync-ebay': typeof ApiPublicSyncEbayRoute
@@ -230,14 +269,18 @@ export interface FileRouteTypes {
     | '/auth'
     | '/collection'
     | '/database'
+    | '/mcp'
     | '/onboarding'
     | '/profile'
     | '/reset-password'
     | '/scan'
     | '/trades'
     | '/trends'
+    | '/.mcp/list-tools'
+    | '/.well-known/oauth-protected-resource'
     | '/account'
     | '/card/$cardId'
+    | '/.mcp/invoke-tool/$tool'
     | '/api/public/refresh-prices'
     | '/api/public/sync-catalog'
     | '/api/public/sync-ebay'
@@ -254,14 +297,18 @@ export interface FileRouteTypes {
     | '/auth'
     | '/collection'
     | '/database'
+    | '/mcp'
     | '/onboarding'
     | '/profile'
     | '/reset-password'
     | '/scan'
     | '/trades'
     | '/trends'
+    | '/.mcp/list-tools'
+    | '/.well-known/oauth-protected-resource'
     | '/account'
     | '/card/$cardId'
+    | '/.mcp/invoke-tool/$tool'
     | '/api/public/refresh-prices'
     | '/api/public/sync-catalog'
     | '/api/public/sync-ebay'
@@ -279,14 +326,18 @@ export interface FileRouteTypes {
     | '/auth'
     | '/collection'
     | '/database'
+    | '/mcp'
     | '/onboarding'
     | '/profile'
     | '/reset-password'
     | '/scan'
     | '/trades'
     | '/trends'
+    | '/.mcp/list-tools'
+    | '/.well-known/oauth-protected-resource'
     | '/_authenticated/account'
     | '/card/$cardId'
+    | '/.mcp/invoke-tool/$tool'
     | '/api/public/refresh-prices'
     | '/api/public/sync-catalog'
     | '/api/public/sync-ebay'
@@ -305,13 +356,17 @@ export interface RootRouteChildren {
   AuthRoute: typeof AuthRoute
   CollectionRoute: typeof CollectionRoute
   DatabaseRoute: typeof DatabaseRoute
+  McpRoute: typeof McpRoute
   OnboardingRoute: typeof OnboardingRoute
   ProfileRoute: typeof ProfileRoute
   ResetPasswordRoute: typeof ResetPasswordRoute
   ScanRoute: typeof ScanRoute
   TradesRoute: typeof TradesRoute
   TrendsRoute: typeof TrendsRoute
+  Char91DotmcpChar93ListToolsRoute: typeof Char91DotmcpChar93ListToolsRoute
+  Char91DotwellKnownChar93OauthProtectedResourceRoute: typeof Char91DotwellKnownChar93OauthProtectedResourceRoute
   CardCardIdRoute: typeof CardCardIdRoute
+  Char91DotmcpChar93InvokeToolToolRoute: typeof Char91DotmcpChar93InvokeToolToolRoute
   ApiPublicRefreshPricesRoute: typeof ApiPublicRefreshPricesRoute
   ApiPublicSyncCatalogRoute: typeof ApiPublicSyncCatalogRoute
   ApiPublicSyncEbayRoute: typeof ApiPublicSyncEbayRoute
@@ -361,6 +416,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DatabaseRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/mcp': {
+      id: '/mcp'
+      path: '/mcp'
+      fullPath: '/mcp'
+      preLoaderRoute: typeof McpRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/onboarding': {
       id: '/onboarding'
       path: '/onboarding'
@@ -403,6 +465,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof TrendsRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/.mcp/list-tools': {
+      id: '/.mcp/list-tools'
+      path: '/.mcp/list-tools'
+      fullPath: '/.mcp/list-tools'
+      preLoaderRoute: typeof Char91DotmcpChar93ListToolsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/.well-known/oauth-protected-resource': {
+      id: '/.well-known/oauth-protected-resource'
+      path: '/.well-known/oauth-protected-resource'
+      fullPath: '/.well-known/oauth-protected-resource'
+      preLoaderRoute: typeof Char91DotwellKnownChar93OauthProtectedResourceRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/_authenticated/account': {
       id: '/_authenticated/account'
       path: '/account'
@@ -415,6 +491,13 @@ declare module '@tanstack/react-router' {
       path: '/card/$cardId'
       fullPath: '/card/$cardId'
       preLoaderRoute: typeof CardCardIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/.mcp/invoke-tool/$tool': {
+      id: '/.mcp/invoke-tool/$tool'
+      path: '/.mcp/invoke-tool/$tool'
+      fullPath: '/.mcp/invoke-tool/$tool'
+      preLoaderRoute: typeof Char91DotmcpChar93InvokeToolToolRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/api/public/refresh-prices': {
@@ -507,13 +590,18 @@ const rootRouteChildren: RootRouteChildren = {
   AuthRoute: AuthRoute,
   CollectionRoute: CollectionRoute,
   DatabaseRoute: DatabaseRoute,
+  McpRoute: McpRoute,
   OnboardingRoute: OnboardingRoute,
   ProfileRoute: ProfileRoute,
   ResetPasswordRoute: ResetPasswordRoute,
   ScanRoute: ScanRoute,
   TradesRoute: TradesRoute,
   TrendsRoute: TrendsRoute,
+  Char91DotmcpChar93ListToolsRoute: Char91DotmcpChar93ListToolsRoute,
+  Char91DotwellKnownChar93OauthProtectedResourceRoute:
+    Char91DotwellKnownChar93OauthProtectedResourceRoute,
   CardCardIdRoute: CardCardIdRoute,
+  Char91DotmcpChar93InvokeToolToolRoute: Char91DotmcpChar93InvokeToolToolRoute,
   ApiPublicRefreshPricesRoute: ApiPublicRefreshPricesRoute,
   ApiPublicSyncCatalogRoute: ApiPublicSyncCatalogRoute,
   ApiPublicSyncEbayRoute: ApiPublicSyncEbayRoute,
