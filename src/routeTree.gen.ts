@@ -35,6 +35,7 @@ import { Route as ApiPublicSyncJpNamesRouteImport } from './routes/api/public/sy
 import { Route as ApiPublicSyncMissingSetsRouteImport } from './routes/api/public/sync-missing-sets'
 import { Route as ApiPublicSyncPokewalletRouteImport } from './routes/api/public/sync-pokewallet'
 import { Route as ApiPublicSyncPricesRouteImport } from './routes/api/public/sync-prices'
+import { Route as ApiPublicSyncPtcgRouteImport } from './routes/api/public/sync-ptcg'
 import { Route as ApiPublicSyncTcgdexRouteImport } from './routes/api/public/sync-tcgdex'
 
 const IndexRoute = IndexRouteImport.update({
@@ -170,6 +171,11 @@ const ApiPublicSyncPricesRoute = ApiPublicSyncPricesRouteImport.update({
   path: '/api/public/sync-prices',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiPublicSyncPtcgRoute = ApiPublicSyncPtcgRouteImport.update({
+  id: '/api/public/sync-ptcg',
+  path: '/api/public/sync-ptcg',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiPublicSyncTcgdexRoute = ApiPublicSyncTcgdexRouteImport.update({
   id: '/api/public/sync-tcgdex',
   path: '/api/public/sync-tcgdex',
@@ -202,6 +208,7 @@ export interface FileRoutesByFullPath {
   '/api/public/sync-missing-sets': typeof ApiPublicSyncMissingSetsRoute
   '/api/public/sync-pokewallet': typeof ApiPublicSyncPokewalletRoute
   '/api/public/sync-prices': typeof ApiPublicSyncPricesRoute
+  '/api/public/sync-ptcg': typeof ApiPublicSyncPtcgRoute
   '/api/public/sync-tcgdex': typeof ApiPublicSyncTcgdexRoute
 }
 export interface FileRoutesByTo {
@@ -230,6 +237,7 @@ export interface FileRoutesByTo {
   '/api/public/sync-missing-sets': typeof ApiPublicSyncMissingSetsRoute
   '/api/public/sync-pokewallet': typeof ApiPublicSyncPokewalletRoute
   '/api/public/sync-prices': typeof ApiPublicSyncPricesRoute
+  '/api/public/sync-ptcg': typeof ApiPublicSyncPtcgRoute
   '/api/public/sync-tcgdex': typeof ApiPublicSyncTcgdexRoute
 }
 export interface FileRoutesById {
@@ -260,6 +268,7 @@ export interface FileRoutesById {
   '/api/public/sync-missing-sets': typeof ApiPublicSyncMissingSetsRoute
   '/api/public/sync-pokewallet': typeof ApiPublicSyncPokewalletRoute
   '/api/public/sync-prices': typeof ApiPublicSyncPricesRoute
+  '/api/public/sync-ptcg': typeof ApiPublicSyncPtcgRoute
   '/api/public/sync-tcgdex': typeof ApiPublicSyncTcgdexRoute
 }
 export interface FileRouteTypes {
@@ -290,6 +299,7 @@ export interface FileRouteTypes {
     | '/api/public/sync-missing-sets'
     | '/api/public/sync-pokewallet'
     | '/api/public/sync-prices'
+    | '/api/public/sync-ptcg'
     | '/api/public/sync-tcgdex'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -318,6 +328,7 @@ export interface FileRouteTypes {
     | '/api/public/sync-missing-sets'
     | '/api/public/sync-pokewallet'
     | '/api/public/sync-prices'
+    | '/api/public/sync-ptcg'
     | '/api/public/sync-tcgdex'
   id:
     | '__root__'
@@ -347,6 +358,7 @@ export interface FileRouteTypes {
     | '/api/public/sync-missing-sets'
     | '/api/public/sync-pokewallet'
     | '/api/public/sync-prices'
+    | '/api/public/sync-ptcg'
     | '/api/public/sync-tcgdex'
   fileRoutesById: FileRoutesById
 }
@@ -376,6 +388,7 @@ export interface RootRouteChildren {
   ApiPublicSyncMissingSetsRoute: typeof ApiPublicSyncMissingSetsRoute
   ApiPublicSyncPokewalletRoute: typeof ApiPublicSyncPokewalletRoute
   ApiPublicSyncPricesRoute: typeof ApiPublicSyncPricesRoute
+  ApiPublicSyncPtcgRoute: typeof ApiPublicSyncPtcgRoute
   ApiPublicSyncTcgdexRoute: typeof ApiPublicSyncTcgdexRoute
 }
 
@@ -563,6 +576,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicSyncPricesRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/sync-ptcg': {
+      id: '/api/public/sync-ptcg'
+      path: '/api/public/sync-ptcg'
+      fullPath: '/api/public/sync-ptcg'
+      preLoaderRoute: typeof ApiPublicSyncPtcgRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/sync-tcgdex': {
       id: '/api/public/sync-tcgdex'
       path: '/api/public/sync-tcgdex'
@@ -611,6 +631,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiPublicSyncMissingSetsRoute: ApiPublicSyncMissingSetsRoute,
   ApiPublicSyncPokewalletRoute: ApiPublicSyncPokewalletRoute,
   ApiPublicSyncPricesRoute: ApiPublicSyncPricesRoute,
+  ApiPublicSyncPtcgRoute: ApiPublicSyncPtcgRoute,
   ApiPublicSyncTcgdexRoute: ApiPublicSyncTcgdexRoute,
 }
 export const routeTree = rootRouteImport
