@@ -67,6 +67,8 @@ function dateMinus(days: number) {
   return new Date(Date.now() - days * 86_400_000).toISOString().slice(0, 10);
 }
 
+export let lastDebug = "";
+
 async function fetchPage(page: number, key: string): Promise<PtcgCard[]> {
   const url = `${PTCG}/cards?page=${page}&pageSize=250&orderBy=id&select=id,tcgplayer,cardmarket`;
   for (let attempt = 0; attempt < 3; attempt++) {
@@ -76,9 +78,10 @@ async function fetchPage(page: number, key: string): Promise<PtcgCard[]> {
         const json = (await res.json()) as { data?: PtcgCard[] };
         return json.data ?? [];
       }
+      lastDebug = `status ${res.status}`;
       if (res.status !== 429 && res.status < 500) return [];
-    } catch {
-      /* retry */
+    } catch (e) {
+      lastDebug = `throw ${String(e)}`;
     }
     await new Promise((r) => setTimeout(r, 800 * (attempt + 1)));
   }
@@ -208,6 +211,7 @@ export async function runPtcgSync(args: PtcgSyncArgs) {
     scanned,
     priced: keepLatest.length,
     historyPoints: keepPoints.length,
+    debug: lastDebug,
     nextPage: lastPage + 1,
     done: exhausted,
   };
