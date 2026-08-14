@@ -23,11 +23,12 @@ interface PtcgCard {
 }
 
 export interface PtcgSyncArgs {
-  /** 1-based page of the global card list (250 cards per page). */
+  /** 1-based index into the set list (sets are walked oldest-first). */
   page: number;
-  /** How many pages to walk in this call. */
+  /** How many sets to walk in this call. */
   pages: number;
 }
+
 
 async function eurToUsd(): Promise<number> {
   try {
@@ -67,22 +68,37 @@ function dateMinus(days: number) {
   return new Date(Date.now() - days * 86_400_000).toISOString().slice(0, 10);
 }
 
-async function fetchPage(page: number, key: string): Promise<PtcgCard[]> {
-  const url = `${PTCG}/cards?page=${page}&pageSize=250&orderBy=id&select=id,tcgplayer,cardmarket`;
+async function getJson<T>(url: string, key: string): Promise<T | null> {
   for (let attempt = 0; attempt < 3; attempt++) {
     try {
       const res = await fetch(url, { headers: { accept: "application/json", "X-Api-Key": key } });
-      if (res.ok) {
-        const json = (await res.json()) as { data?: PtcgCard[] };
-        return json.data ?? [];
-      }
-      if (res.status !== 429 && res.status < 500) return [];
+      if (res.ok) return (await res.json()) as T;
     } catch {
       /* retry */
     }
     await new Promise((r) => setTimeout(r, 800 * (attempt + 1)));
   }
-  return [];
+  return null;
+}
+
+/**
+ * The unfiltered `/cards` endpoint fails on deep pages, so the catalogue is
+ * walked one set at a time — the same slices the API serves reliably.
+ */
+async function fetchSetIds(key: string): Promise<string[]> {
+  const json = await getJson<{ data?: { id: string; releaseDate?: string }[] }>(
+    `${PTCG}/sets?pageSize=250&orderBy=releaseDate&select=id,releaseDate`,
+    key,
+  );
+  return (json?.data ?? []).map((s) => s.id);
+}
+
+async function fetchSetCards(setId: string, key: string): Promise<PtcgCard[]> {
+  const json = await getJson<{ data?: PtcgCard[] }>(
+    `${PTCG}/cards?q=set.id:${setId}&pageSize=250&select=id,tcgplayer,cardmarket`,
+    key,
+  );
+  return json?.data ?? [];
 }
 
 export async function runPtcgSync(args: PtcgSyncArgs) {
@@ -96,21 +112,16 @@ export async function runPtcgSync(args: PtcgSyncArgs) {
 
   const points: Record<string, unknown>[] = [];
   const latest: Record<string, unknown>[] = [];
-  const marketUpdates: { id: string; price: number }[] = [];
 
+  const setIds = await fetchSetIds(key);
+  const start = Math.max(args.page - 1, 0);
+  const slice = setIds.slice(start, start + args.pages);
   let scanned = 0;
-  let lastPage = args.page - 1;
-  let exhausted = false;
 
-  for (let i = 0; i < args.pages; i++) {
-    const page = args.page + i;
-    const cards = await fetchPage(page, key);
-    lastPage = page;
-    if (!cards.length) {
-      exhausted = true;
-      break;
-    }
+  for (const setId of slice) {
+    const cards = await fetchSetCards(setId, key);
     scanned += cards.length;
+
 
     for (const card of cards) {
       const id = `en-${card.id}`;
@@ -126,7 +137,6 @@ export async function runPtcgSync(args: PtcgSyncArgs) {
           currency: "USD",
           captured_on: card.tcgplayer?.updatedAt?.slice(0, 10) ?? today,
         });
-        marketUpdates.push({ id, price: tcg });
       }
 
       const cm = card.cardmarket?.prices;
@@ -196,19 +206,16 @@ export async function runPtcgSync(args: PtcgSyncArgs) {
       .from("card_price_latest")
       .upsert(keepLatest.slice(i, i + 500) as never, { onConflict: "card_id,source" });
   }
-  for (const row of marketUpdates.filter((r) => known.has(r.id))) {
-    await supabaseAdmin
-      .from("tcg_cards")
-      .update({ market_price: row.price, updated_at: now } as never)
-      .eq("id", row.id);
-  }
+  // `tcg_cards.market_price` is refreshed in bulk from `card_price_latest`
+  // by the nightly SQL job, so no per-row writes are needed here.
 
   return {
     ok: true,
     scanned,
     priced: keepLatest.length,
     historyPoints: keepPoints.length,
-    nextPage: lastPage + 1,
-    done: exhausted,
+    nextPage: start + slice.length + 1,
+    done: slice.length === 0 || start + slice.length >= setIds.length,
+
   };
 }
