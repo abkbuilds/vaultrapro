@@ -9,7 +9,6 @@
  * - TCGplayer              : api.pokemontcg.io (real market prices, EN)
  * - Cardmarket             : api.tcgdex.net (real EN + JP prices, no API key)
  * - eBay                   : Browse API (needs EBAY_CLIENT_ID + EBAY_CLIENT_SECRET)
- * - snkrdunk               : no public API — needs SNKRDUNK_API_TOKEN partner feed
  */
 import type { PriceSource } from "@/lib/tcg/types";
 
@@ -292,41 +291,11 @@ export async function quoteEbay(card: {
 }
 
 
-/* -------------------------------- snkrdunk ------------------------------ */
-
-export async function quoteSnkrdunk(query: string): Promise<Quote> {
-  const token = process.env.SNKRDUNK_API_TOKEN;
-  if (!token) {
-    return {
-      source: "snkrdunk",
-      price: null,
-      currency: "JPY",
-      live: false,
-      note: "snkrdunk has no public API — a partner token is required",
-    };
-  }
-  const json = await getJson<Record<string, any>>(
-    `https://snkrdunk.com/api/v1/trading-cards/search?keyword=${encodeURIComponent(query)}`,
-    { headers: { authorization: `Bearer ${token}` } },
-  );
-  const first = (json?.items ?? json?.data ?? [])[0];
-  const yen = Number(first?.minPrice ?? first?.price);
-  return {
-    source: "snkrdunk",
-    price: Number.isFinite(yen) && yen > 0 ? yen : null,
-    currency: "JPY",
-    live: Number.isFinite(yen) && yen > 0,
-    note: Number.isFinite(yen) && yen > 0 ? undefined : "No snkrdunk match",
-  };
-}
-
 /** Sources that apply to a card, by language. */
 export function sourcesFor(language: string): PriceSource[] {
   // TCGplayer lists Japanese singles too (category 85), reachable keylessly via
   // tcgcsv.com, so it applies to both languages.
-  return language === "JP"
-    ? ["tcgplayer", "cardmarket", "ebay", "snkrdunk"]
-    : ["tcgplayer", "cardmarket", "ebay"];
+  return ["tcgplayer", "cardmarket", "ebay"];
 }
 
 export async function quoteAll(card: {
@@ -337,7 +306,6 @@ export async function quoteAll(card: {
   setCode?: string;
   language: string;
 }): Promise<Quote[]> {
-  const query = `${card.name} ${card.setName} ${card.number} pokemon card`;
   const wanted = sourcesFor(card.language);
   const runners: Record<PriceSource, () => Promise<Quote>> = {
     tcgplayer: () =>
@@ -365,7 +333,6 @@ export async function quoteAll(card: {
         language: card.language,
       }),
 
-    snkrdunk: () => quoteSnkrdunk(query),
   } as never;
   return Promise.all(wanted.map((s) => runners[s]()));
 }
