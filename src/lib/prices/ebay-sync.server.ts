@@ -34,17 +34,53 @@ type CardRow = {
 /** eBay throttles bursts; this window stays comfortably inside the limits. */
 const CONCURRENCY = 8;
 
+/**
+ * eBay allows ~5,000 Browse calls per application per day. We spend up to 4,800
+ * and keep the rest as headroom for on-demand card lookups in the app.
+ */
+const DAILY_CAP = 4800;
+
 export async function runEbaySync(args: EbaySyncArgs) {
   const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+
+  // Reserve this batch against today's shared budget before spending any calls.
+  const { data: grantedRaw, error: budgetError } = await supabaseAdmin.rpc(
+    "ebay_reserve_calls" as never,
+    { _want: args.limit, _cap: DAILY_CAP } as never,
+  );
+  if (budgetError) return { ok: false, error: budgetError.message };
+  const granted = Number(grantedRaw ?? 0);
+  if (granted <= 0) {
+    return {
+      ok: true,
+      strategy: args.strategy,
+      attempted: 0,
+      priced: 0,
+      calls: 0,
+      done: true,
+      note: "Daily eBay call budget exhausted",
+    };
+  }
 
   const { data, error } = await supabaseAdmin.rpc("ebay_sync_candidates" as never, {
     _language: args.language,
     _strategy: args.strategy,
-    _limit: args.limit,
+    _limit: granted,
   } as never);
   if (error) return { ok: false, error: error.message };
 
   const rows = (data ?? []) as unknown as CardRow[];
+
+  // Hand back any reserved calls this batch won't use.
+  if (rows.length < granted) {
+    await supabaseAdmin.rpc("ebay_reserve_calls" as never, {
+      _want: -(granted - rows.length),
+      _cap: DAILY_CAP,
+    } as never);
+  }
+
+
+
 
   const today = new Date().toISOString().slice(0, 10);
   const points: Record<string, unknown>[] = [];

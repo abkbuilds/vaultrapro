@@ -172,6 +172,24 @@ export type Database = {
         }
         Relationships: []
       }
+      ebay_call_budget: {
+        Row: {
+          calls: number
+          day: string
+          updated_at: string
+        }
+        Insert: {
+          calls?: number
+          day: string
+          updated_at?: string
+        }
+        Update: {
+          calls?: number
+          day?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       ebay_probe_log: {
         Row: {
           card_id: string
@@ -374,6 +392,10 @@ export type Database = {
           to_price: number
           window_days: number
         }[]
+      }
+      ebay_reserve_calls: {
+        Args: { _cap?: number; _want: number }
+        Returns: number
       }
       ebay_sync_candidates: {
         Args: { _language: string; _limit: number; _strategy: string }
