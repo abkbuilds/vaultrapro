@@ -30,7 +30,6 @@ export type PriceSource =
   | "tcgplayer"
   | "cardmarket"
   | "ebay"
-  | "snkrdunk"
   | "pricecharting";
 
 export type TimeRange = "1D" | "1W" | "1M" | "3M" | "1Y" | "5Y" | "ALL";
@@ -106,7 +105,6 @@ export const SOURCE_META: Record<
     languages: ["EN", "JP"],
   },
   ebay: { label: "eBay sold", color: "var(--src-ebay)", languages: ["EN", "JP"] },
-  snkrdunk: { label: "snkrdunk", color: "var(--src-snkrdunk)", languages: ["JP"] },
   pricecharting: {
     label: "PriceCharting",
     color: "var(--src-pricecharting)",

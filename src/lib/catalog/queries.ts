@@ -64,7 +64,7 @@ export function toTcgCard(row: DbCard): TcgCard {
   };
 }
 
-const SOURCE_RANK = ["tcgplayer", "cardmarket", "ebay", "snkrdunk"];
+const SOURCE_RANK = ["tcgplayer", "cardmarket", "ebay"];
 
 /**
  * Fills in each card's real observed 7-day movement from the recorded

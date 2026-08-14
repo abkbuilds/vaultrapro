@@ -29,7 +29,7 @@ import {
   type PriceSource,
   type TimeRange,
 } from "@/lib/tcg/types";
-import { MultiSourceChart } from "@/components/tcg/Charts";
+import { MultiSourceChart, TrendAreaChart } from "@/components/tcg/Charts";
 import { RangeToggle } from "@/components/tcg/RangeToggle";
 import { CardImage, PriceDelta, money } from "@/components/tcg/CardBits";
 import { useCollection } from "@/lib/tcg/collection";
@@ -49,7 +49,7 @@ export const Route = createFileRoute("/card/$cardId")({
     }
     const { card } = loaderData;
     const title = `${card.name} · ${card.setCode} ${card.number} — Vaultra`;
-    const description = `${card.name} from ${card.setName} (${card.language}). Live TCGplayer, Cardmarket, eBay and snkrdunk prices with full history.`;
+    const description = `${card.name} from ${card.setName} (${card.language}). Live TCGplayer, Cardmarket and eBay prices with full history.`;
     return {
       meta: [
         { title },
@@ -64,7 +64,16 @@ export const Route = createFileRoute("/card/$cardId")({
   component: CardDetail,
 });
 
-const ALL_RANGES: TimeRange[] = ["1D", "1W", "1M", "3M", "1Y", "5Y", "ALL"];
+const ALL_RANGES: TimeRange[] = ["1W", "1M", "3M", "1Y", "5Y", "ALL"];
+
+function NoHistory() {
+  return (
+    <div className="grid h-52 place-items-center px-6 text-center text-sm text-muted-foreground">
+      No recorded price history for this window yet. Only real, source-backed readings are
+      charted — nothing is estimated.
+    </div>
+  );
+}
 
 function CardDetail() {
   const { card } = Route.useLoaderData();
@@ -72,6 +81,7 @@ function CardDetail() {
   const [range, setRange] = useState<TimeRange>("3M");
   const [condition, setCondition] = useState<Condition>("Near Mint");
   const [hidden, setHidden] = useState<PriceSource[]>([]);
+  const [overlay, setOverlay] = useState(false);
 
   const getPrices = useServerFn(fetchCardPrices);
   const prices = useQuery({
@@ -124,6 +134,37 @@ function CardDetail() {
   }, [series]);
 
   const hasHistory = chartData.length > 1;
+
+  /**
+   * Rare Candy / Collectr style single "market value" line: the deepest
+   * USD-denominated source we actually recorded, in priority order.
+   */
+  const primary = useMemo(() => {
+    const order: PriceSource[] = ["tcgplayer", "cardmarket", "ebay"];
+    const candidates = [...series].sort(
+      (a, b) =>
+        b.points.length - a.points.length || order.indexOf(a.source) - order.indexOf(b.source),
+    );
+    return candidates.find((s) => s.points.length > 1) ?? candidates[0] ?? null;
+  }, [series]);
+
+  const marketPoints = primary?.points ?? [];
+  const marketMoved =
+    marketPoints.length > 1
+      ? {
+          from: marketPoints[0].value,
+          to: marketPoints[marketPoints.length - 1].value,
+          pct:
+            marketPoints[0].value > 0
+              ? ((marketPoints[marketPoints.length - 1].value - marketPoints[0].value) /
+                  marketPoints[0].value) *
+                100
+              : null,
+        }
+      : null;
+  const marketSymbol =
+    primary?.currency === "EUR" ? "\u20ac" : primary?.currency === "JPY" ? "\u00a5" : "$";
+
 
   return (
     <main>
@@ -211,53 +252,107 @@ function CardDetail() {
 
       <section className="mt-5 px-4">
         <div className="glass-panel rounded-3xl p-3">
-          {prices.isLoading ? (
-            <div className="grid h-52 place-items-center text-muted-foreground">
-              <Loader2 className="size-5 animate-spin" />
-            </div>
-          ) : prices.isError ? (
-            <div className="grid h-52 place-items-center px-6 text-center text-sm text-destructive">
-              Couldn't reach the price sources. Try again in a moment.
-            </div>
-          ) : hasHistory ? (
-            <MultiSourceChart data={chartData} sources={shown} currencies={currencyBySource} />
-          ) : (
-            <div className="grid h-52 place-items-center px-6 text-center text-sm text-muted-foreground">
-              No recorded price history for this window yet. Only real, source-backed
-              readings are charted — nothing is estimated.
-            </div>
-          )}
-          <div className="mt-2 flex flex-wrap gap-1.5">
-            {allSources.map((s) => {
-              const off = hidden.includes(s);
-              return (
-                <button
-                  key={s}
-                  type="button"
-                  onClick={() => setHidden((p) => (off ? p.filter((x) => x !== s) : [...p, s]))}
+          <div className="flex items-start justify-between gap-3 px-1">
+            <div className="min-w-0">
+              <h2 className="font-display text-sm font-semibold">Market value</h2>
+              <p className="mt-0.5 font-display text-2xl font-bold tabular-nums">
+                {marketPoints.length
+                  ? `${marketSymbol}${marketPoints[marketPoints.length - 1].value.toLocaleString()}`
+                  : "—"}
+              </p>
+              {marketMoved?.pct != null && (
+                <p
                   className={cn(
-                    "flex items-center gap-1.5 rounded-full px-2.5 py-1.5 text-[11px] font-semibold transition-opacity",
-                    off ? "bg-surface-2 opacity-45" : "bg-surface-2",
+                    "text-[11px] font-semibold tabular-nums",
+                    marketMoved.pct >= 0 ? "text-success" : "text-destructive",
                   )}
                 >
-                  <span
-                    className="size-2 rounded-full"
-                    style={{ background: SOURCE_META[s].color }}
-                  />
-                  {SOURCE_META[s].label}
-                </button>
-              );
-            })}
+                  {marketMoved.pct >= 0 ? "▲" : "▼"} {marketSymbol}
+                  {Math.abs(marketMoved.to - marketMoved.from).toFixed(2)} (
+                  {Math.abs(marketMoved.pct).toFixed(2)}%){" "}
+                  <span className="font-medium text-muted-foreground">
+                    over {range === "ALL" ? "all time" : range}
+                  </span>
+                </p>
+              )}
+            </div>
+            <button
+              type="button"
+              onClick={() => setOverlay((v) => !v)}
+              className="shrink-0 rounded-full bg-surface-2 px-3 py-1.5 text-[11px] font-semibold"
+            >
+              {overlay ? "Market" : "Compare sources"}
+            </button>
           </div>
+
+          <div className="mt-2">
+            {prices.isLoading ? (
+              <div className="grid h-52 place-items-center text-muted-foreground">
+                <Loader2 className="size-5 animate-spin" />
+              </div>
+            ) : prices.isError ? (
+              <div className="grid h-52 place-items-center px-6 text-center text-sm text-destructive">
+                Couldn't reach the price sources. Try again in a moment.
+              </div>
+            ) : overlay ? (
+              hasHistory ? (
+                <MultiSourceChart data={chartData} sources={shown} currencies={currencyBySource} />
+              ) : (
+                <NoHistory />
+              )
+            ) : marketPoints.length > 1 ? (
+              <TrendAreaChart
+                data={marketPoints}
+                height={208}
+                prefix={marketSymbol}
+                color={
+                  marketMoved && marketMoved.pct != null && marketMoved.pct < 0
+                    ? "var(--color-destructive)"
+                    : "var(--color-success)"
+                }
+              />
+            ) : (
+              <NoHistory />
+            )}
+          </div>
+
+          {overlay && (
+            <div className="mt-2 flex flex-wrap gap-1.5">
+              {allSources.map((s) => {
+                const off = hidden.includes(s);
+                return (
+                  <button
+                    key={s}
+                    type="button"
+                    onClick={() => setHidden((p) => (off ? p.filter((x) => x !== s) : [...p, s]))}
+                    className={cn(
+                      "flex items-center gap-1.5 rounded-full px-2.5 py-1.5 text-[11px] font-semibold transition-opacity",
+                      off ? "bg-surface-2 opacity-45" : "bg-surface-2",
+                    )}
+                  >
+                    <span
+                      className="size-2 rounded-full"
+                      style={{ background: SOURCE_META[s].color }}
+                    />
+                    {SOURCE_META[s].label}
+                  </button>
+                );
+              })}
+            </div>
+          )}
           <div className="mt-2">
             <RangeToggle value={range} onChange={setRange} ranges={ALL_RANGES} />
           </div>
           <p className="mt-2 text-[11px] text-muted-foreground">
-            Charted from real marketplace readings only — gaps are left as gaps, never
-            smoothed or predicted.
+            {primary
+              ? `${SOURCE_META[primary.source].label} readings · `
+              : ""}
+            charted from real marketplace data only — gaps are left as gaps, never smoothed
+            or predicted.
           </p>
         </div>
       </section>
+
 
       <section className="mt-5 px-4">
         <h2 className="pb-2 font-display text-lg font-semibold">TCGplayer price tiers</h2>
