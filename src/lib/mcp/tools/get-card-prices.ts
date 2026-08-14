@@ -6,7 +6,7 @@ export default defineTool({
   name: "get_card_prices",
   title: "Get card prices and history",
   description:
-    "Real recorded prices for one card: the latest quote per source (TCGplayer, Cardmarket, eBay, snkrdunk) with 24h/7d/30d movement, plus dated price history and recent sales. Only source-backed data is returned; missing readings mean no data.",
+    "Real recorded prices for one card: the latest quote per source (TCGplayer, Cardmarket, eBay) with 24h/7d/30d movement, plus dated price history and recent sales. Only source-backed data is returned; missing readings mean no data.",
   inputSchema: {
     card_id: z.string().trim().min(1).describe("Card id returned by search_cards."),
     history_days: z

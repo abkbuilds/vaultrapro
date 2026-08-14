@@ -36,7 +36,7 @@ const STEPS = [
   {
     icon: LineChart,
     title: "Prices from every source",
-    body: "TCGplayer, Cardmarket, eBay sold listings and snkrdunk overlaid on one graph, with your portfolio value tracked over time.",
+    body: "TCGplayer, Cardmarket and eBay sold listings overlaid on one graph, with your portfolio value tracked over time.",
   },
 ];
 

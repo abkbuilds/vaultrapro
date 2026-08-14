@@ -49,7 +49,7 @@ export const Route = createFileRoute("/card/$cardId")({
     }
     const { card } = loaderData;
     const title = `${card.name} · ${card.setCode} ${card.number} — Vaultra`;
-    const description = `${card.name} from ${card.setName} (${card.language}). Live TCGplayer, Cardmarket, eBay and snkrdunk prices with full history.`;
+    const description = `${card.name} from ${card.setName} (${card.language}). Live TCGplayer, Cardmarket and eBay prices with full history.`;
     return {
       meta: [
         { title },

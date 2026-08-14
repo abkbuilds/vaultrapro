@@ -134,52 +134,6 @@ async function ebaySales(card: CardLike): Promise<SaleFeed> {
   }
 }
 
-/* -------------------------------- snkrdunk ------------------------------- */
-
-async function snkrdunkSales(card: CardLike): Promise<SaleFeed> {
-  const token = process.env.SNKRDUNK_API_TOKEN;
-  if (!token) {
-    return {
-      source: "snkrdunk",
-      sales: [],
-      unavailable: "snkrdunk has no public API — a partner token is required",
-    };
-  }
-  try {
-    const res = await fetch(
-      `https://snkrdunk.com/api/v1/trading-cards/search?keyword=${encodeURIComponent(card.name)}`,
-      { headers: { authorization: `Bearer ${token}` } },
-    );
-    if (!res.ok) return { source: "snkrdunk", sales: [], unavailable: "snkrdunk request failed" };
-    const json = (await res.json()) as Record<string, any>;
-    const items: any[] = json?.sales ?? json?.items ?? [];
-    const sales: RawSale[] = [];
-    for (const s of items) {
-      const yen = Number(s?.price ?? s?.soldPrice);
-      const date = s?.soldAt ?? s?.tradedAt;
-      if (!Number.isFinite(yen) || yen <= 0 || !date) continue;
-      sales.push({
-        source: "snkrdunk",
-        externalId: String(s.id ?? `${date}-${yen}`),
-        soldAt: new Date(date).toISOString(),
-        price: yen,
-        currency: "JPY",
-        priceUsd: await toUsd(yen, "JPY"),
-        condition: s?.condition ?? null,
-        title: s?.name ?? null,
-        url: s?.url ?? null,
-      });
-    }
-    return {
-      source: "snkrdunk",
-      sales,
-      unavailable: sales.length ? undefined : "No recent snkrdunk sales",
-    };
-  } catch {
-    return { source: "snkrdunk", sales: [], unavailable: "snkrdunk request failed" };
-  }
-}
-
 /** Plug new marketplaces in here — everything downstream is source-agnostic. */
 export const SALE_ADAPTERS: Record<
   PriceSource,
@@ -187,13 +141,12 @@ export const SALE_ADAPTERS: Record<
 > = {
   ebay: ebaySales,
   pricecharting: null, // removed — no live PriceCharting feed
-  snkrdunk: snkrdunkSales,
   tcgplayer: null, // aggregate market data only, no per-sale feed
   cardmarket: null,
 };
 
 export function saleSourcesFor(language: string): PriceSource[] {
-  return language === "JP" ? ["ebay", "snkrdunk"] : ["ebay"];
+  return ["ebay"];
 }
 
 /* -------------------------------- ingestion ------------------------------ */
