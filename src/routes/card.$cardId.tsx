@@ -29,7 +29,7 @@ import {
   type PriceSource,
   type TimeRange,
 } from "@/lib/tcg/types";
-import { MultiSourceChart } from "@/components/tcg/Charts";
+import { MultiSourceChart, TrendAreaChart } from "@/components/tcg/Charts";
 import { RangeToggle } from "@/components/tcg/RangeToggle";
 import { CardImage, PriceDelta, money } from "@/components/tcg/CardBits";
 import { useCollection } from "@/lib/tcg/collection";
@@ -64,7 +64,16 @@ export const Route = createFileRoute("/card/$cardId")({
   component: CardDetail,
 });
 
-const ALL_RANGES: TimeRange[] = ["1D", "1W", "1M", "3M", "1Y", "5Y", "ALL"];
+const ALL_RANGES: TimeRange[] = ["1W", "1M", "3M", "1Y", "5Y", "ALL"];
+
+function NoHistory() {
+  return (
+    <div className="grid h-52 place-items-center px-6 text-center text-sm text-muted-foreground">
+      No recorded price history for this window yet. Only real, source-backed readings are
+      charted — nothing is estimated.
+    </div>
+  );
+}
 
 function CardDetail() {
   const { card } = Route.useLoaderData();
@@ -72,6 +81,7 @@ function CardDetail() {
   const [range, setRange] = useState<TimeRange>("3M");
   const [condition, setCondition] = useState<Condition>("Near Mint");
   const [hidden, setHidden] = useState<PriceSource[]>([]);
+  const [overlay, setOverlay] = useState(false);
 
   const getPrices = useServerFn(fetchCardPrices);
   const prices = useQuery({
