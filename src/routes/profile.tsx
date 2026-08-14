@@ -39,9 +39,10 @@ const PIE_COLORS = [
 const MARKETPLACES = [
   { name: "TCGplayer (EN)", status: "Live" },
   { name: "Cardmarket (EN + JP)", status: "Live" },
-  { name: "eBay sold", status: "Needs API credentials" },
-  
+  { name: "eBay live listings", status: "Live" },
+  { name: "eBay sold data", status: "Pending eBay approval" },
 ];
+
 
 function ProfilePage() {
   const { entries, wishlist } = useCollection();
