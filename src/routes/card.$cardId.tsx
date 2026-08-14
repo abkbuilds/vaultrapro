@@ -125,6 +125,37 @@ function CardDetail() {
 
   const hasHistory = chartData.length > 1;
 
+  /**
+   * Rare Candy / Collectr style single "market value" line: the deepest
+   * USD-denominated source we actually recorded, in priority order.
+   */
+  const primary = useMemo(() => {
+    const order: PriceSource[] = ["tcgplayer", "cardmarket", "ebay"];
+    const candidates = [...series].sort(
+      (a, b) =>
+        order.indexOf(a.source) - order.indexOf(b.source) || b.points.length - a.points.length,
+    );
+    return candidates.find((s) => s.points.length > 1) ?? candidates[0] ?? null;
+  }, [series]);
+
+  const marketPoints = primary?.points ?? [];
+  const marketMoved =
+    marketPoints.length > 1
+      ? {
+          from: marketPoints[0].value,
+          to: marketPoints[marketPoints.length - 1].value,
+          pct:
+            marketPoints[0].value > 0
+              ? ((marketPoints[marketPoints.length - 1].value - marketPoints[0].value) /
+                  marketPoints[0].value) *
+                100
+              : null,
+        }
+      : null;
+  const marketSymbol =
+    primary?.currency === "EUR" ? "\u20ac" : primary?.currency === "JPY" ? "\u00a5" : "$";
+
+
   return (
     <main>
       <div className="flex items-center justify-between px-4 pt-5">
