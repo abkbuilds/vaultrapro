@@ -71,6 +71,16 @@ export async function runEbaySync(args: EbaySyncArgs) {
 
   const rows = (data ?? []) as unknown as CardRow[];
 
+  // Hand back any reserved calls this batch won't use.
+  if (rows.length < granted) {
+    await supabaseAdmin.rpc("ebay_reserve_calls" as never, {
+      _want: -(granted - rows.length),
+      _cap: DAILY_CAP,
+    } as never);
+  }
+
+
+
 
   const today = new Date().toISOString().slice(0, 10);
   const points: Record<string, unknown>[] = [];
