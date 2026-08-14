@@ -143,7 +143,7 @@ function CardDetail() {
     const order: PriceSource[] = ["tcgplayer", "cardmarket", "ebay"];
     const candidates = [...series].sort(
       (a, b) =>
-        order.indexOf(a.source) - order.indexOf(b.source) || b.points.length - a.points.length,
+        b.points.length - a.points.length || order.indexOf(a.source) - order.indexOf(b.source),
     );
     return candidates.find((s) => s.points.length > 1) ?? candidates[0] ?? null;
   }, [series]);
