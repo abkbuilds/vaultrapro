@@ -40,7 +40,7 @@ const MARKETPLACES = [
   { name: "TCGplayer (EN)", status: "Live" },
   { name: "Cardmarket (EN + JP)", status: "Live" },
   { name: "eBay sold", status: "Needs API credentials" },
-  { name: "snkrdunk (JP)", status: "Needs partner feed" },
+  
 ];
 
 function ProfilePage() {
