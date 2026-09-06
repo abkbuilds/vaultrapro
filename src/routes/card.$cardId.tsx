@@ -648,8 +648,9 @@ function TiersTable({
           </tr>
         </thead>
         <tbody className="tabular-nums">
-          {tiers.map((t) => (
-            <tr key={t.variant} className="border-b border-border/50 last:border-0">
+          {tiers.map((t, i) => (
+            <tr key={`${t.variant}-${i}`} className="border-b border-border/50 last:border-0">
+
               <td className="px-3 py-2 font-medium capitalize">
                 {t.variant.replace(/([A-Z])/g, " $1").toLowerCase()}
               </td>
