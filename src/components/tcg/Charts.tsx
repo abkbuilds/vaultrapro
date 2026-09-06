@@ -1,82 +1,91 @@
+/**
+ * Price charts.
+ *
+ * Built on the Bklit chart primitives (visx + motion) so every card's price
+ * history draws in with a clip-reveal, springs its y-domain when the range
+ * toggle changes, and gets a crosshair tooltip on touch.
+ */
+import { useMemo } from "react";
 import {
   Area,
   AreaChart,
-  CartesianGrid,
+  Grid,
   Line,
   LineChart,
-  ResponsiveContainer,
-  Tooltip,
   XAxis,
   YAxis,
-} from "recharts";
+  ChartTooltip,
+} from "@/components/charts";
 import type { PriceSource } from "@/lib/tcg/types";
 import { SOURCE_META } from "@/lib/tcg/types";
 import { money } from "@/components/tcg/CardBits";
 
-function fmtDate(iso: string, compact = true) {
-  const d = new Date(iso);
-  return compact
-    ? d.toLocaleDateString("en-US", { month: "short", day: "numeric" })
-    : d.toLocaleString("en-US", { month: "short", day: "numeric", hour: "numeric" });
+function symbolFor(currency = "USD") {
+  return currency === "EUR" ? "\u20ac" : currency === "JPY" ? "\u00a5" : "$";
 }
 
-function compact(n: number) {
-  return n >= 1000 ? `${(n / 1000).toFixed(1)}k` : String(Math.round(n));
+function fmtAxis(value: number, symbol: string) {
+  if (value >= 1000) return `${symbol}${(value / 1000).toFixed(1)}k`;
+  return `${symbol}${value >= 10 ? Math.round(value) : value.toFixed(2)}`;
 }
 
-const axis = {
-  stroke: "var(--color-muted-foreground)",
-  fontSize: 10,
-  tickLine: false,
-  axisLine: false,
-};
+const ENTER = { type: "spring", stiffness: 90, damping: 20, mass: 0.9 } as const;
 
 export function MultiSourceChart({
   data,
   sources,
   currencies = {},
+  loading = false,
+  height = 224,
 }: {
   data: Record<string, string | number>[];
   sources: PriceSource[];
   /** Currency per source, so EUR (Cardmarket) and JPY series stay honest. */
   currencies?: Partial<Record<PriceSource, string>>;
+  loading?: boolean;
+  height?: number;
 }) {
-  const axisCurrency = currencies[sources[0]] ?? "USD";
-  const symbol = axisCurrency === "EUR" ? "\u20ac" : axisCurrency === "JPY" ? "\u00a5" : "$";
+  const symbol = symbolFor(currencies[sources[0]] ?? "USD");
+  const rows = useMemo(
+    () => data.map((d) => ({ ...d, date: new Date(String(d.date)) })),
+    [data],
+  );
+
   return (
-    <div className="h-56 w-full">
-      <ResponsiveContainer width="100%" height="100%">
-        <LineChart data={data} margin={{ top: 8, right: 8, left: 0, bottom: 0 }}>
-          <CartesianGrid strokeDasharray="3 3" stroke="var(--color-border)" vertical={false} />
-          <XAxis dataKey="date" tickFormatter={(v) => fmtDate(String(v))} minTickGap={32} {...axis} />
-          <YAxis tickFormatter={(v) => `${symbol}${compact(Number(v))}`} width={46} domain={["auto", "auto"]} {...axis} />
-          <Tooltip
-            contentStyle={{
-              background: "var(--color-popover)",
-              border: "1px solid var(--color-border)",
-              borderRadius: 12,
-              fontSize: 12,
-            }}
-            labelFormatter={(v) => fmtDate(String(v), false)}
-            formatter={(value, name) => [
-              money(Number(value), currencies[name as PriceSource] ?? "USD"),
-              SOURCE_META[name as PriceSource]?.label ?? String(name),
-            ]}
-          />
-          {sources.map((s) => (
-            <Line
-              key={s}
-              type="monotone"
-              dataKey={s}
-              stroke={SOURCE_META[s].color}
-              strokeWidth={2}
-              dot={false}
-              activeDot={{ r: 3 }}
-            />
-          ))}
-        </LineChart>
-      </ResponsiveContainer>
-    </div>
+    <LineChart
+      data={rows}
+      xDataKey="date"
+      status={loading ? "loading" : "ready"}
+      animationDuration={1100}
+      enterTransition={ENTER}
+      revealSignature={`${sources.join(",")}:${rows.length}`}
+      margin={{ top: 16, right: 14, bottom: 26, left: 44 }}
+      style={{ aspectRatio: "auto", height }}
+      className="w-full"
+    >
+      <Grid horizontal shimmer />
+      {sources.map((s) => (
+        <Line
+          key={s}
+          dataKey={s}
+          stroke={SOURCE_META[s].color}
+          strokeWidth={2}
+        />
+      ))}
+      <YAxis numTicks={4} formatValue={(v) => fmtAxis(v, symbol)} />
+      <XAxis numTicks={4} />
+      <ChartTooltip
+        rows={(point) =>
+          sources
+            .filter((s) => point[s] != null)
+            .map((s) => ({
+              color: SOURCE_META[s].color,
+              label: SOURCE_META[s].label,
+              value: money(Number(point[s]), currencies[s] ?? "USD"),
+            }))
+        }
+      />
+    </LineChart>
   );
 }
 
@@ -85,51 +94,61 @@ export function TrendAreaChart({
   color = "var(--color-primary)",
   height = 180,
   prefix = "$",
+  loading = false,
+  label = "Market value",
 }: {
   data: { date: string; value: number }[];
   color?: string;
   height?: number;
   prefix?: string;
+  loading?: boolean;
+  label?: string;
 }) {
-  const id = `grad-${color.replace(/[^a-z0-9]/gi, "")}`;
-  return (
-    <div style={{ height }} className="w-full">
-      <ResponsiveContainer width="100%" height="100%">
-        <AreaChart data={data} margin={{ top: 8, right: 4, left: 0, bottom: 0 }}>
-          <defs>
-            <linearGradient id={id} x1="0" y1="0" x2="0" y2="1">
-              <stop offset="0%" stopColor={color} stopOpacity={0.45} />
-              <stop offset="100%" stopColor={color} stopOpacity={0} />
-            </linearGradient>
-          </defs>
-          <XAxis dataKey="date" tickFormatter={(v) => fmtDate(String(v))} minTickGap={40} {...axis} />
-          <YAxis
-            width={46}
-            domain={["auto", "auto"]}
-            tickFormatter={(v) => `${prefix}${compact(Number(v))}`}
-            {...axis}
-          />
+  const rows = useMemo(
+    () => data.map((d) => ({ date: new Date(d.date), value: d.value })),
+    [data],
+  );
 
-          <Tooltip
-            contentStyle={{
-              background: "var(--color-popover)",
-              border: "1px solid var(--color-border)",
-              borderRadius: 12,
-              fontSize: 12,
-            }}
-            labelFormatter={(v) => fmtDate(String(v), false)}
-            formatter={(value) => [`${prefix}${Number(value).toLocaleString()}`, "Value"]}
-          />
-          <Area
-            type="monotone"
-            dataKey="value"
-            stroke={color}
-            strokeWidth={2}
-            fill={`url(#${id})`}
-          />
-        </AreaChart>
-      </ResponsiveContainer>
-    </div>
+  return (
+    <AreaChart
+      data={rows}
+      xDataKey="date"
+      status={loading ? "loading" : "ready"}
+      loadingLabel="Loading price history"
+      animationDuration={1100}
+      enterTransition={ENTER}
+      revealSignature={`${color}:${rows.length}:${rows[0]?.date.getTime() ?? 0}`}
+      yDomainTween
+      margin={{ top: 16, right: 12, bottom: 26, left: 44 }}
+      style={{ aspectRatio: "auto", height }}
+      className="w-full"
+    >
+      <Grid horizontal shimmer />
+      <Area
+        dataKey="value"
+        fill={color}
+        stroke={color}
+        fillOpacity={0.32}
+        gradientToOpacity={0}
+        strokeWidth={2.25}
+        fadeEdges
+      />
+      <YAxis numTicks={4} formatValue={(v) => fmtAxis(v, prefix)} />
+      <XAxis numTicks={4} />
+      <ChartTooltip
+        indicatorColor={color}
+        indicatorDasharray="4,4"
+        rows={(point) => [
+          {
+            color,
+            label,
+            value: `${prefix}${Number(point.value).toLocaleString(undefined, {
+              maximumFractionDigits: 2,
+            })}`,
+          },
+        ]}
+      />
+    </AreaChart>
   );
 }
 
@@ -141,13 +160,20 @@ export function Sparkline({
   positive: boolean;
 }) {
   const color = positive ? "var(--color-success)" : "var(--color-destructive)";
+  const rows = useMemo(
+    () => data.map((d) => ({ date: new Date(d.date), value: d.value })),
+    [data],
+  );
   return (
-    <div className="h-10 w-20">
-      <ResponsiveContainer width="100%" height="100%">
-        <LineChart data={data}>
-          <Line type="monotone" dataKey="value" stroke={color} strokeWidth={1.8} dot={false} />
-        </LineChart>
-      </ResponsiveContainer>
-    </div>
+    <LineChart
+      data={rows}
+      xDataKey="date"
+      animationDuration={900}
+      margin={{ top: 4, right: 2, bottom: 4, left: 2 }}
+      style={{ aspectRatio: "auto", height: 40 }}
+      className="w-20"
+    >
+      <Line dataKey="value" stroke={color} strokeWidth={1.8} />
+    </LineChart>
   );
 }
