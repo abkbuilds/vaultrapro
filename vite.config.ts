@@ -11,7 +11,7 @@ export default defineConfig({
   plugins: [mcpPlugin()],
   vite: {
     ssr: {
-      noExternal: ["@visx/responsive"],
+      noExternal: [/^@visx\//],
     },
   },
   tanstackStart: {
