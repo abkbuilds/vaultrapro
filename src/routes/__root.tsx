@@ -17,6 +17,8 @@ import { CollectionProvider } from "@/lib/tcg/collection";
 import { TradeProvider } from "@/lib/tcg/trades";
 import { AuthProvider } from "@/lib/auth";
 import { Toaster } from "@/components/ui/sonner";
+import { ScrollAnimator } from "@/components/motion/ScrollAnimator";
+import { ScrollProgress } from "@/components/motion/ScrollProgress";
 
 function NotFoundComponent() {
   return (
@@ -142,6 +144,8 @@ function RootComponent() {
       <AuthProvider>
         <CollectionProvider>
           <TradeProvider>
+          <ScrollProgress />
+          <ScrollAnimator />
           <TopBar />
           <div className="mx-auto min-h-screen w-full max-w-lg pb-24">
             {/* Required: nested routes render here. */}
