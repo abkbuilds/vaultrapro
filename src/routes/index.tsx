@@ -10,33 +10,46 @@ import { useCollection, valueEntries, holdingsOf } from "@/lib/tcg/collection";
 import { fetchMovers, fetchPortfolioSeries } from "@/lib/prices/prices.functions";
 import { RANGE_DAYS, type TimeRange } from "@/lib/tcg/types";
 import { useAuth } from "@/lib/auth";
+import { LandingPage } from "@/components/landing/LandingPage";
 
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
-      { title: "Portfolio — Vaultra TCG Tracker" },
+      { title: "Vaultra — Pokémon Card Portfolio & Price Tracker" },
       {
         name: "description",
         content:
-          "Your Pokémon portfolio value, real recorded price movement and recent scans in one mobile dashboard.",
+          "Track 44,000+ English and Japanese Pokémon cards with live TCGplayer, eBay and Cardmarket readings, real rarity filters and honest historical value charts.",
       },
-      { property: "og:title", content: "Portfolio — Vaultra TCG Tracker" },
+      { property: "og:title", content: "Vaultra — Pokémon Card Portfolio & Price Tracker" },
       {
         property: "og:description",
-        content: "Track your card collection with real TCGplayer, eBay and Japanese market data.",
+        content:
+          "Multi-collection portfolios, live card prices, rarity indicators and source-backed value charts for English and Japanese Pokémon TCG.",
       },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
     ],
   }),
-  component: Dashboard,
+  component: Home,
 });
 
 const RANGES: TimeRange[] = ["1D", "1M", "3M", "1Y", "ALL"];
 
+function Home() {
+  const { user, loading } = useAuth();
+  if (loading) {
+    return (
+      <div className="grid h-[60vh] place-items-center text-muted-foreground">
+        <Loader2 className="size-5 animate-spin" />
+      </div>
+    );
+  }
+  return user ? <Dashboard /> : <LandingPage />;
+}
+
 function Dashboard() {
   const { entries } = useCollection();
-  const { user, loading: authLoading } = useAuth();
   const [range, setRange] = useState<TimeRange>("3M");
   const valued = useMemo(() => valueEntries(entries), [entries]);
 
@@ -89,33 +102,6 @@ function Dashboard() {
         }
       />
 
-      {!authLoading && !user && (
-        <section className="px-4 pb-4">
-          <div className="rounded-2xl bg-linear-to-r from-primary/25 to-accent/20 p-4 ring-1 ring-primary/30">
-            <p className="text-sm font-semibold">Save your collection to your account</p>
-            <p className="mt-0.5 text-xs text-muted-foreground">
-              Sign up free with Google, Apple or email to sync your portfolio, sales log
-              and wishlist across devices.
-            </p>
-            <div className="mt-3 flex gap-2">
-              <Link
-                to="/auth"
-                search={{ redirect: "/" }}
-                className="flex-1 rounded-xl bg-primary py-2.5 text-center text-xs font-bold text-primary-foreground"
-              >
-                Sign up free
-              </Link>
-              <Link
-                to="/auth"
-                search={{ redirect: "/" }}
-                className="flex-1 rounded-xl bg-surface py-2.5 text-center text-xs font-bold"
-              >
-                Sign in
-              </Link>
-            </div>
-          </div>
-        </section>
-      )}
 
       <section className="px-4">
         <div className="glass-panel rounded-3xl p-4">
