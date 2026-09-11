@@ -101,33 +101,6 @@ function Dashboard() {
         }
       />
 
-      {!authLoading && !user && (
-        <section className="px-4 pb-4">
-          <div className="rounded-2xl bg-linear-to-r from-primary/25 to-accent/20 p-4 ring-1 ring-primary/30">
-            <p className="text-sm font-semibold">Save your collection to your account</p>
-            <p className="mt-0.5 text-xs text-muted-foreground">
-              Sign up free with Google, Apple or email to sync your portfolio, sales log
-              and wishlist across devices.
-            </p>
-            <div className="mt-3 flex gap-2">
-              <Link
-                to="/auth"
-                search={{ redirect: "/" }}
-                className="flex-1 rounded-xl bg-primary py-2.5 text-center text-xs font-bold text-primary-foreground"
-              >
-                Sign up free
-              </Link>
-              <Link
-                to="/auth"
-                search={{ redirect: "/" }}
-                className="flex-1 rounded-xl bg-surface py-2.5 text-center text-xs font-bold"
-              >
-                Sign in
-              </Link>
-            </div>
-          </div>
-        </section>
-      )}
 
       <section className="px-4">
         <div className="glass-panel rounded-3xl p-4">
