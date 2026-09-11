@@ -14,29 +14,41 @@ import { useAuth } from "@/lib/auth";
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
-      { title: "Portfolio — Vaultra TCG Tracker" },
+      { title: "Vaultra — Pokémon Card Portfolio & Price Tracker" },
       {
         name: "description",
         content:
-          "Your Pokémon portfolio value, real recorded price movement and recent scans in one mobile dashboard.",
+          "Track 44,000+ English and Japanese Pokémon cards with live TCGplayer, eBay and Cardmarket readings, real rarity filters and honest historical value charts.",
       },
-      { property: "og:title", content: "Portfolio — Vaultra TCG Tracker" },
+      { property: "og:title", content: "Vaultra — Pokémon Card Portfolio & Price Tracker" },
       {
         property: "og:description",
-        content: "Track your card collection with real TCGplayer, eBay and Japanese market data.",
+        content:
+          "Multi-collection portfolios, live card prices, rarity indicators and source-backed value charts for English and Japanese Pokémon TCG.",
       },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
     ],
   }),
-  component: Dashboard,
+  component: Home,
 });
 
 const RANGES: TimeRange[] = ["1D", "1M", "3M", "1Y", "ALL"];
 
+function Home() {
+  const { user, loading } = useAuth();
+  if (loading) {
+    return (
+      <div className="grid h-[60vh] place-items-center text-muted-foreground">
+        <Loader2 className="size-5 animate-spin" />
+      </div>
+    );
+  }
+  return user ? <Dashboard /> : <LandingPage />;
+}
+
 function Dashboard() {
   const { entries } = useCollection();
-  const { user, loading: authLoading } = useAuth();
   const [range, setRange] = useState<TimeRange>("3M");
   const valued = useMemo(() => valueEntries(entries), [entries]);
 
