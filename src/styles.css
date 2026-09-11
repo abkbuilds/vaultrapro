@@ -196,6 +196,48 @@
     color: var(--color-foreground);
     font-family: var(--font-sans);
     overscroll-behavior-y: none;
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+  }
+
+  /* Momentum scrolling + snappy, consistent easing for horizontal rails */
+  [data-rail],
+  .overflow-x-auto {
+    -webkit-overflow-scrolling: touch;
+    scroll-behavior: smooth;
+  }
+
+  /* Tactile press feedback across interactive elements */
+  button:not([disabled]),
+  a[role="button"],
+  [data-pressable] {
+    transition:
+      transform 200ms cubic-bezier(0.22, 1, 0.36, 1),
+      opacity 200ms ease,
+      background-color 200ms ease,
+      border-color 200ms ease,
+      box-shadow 200ms ease;
+  }
+
+  button:not([disabled]):active,
+  a[role="button"]:active,
+  [data-pressable]:active {
+    transform: scale(0.97);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    button:not([disabled]):active,
+    a[role="button"]:active,
+    [data-pressable]:active {
+      transform: none;
+    }
+
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.001ms !important;
+      transition-duration: 0.001ms !important;
+    }
   }
 
   h1,
