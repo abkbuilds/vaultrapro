@@ -19,6 +19,7 @@ import { AuthProvider } from "@/lib/auth";
 import { Toaster } from "@/components/ui/sonner";
 import { ScrollAnimator } from "@/components/motion/ScrollAnimator";
 import { ScrollProgress } from "@/components/motion/ScrollProgress";
+import { PageTransition } from "@/components/motion/PageTransition";
 
 function NotFoundComponent() {
   return (
@@ -149,7 +150,9 @@ function RootComponent() {
           <TopBar />
           <div className="mx-auto min-h-screen w-full max-w-lg pb-24">
             {/* Required: nested routes render here. */}
-            <Outlet />
+            <PageTransition>
+              <Outlet />
+            </PageTransition>
           </div>
           <BottomNav />
           <Toaster position="top-center" theme="dark" offset={16} />
