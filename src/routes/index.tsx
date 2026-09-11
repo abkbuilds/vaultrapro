@@ -10,6 +10,7 @@ import { useCollection, valueEntries, holdingsOf } from "@/lib/tcg/collection";
 import { fetchMovers, fetchPortfolioSeries } from "@/lib/prices/prices.functions";
 import { RANGE_DAYS, type TimeRange } from "@/lib/tcg/types";
 import { useAuth } from "@/lib/auth";
+import { LandingPage } from "@/components/landing/LandingPage";
 
 export const Route = createFileRoute("/")({
   head: () => ({
