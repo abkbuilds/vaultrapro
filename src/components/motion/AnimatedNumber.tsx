@@ -51,7 +51,9 @@ export function AnimatedNumber({
         el.textContent = format(value);
       },
     });
-    return () => anim.pause();
+    return () => {
+      anim.pause();
+    };
   }, [value, duration, format]);
 
   return (
