@@ -106,8 +106,9 @@ export function LandingPage() {
           Source-backed pricing only
         </span>
         <h1 className="font-display mt-4 text-4xl leading-[1.05] font-bold tracking-tight">
-          Treat your Pokémon cards like a{" "}
-          <span className="text-gradient">real portfolio</span>.
+          <SplitText text="Treat your Pokémon cards like a" delay={120}>
+            <span className="text-gradient">real portfolio</span>.
+          </SplitText>
         </h1>
         <p className="mt-3 max-w-prose text-sm leading-relaxed text-muted-foreground">
           Vaultra tracks 44,000+ English and Japanese cards — including promos — with live
