@@ -116,21 +116,25 @@ export function LandingPage() {
           was never recorded, we say so instead of guessing.
         </p>
         <div className="mt-5 flex flex-col gap-2 sm:flex-row">
-          <Link
-            to="/auth"
-            search={{ redirect: "/" }}
-            className="shadow-glow flex items-center justify-center gap-2 rounded-xl bg-primary px-5 py-3 text-sm font-bold text-primary-foreground"
-          >
-            Start tracking free
-            <ArrowRight className="size-4" aria-hidden />
-          </Link>
-          <Link
-            to="/trends"
-            className="flex items-center justify-center gap-2 rounded-xl bg-surface px-5 py-3 text-sm font-bold ring-1 ring-border"
-          >
-            <Play className="size-4" aria-hidden />
-            See live market
-          </Link>
+          <Magnetic strength={8}>
+            <Link
+              to="/auth"
+              search={{ redirect: "/" }}
+              className="shadow-glow flex items-center justify-center gap-2 rounded-xl bg-primary px-5 py-3 text-sm font-bold text-primary-foreground"
+            >
+              Start tracking free
+              <ArrowRight className="size-4" aria-hidden />
+            </Link>
+          </Magnetic>
+          <Magnetic strength={8}>
+            <Link
+              to="/trends"
+              className="flex items-center justify-center gap-2 rounded-xl bg-surface px-5 py-3 text-sm font-bold ring-1 ring-border"
+            >
+              <Play className="size-4" aria-hidden />
+              See live market
+            </Link>
+          </Magnetic>
         </div>
         <dl className="mt-6 grid grid-cols-3 gap-2">
           {[
@@ -138,10 +142,12 @@ export function LandingPage() {
             { k: "EN + JP", v: "Both markets" },
             { k: "3", v: "Live price sources" },
           ].map((s) => (
-            <div key={s.v} className="glass-panel rounded-2xl px-3 py-3 text-center">
-              <dt className="font-display text-lg font-bold">{s.k}</dt>
-              <dd className="text-[11px] text-muted-foreground">{s.v}</dd>
-            </div>
+            <TiltCard key={s.v} max={6}>
+              <div className="glass-panel rounded-2xl px-3 py-3 text-center">
+                <dt className="font-display text-lg font-bold">{s.k}</dt>
+                <dd className="text-[11px] text-muted-foreground">{s.v}</dd>
+              </div>
+            </TiltCard>
           ))}
         </dl>
       </section>
