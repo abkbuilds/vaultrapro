@@ -23,6 +23,9 @@ import { TrendAreaChart } from "@/components/tcg/Charts";
 import { RangeToggle } from "@/components/tcg/RangeToggle";
 import { fetchMovers, fetchPortfolioSeries } from "@/lib/prices/prices.functions";
 import { RANGE_DAYS, type TimeRange } from "@/lib/tcg/types";
+import { SplitText } from "@/components/motion/SplitText";
+import { Magnetic } from "@/components/motion/Magnetic";
+import { TiltCard } from "@/components/motion/TiltCard";
 
 /** A real, widely held card used purely as the public market showcase. */
 const SHOWCASE = { cardId: "en-base1-4", name: "Charizard", set: "Base Set · 4/102" };
