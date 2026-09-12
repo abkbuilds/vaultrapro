@@ -23,6 +23,9 @@ import { TrendAreaChart } from "@/components/tcg/Charts";
 import { RangeToggle } from "@/components/tcg/RangeToggle";
 import { fetchMovers, fetchPortfolioSeries } from "@/lib/prices/prices.functions";
 import { RANGE_DAYS, type TimeRange } from "@/lib/tcg/types";
+import { SplitText } from "@/components/motion/SplitText";
+import { Magnetic } from "@/components/motion/Magnetic";
+import { TiltCard } from "@/components/motion/TiltCard";
 
 /** A real, widely held card used purely as the public market showcase. */
 const SHOWCASE = { cardId: "en-base1-4", name: "Charizard", set: "Base Set · 4/102" };
@@ -103,8 +106,9 @@ export function LandingPage() {
           Source-backed pricing only
         </span>
         <h1 className="font-display mt-4 text-4xl leading-[1.05] font-bold tracking-tight">
-          Treat your Pokémon cards like a{" "}
-          <span className="text-gradient">real portfolio</span>.
+          <SplitText text="Treat your Pokémon cards like a" delay={120}>
+            <span className="text-gradient">real portfolio</span>.
+          </SplitText>
         </h1>
         <p className="mt-3 max-w-prose text-sm leading-relaxed text-muted-foreground">
           Vaultra tracks 44,000+ English and Japanese cards — including promos — with live
@@ -112,21 +116,25 @@ export function LandingPage() {
           was never recorded, we say so instead of guessing.
         </p>
         <div className="mt-5 flex flex-col gap-2 sm:flex-row">
-          <Link
-            to="/auth"
-            search={{ redirect: "/" }}
-            className="shadow-glow flex items-center justify-center gap-2 rounded-xl bg-primary px-5 py-3 text-sm font-bold text-primary-foreground"
-          >
-            Start tracking free
-            <ArrowRight className="size-4" aria-hidden />
-          </Link>
-          <Link
-            to="/trends"
-            className="flex items-center justify-center gap-2 rounded-xl bg-surface px-5 py-3 text-sm font-bold ring-1 ring-border"
-          >
-            <Play className="size-4" aria-hidden />
-            See live market
-          </Link>
+          <Magnetic strength={8}>
+            <Link
+              to="/auth"
+              search={{ redirect: "/" }}
+              className="shadow-glow flex items-center justify-center gap-2 rounded-xl bg-primary px-5 py-3 text-sm font-bold text-primary-foreground"
+            >
+              Start tracking free
+              <ArrowRight className="size-4" aria-hidden />
+            </Link>
+          </Magnetic>
+          <Magnetic strength={8}>
+            <Link
+              to="/trends"
+              className="flex items-center justify-center gap-2 rounded-xl bg-surface px-5 py-3 text-sm font-bold ring-1 ring-border"
+            >
+              <Play className="size-4" aria-hidden />
+              See live market
+            </Link>
+          </Magnetic>
         </div>
         <dl className="mt-6 grid grid-cols-3 gap-2">
           {[
@@ -134,10 +142,12 @@ export function LandingPage() {
             { k: "EN + JP", v: "Both markets" },
             { k: "3", v: "Live price sources" },
           ].map((s) => (
-            <div key={s.v} className="glass-panel rounded-2xl px-3 py-3 text-center">
-              <dt className="font-display text-lg font-bold">{s.k}</dt>
-              <dd className="text-[11px] text-muted-foreground">{s.v}</dd>
-            </div>
+            <TiltCard key={s.v} max={6}>
+              <div className="glass-panel rounded-2xl px-3 py-3 text-center">
+                <dt className="font-display text-lg font-bold">{s.k}</dt>
+                <dd className="text-[11px] text-muted-foreground">{s.v}</dd>
+              </div>
+            </TiltCard>
           ))}
         </dl>
       </section>
@@ -202,13 +212,15 @@ export function LandingPage() {
         <h2 className="font-display text-xl font-semibold">Built for collectors who count</h2>
         <div className="mt-3 grid gap-2 sm:grid-cols-2">
           {FEATURES.map((f) => (
-            <article key={f.title} className="glass-panel rounded-2xl p-4">
-              <span className="grid size-10 place-items-center rounded-xl bg-primary/15 text-primary ring-1 ring-primary/25">
-                <f.icon className="size-5" aria-hidden />
-              </span>
-              <h3 className="mt-3 text-sm font-semibold">{f.title}</h3>
-              <p className="mt-1 text-xs leading-relaxed text-muted-foreground">{f.body}</p>
-            </article>
+            <TiltCard key={f.title} max={5}>
+              <article className="glass-panel h-full rounded-2xl p-4">
+                <span className="grid size-10 place-items-center rounded-xl bg-primary/15 text-primary ring-1 ring-primary/25">
+                  <f.icon className="size-5" aria-hidden />
+                </span>
+                <h3 className="mt-3 text-sm font-semibold">{f.title}</h3>
+                <p className="mt-1 text-xs leading-relaxed text-muted-foreground">{f.body}</p>
+              </article>
+            </TiltCard>
           ))}
         </div>
       </section>
