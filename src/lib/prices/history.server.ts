@@ -112,7 +112,10 @@ export async function getCardPrices(
 async function loadSalePoints(cardId: string, days: number) {
   const since = new Date();
   since.setDate(since.getDate() - days);
-  const { data } = await supabase
+  // Sales rows are not public; read them with the trusted server client and
+  // return only the aggregated per-day averages the charts need.
+  const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+  const { data } = await supabaseAdmin
     .from("card_sales")
     .select("source,price,price_usd,sold_at")
     .eq("card_id", cardId)
