@@ -300,10 +300,21 @@ export async function cardmarketHistorySeeds(input: string | CardRef) {
     number: card.number ?? "",
     setCode: card.setCode,
   });
-  return (match?.cardmarketSeedsEur ?? []).map((s) => ({
+  const pwSeeds = (match?.cardmarketSeedsEur ?? []).map((s) => ({
     daysAgo: s.daysAgo,
     price: Number((s.price * rate).toFixed(2)),
   }));
+  if (pwSeeds.length) return pwSeeds;
+
+  // TCGGO publishes real 7 and 30 day Cardmarket averages (already USD).
+  const { tcggoLookup } = await import("./tcggo.server");
+  const reading = await tcggoLookup({
+    id: card.id,
+    name: card.name ?? "",
+    number: card.number ?? "",
+    setCode: card.setCode,
+  });
+  return reading?.cardmarketSeeds ?? [];
 }
 
 
