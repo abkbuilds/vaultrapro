@@ -347,6 +347,7 @@ export async function runTcggoSync(args: TcggoSyncArgs) {
     );
 
     for (const { row, reading } of results) {
+      probes.push({ card_id: row.id, probed_at: new Date().toISOString(), matched: !!reading });
       if (!reading) continue;
       const best = reading.tcgplayerUsd ?? reading.cardmarketUsd;
       const update: Record<string, unknown> = {};
