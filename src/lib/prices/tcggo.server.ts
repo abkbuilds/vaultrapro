@@ -272,6 +272,13 @@ export interface TcggoSyncArgs {
   onlyMissing: boolean;
   /** Also fill in missing artwork from the feed. */
   fillImages?: boolean;
+  /**
+   * Coverage mode: pick cards that have not been probed in the last
+   * `cooldownDays` days (unpriced cards first) so each daily request lands on a
+   * different card instead of re-reading the same ones.
+   */
+  coverage?: boolean;
+  cooldownDays?: number;
 }
 
 function isoDaysAgo(days: number) {
@@ -291,26 +298,41 @@ export async function runTcggoSync(args: TcggoSyncArgs) {
   if (!apiKey()) return { ok: false, error: "RAPIDAPI_TCGGO_KEY is not configured" };
   const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
 
-  let q = supabaseAdmin
-    .from("tcg_cards")
-    .select("id,name,number,set_code,image_small,market_price")
-    .eq("language", args.language)
-    .order("id", { ascending: true })
-    .range(args.offset, args.offset + args.limit - 1);
-  if (args.onlyMissing) q = q.is("market_price", null);
-
-  const { data, error } = await q;
-  if (error) return { ok: false, error: error.message };
-  const rows = (data ?? []) as unknown as CardRow[];
+  let rows: CardRow[];
+  if (args.coverage !== false) {
+    const { data, error } = await supabaseAdmin.rpc("tcggo_sync_candidates" as never, {
+      _language: args.language,
+      _limit: args.limit,
+      _cooldown_days: args.cooldownDays ?? 14,
+    } as never);
+    if (error) return { ok: false, error: error.message };
+    rows = (data ?? []) as unknown as CardRow[];
+  } else {
+    let q = supabaseAdmin
+      .from("tcg_cards")
+      .select("id,name,number,set_code,image_small,market_price")
+      .eq("language", args.language)
+      .order("id", { ascending: true })
+      .range(args.offset, args.offset + args.limit - 1);
+    if (args.onlyMissing) q = q.is("market_price", null);
+    const { data, error } = await q;
+    if (error) return { ok: false, error: error.message };
+    rows = (data ?? []) as unknown as CardRow[];
+  }
 
   const today = new Date().toISOString().slice(0, 10);
   const points: Record<string, unknown>[] = [];
   let priced = 0;
   let images = 0;
 
-  const CONCURRENCY = 5;
+  const probes: { card_id: string; probed_at: string; matched: boolean }[] = [];
+  let allowance = await tcggoBudgetRemaining();
+
+  const CONCURRENCY = 8;
   for (let i = 0; i < rows.length; i += CONCURRENCY) {
+    if (allowance <= 0) break;
     const chunk = rows.slice(i, i + CONCURRENCY);
+    allowance -= chunk.length;
     const results = await Promise.all(
       chunk.map(async (row) => ({
         row,
@@ -325,6 +347,7 @@ export async function runTcggoSync(args: TcggoSyncArgs) {
     );
 
     for (const { row, reading } of results) {
+      probes.push({ card_id: row.id, probed_at: new Date().toISOString(), matched: !!reading });
       if (!reading) continue;
       const best = reading.tcgplayerUsd ?? reading.cardmarketUsd;
       const update: Record<string, unknown> = {};
@@ -382,9 +405,15 @@ export async function runTcggoSync(args: TcggoSyncArgs) {
     });
   }
 
+  for (let i = 0; i < probes.length; i += 500) {
+    await supabaseAdmin
+      .from("tcggo_probe_log")
+      .upsert(probes.slice(i, i + 500) as never, { onConflict: "card_id" });
+  }
+
   return {
     ok: true,
-    scanned: rows.length,
+    scanned: probes.length,
     priced,
     imagesFilled: images,
     pointsCaptured: points.length,
