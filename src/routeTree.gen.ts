@@ -37,6 +37,7 @@ import { Route as ApiPublicSyncPokewalletRouteImport } from './routes/api/public
 import { Route as ApiPublicSyncPricesRouteImport } from './routes/api/public/sync-prices'
 import { Route as ApiPublicSyncPtcgRouteImport } from './routes/api/public/sync-ptcg'
 import { Route as ApiPublicSyncTcgdexRouteImport } from './routes/api/public/sync-tcgdex'
+import { Route as ApiPublicSyncTcggoRouteImport } from './routes/api/public/sync-tcggo'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -181,6 +182,11 @@ const ApiPublicSyncTcgdexRoute = ApiPublicSyncTcgdexRouteImport.update({
   path: '/api/public/sync-tcgdex',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiPublicSyncTcggoRoute = ApiPublicSyncTcggoRouteImport.update({
+  id: '/api/public/sync-tcggo',
+  path: '/api/public/sync-tcggo',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -210,6 +216,7 @@ export interface FileRoutesByFullPath {
   '/api/public/sync-prices': typeof ApiPublicSyncPricesRoute
   '/api/public/sync-ptcg': typeof ApiPublicSyncPtcgRoute
   '/api/public/sync-tcgdex': typeof ApiPublicSyncTcgdexRoute
+  '/api/public/sync-tcggo': typeof ApiPublicSyncTcggoRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -239,6 +246,7 @@ export interface FileRoutesByTo {
   '/api/public/sync-prices': typeof ApiPublicSyncPricesRoute
   '/api/public/sync-ptcg': typeof ApiPublicSyncPtcgRoute
   '/api/public/sync-tcgdex': typeof ApiPublicSyncTcgdexRoute
+  '/api/public/sync-tcggo': typeof ApiPublicSyncTcggoRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -270,6 +278,7 @@ export interface FileRoutesById {
   '/api/public/sync-prices': typeof ApiPublicSyncPricesRoute
   '/api/public/sync-ptcg': typeof ApiPublicSyncPtcgRoute
   '/api/public/sync-tcgdex': typeof ApiPublicSyncTcgdexRoute
+  '/api/public/sync-tcggo': typeof ApiPublicSyncTcggoRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -301,6 +310,7 @@ export interface FileRouteTypes {
     | '/api/public/sync-prices'
     | '/api/public/sync-ptcg'
     | '/api/public/sync-tcgdex'
+    | '/api/public/sync-tcggo'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -330,6 +340,7 @@ export interface FileRouteTypes {
     | '/api/public/sync-prices'
     | '/api/public/sync-ptcg'
     | '/api/public/sync-tcgdex'
+    | '/api/public/sync-tcggo'
   id:
     | '__root__'
     | '/'
@@ -360,6 +371,7 @@ export interface FileRouteTypes {
     | '/api/public/sync-prices'
     | '/api/public/sync-ptcg'
     | '/api/public/sync-tcgdex'
+    | '/api/public/sync-tcggo'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -390,6 +402,7 @@ export interface RootRouteChildren {
   ApiPublicSyncPricesRoute: typeof ApiPublicSyncPricesRoute
   ApiPublicSyncPtcgRoute: typeof ApiPublicSyncPtcgRoute
   ApiPublicSyncTcgdexRoute: typeof ApiPublicSyncTcgdexRoute
+  ApiPublicSyncTcggoRoute: typeof ApiPublicSyncTcggoRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -590,6 +603,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicSyncTcgdexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/sync-tcggo': {
+      id: '/api/public/sync-tcggo'
+      path: '/api/public/sync-tcggo'
+      fullPath: '/api/public/sync-tcggo'
+      preLoaderRoute: typeof ApiPublicSyncTcggoRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -633,6 +653,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiPublicSyncPricesRoute: ApiPublicSyncPricesRoute,
   ApiPublicSyncPtcgRoute: ApiPublicSyncPtcgRoute,
   ApiPublicSyncTcgdexRoute: ApiPublicSyncTcgdexRoute,
+  ApiPublicSyncTcggoRoute: ApiPublicSyncTcggoRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
