@@ -388,6 +388,8 @@ export async function runTcggoSync(args: TcggoSyncArgs) {
     priced,
     imagesFilled: images,
     pointsCaptured: points.length,
+    dailyCap: TCGGO_DAILY_CAP,
+    budgetRemaining: await tcggoBudgetRemaining(),
     nextOffset: args.onlyMissing ? args.offset : args.offset + rows.length,
     done: rows.length < args.limit,
   };
