@@ -241,6 +241,26 @@ export async function quoteCardmarket(input: string | CardRef): Promise<Quote> {
     };
   }
 
+  // TCGGO (RapidAPI) republishes Cardmarket near-mint figures for EN and JP.
+  {
+    const { tcggoLookup } = await import("./tcggo.server");
+    const reading = await tcggoLookup({
+      id: card.id,
+      name: card.name ?? "",
+      number: card.number,
+      setCode: card.setCode,
+    });
+    if (reading?.cardmarketUsd != null) {
+      return {
+        source: "cardmarket",
+        price: reading.cardmarketUsd,
+        currency: "USD",
+        live: true,
+        note: "Cardmarket near mint via TCGGO",
+      };
+    }
+  }
+
   return {
     source: "cardmarket",
     price: null,
