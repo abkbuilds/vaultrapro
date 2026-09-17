@@ -202,12 +202,11 @@ export async function tcggoLookup(ref: TcggoRef): Promise<TcggoReading | null> {
   if (!code || !number) return null;
   const ep = (await episodeIndex(lang)).get(code);
   if (!ep) return null;
+  // Japanese cards are only returned when the language is stated explicitly.
   const json = await api<{ data: TcggoCard[] }>(
-    `/cards?episode_id=${ep.id}&card_number=${encodeURIComponent(number)}&page=1`,
+    `/cards?episode_id=${ep.id}&card_number=${encodeURIComponent(number)}&lang=${lang}&page=1`,
   );
-  const hit = json?.data?.find(
-    (c) => plainNumber(String(c.card_number ?? "")) === number || c.card_code_number != null,
-  );
+  const hit = json?.data?.find((c) => plainNumber(String(c.card_number ?? "")) === number);
   return hit ? toReading(hit) : null;
 }
 
