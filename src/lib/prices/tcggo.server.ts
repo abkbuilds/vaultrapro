@@ -325,9 +325,14 @@ export async function runTcggoSync(args: TcggoSyncArgs) {
   let priced = 0;
   let images = 0;
 
-  const CONCURRENCY = 5;
+  const probes: { card_id: string; probed_at: string; matched: boolean }[] = [];
+  let allowance = await tcggoBudgetRemaining();
+
+  const CONCURRENCY = 8;
   for (let i = 0; i < rows.length; i += CONCURRENCY) {
+    if (allowance <= 0) break;
     const chunk = rows.slice(i, i + CONCURRENCY);
+    allowance -= chunk.length;
     const results = await Promise.all(
       chunk.map(async (row) => ({
         row,
