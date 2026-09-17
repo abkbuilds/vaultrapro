@@ -396,6 +396,24 @@ export type Database = {
         }
         Relationships: []
       }
+      tcggo_probe_log: {
+        Row: {
+          card_id: string
+          matched: boolean
+          probed_at: string
+        }
+        Insert: {
+          card_id: string
+          matched?: boolean
+          probed_at?: string
+        }
+        Update: {
+          card_id?: string
+          matched?: boolean
+          probed_at?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
@@ -438,6 +456,17 @@ export type Database = {
       tcggo_reserve_calls: {
         Args: { _cap?: number; _want: number }
         Returns: number
+      }
+      tcggo_sync_candidates: {
+        Args: { _cooldown_days?: number; _language: string; _limit: number }
+        Returns: {
+          id: string
+          image_small: string
+          market_price: number
+          name: string
+          number: string
+          set_code: string
+        }[]
       }
     }
     Enums: {
