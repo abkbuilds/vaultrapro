@@ -21,12 +21,18 @@ function apiKey() {
  * for live card-page lookups and retries. When the budget is exhausted the
  * adapter simply reports "no data" instead of overspending the quota.
  */
-export const TCGGO_DAILY_CAP = 14_400;
+export const TCGGO_DAILY_CAP = 14_800;
 
 /** Reservations are taken in blocks so a batch does not hit the DB per call. */
-const BLOCK = 25;
+const BLOCK = 50;
 let pool = 0;
 let poolDay = "";
+let exhaustedDay = "";
+
+/** True once today's ledger is spent, so batches stop instead of mis-probing. */
+export function tcggoBudgetExhausted() {
+  return exhaustedDay === new Date().toISOString().slice(0, 10);
+}
 
 async function takeCall(): Promise<boolean> {
   const today = new Date().toISOString().slice(0, 10);
@@ -45,12 +51,20 @@ async function takeCall(): Promise<boolean> {
       _cap: TCGGO_DAILY_CAP,
     } as never);
     const granted = Number(data ?? 0);
-    if (granted <= 0) return false;
+    if (granted <= 0) {
+      exhaustedDay = today;
+      return false;
+    }
     pool = granted - 1;
     return true;
   } catch {
     return false;
   }
+}
+
+/** Set codes the feed actually publishes, for skipping uncovered sets for free. */
+export async function tcggoSupportedCodes(lang: "en" | "jp"): Promise<Set<string>> {
+  return new Set((await episodeIndex(lang)).keys());
 }
 
 /** Remaining requests for today, for reporting. */
