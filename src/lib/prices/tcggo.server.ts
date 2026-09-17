@@ -312,15 +312,34 @@ export async function runTcggoSync(args: TcggoSyncArgs) {
   if (!apiKey()) return { ok: false, error: "RAPIDAPI_TCGGO_KEY is not configured" };
   const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
 
+  const lang: "en" | "jp" = args.language === "JP" ? "jp" : "en";
+  const probes: { card_id: string; probed_at: string; matched: boolean }[] = [];
+  const stamp = () => new Date().toISOString();
+
   let rows: CardRow[];
   if (args.coverage !== false) {
+    // Over-fetch, then drop cards from sets the feed does not publish. Those
+    // are filtered from the cached episode index, so they cost no requests.
     const { data, error } = await supabaseAdmin.rpc("tcggo_sync_candidates" as never, {
       _language: args.language,
-      _limit: args.limit,
-      _cooldown_days: args.cooldownDays ?? 14,
+      _limit: Math.min(args.limit * 4, 2000),
+      _cooldown_days: args.cooldownDays ?? 90,
     } as never);
     if (error) return { ok: false, error: error.message };
-    rows = (data ?? []) as unknown as CardRow[];
+    const all = (data ?? []) as unknown as CardRow[];
+    const supported = await tcggoSupportedCodes(lang);
+    const usable: CardRow[] = [];
+    for (const row of all) {
+      const code = row.set_code?.toUpperCase() ?? "";
+      const covered = lang === "en" ? true : !!code && supported.has(code);
+      if (covered) {
+        if (usable.length < args.limit) usable.push(row);
+      } else {
+        // Record the skip so the next run moves on to different cards.
+        probes.push({ card_id: row.id, probed_at: stamp(), matched: false });
+      }
+    }
+    rows = usable;
   } else {
     let q = supabaseAdmin
       .from("tcg_cards")
@@ -339,12 +358,11 @@ export async function runTcggoSync(args: TcggoSyncArgs) {
   let priced = 0;
   let images = 0;
 
-  const probes: { card_id: string; probed_at: string; matched: boolean }[] = [];
   let allowance = await tcggoBudgetRemaining();
 
-  const CONCURRENCY = 8;
+  const CONCURRENCY = 12;
   for (let i = 0; i < rows.length; i += CONCURRENCY) {
-    if (allowance <= 0) break;
+    if (allowance <= 0 || tcggoBudgetExhausted()) break;
     const chunk = rows.slice(i, i + CONCURRENCY);
     allowance -= chunk.length;
     const results = await Promise.all(
