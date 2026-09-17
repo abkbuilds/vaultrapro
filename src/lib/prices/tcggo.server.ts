@@ -248,8 +248,8 @@ function plainNumber(n?: string) {
   return digits ? String(Number(digits)) : "";
 }
 
-/** Finds the matching TCGGO card, by TCGplayer id first, then set code + number. */
-export async function tcggoLookup(ref: TcggoRef): Promise<TcggoReading | null> {
+/** Finds the matching TCGGO card record, by TCGplayer id first, then set code + number. */
+export async function tcggoFindCard(ref: TcggoRef): Promise<TcggoCard | null> {
   const lang: "en" | "jp" = ref.id.startsWith("jp-") || ref.language === "JP" ? "jp" : "en";
 
   if (lang === "en") {
@@ -259,7 +259,7 @@ export async function tcggoLookup(ref: TcggoRef): Promise<TcggoReading | null> {
         `/cards?tcgid=${encodeURIComponent(tcgid)}&page=1`,
       );
       const hit = json?.data?.[0];
-      if (hit) return toReading(hit);
+      if (hit) return hit;
     }
   }
 
@@ -272,9 +272,18 @@ export async function tcggoLookup(ref: TcggoRef): Promise<TcggoReading | null> {
   const json = await api<{ data: TcggoCard[] }>(
     `/cards?episode_id=${ep.id}&card_number=${encodeURIComponent(number)}&lang=${lang}&page=1`,
   );
-  const hit = json?.data?.find((c) => plainNumber(String(c.card_number ?? "")) === number);
+  return json?.data?.find((c) => plainNumber(String(c.card_number ?? "")) === number) ?? null;
+}
+
+/** Live marketplace reading for a catalogue card, or null when unpublished. */
+export async function tcggoLookup(ref: TcggoRef): Promise<TcggoReading | null> {
+  const hit = await tcggoFindCard(ref);
   return hit ? toReading(hit) : null;
 }
+
+/** Raw metered request helper, shared with the browse/sold-price adapters. */
+export const tcggoApi = api;
+export type { TcggoCard, TcggoEpisode };
 
 /* -------------------------------- sync ----------------------------------- */
 

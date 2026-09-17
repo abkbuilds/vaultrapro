@@ -1,4 +1,4 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
 import { keepPreviousData, useQuery } from "@tanstack/react-query";
 import { Loader2, Plus, Search } from "lucide-react";
@@ -117,6 +117,23 @@ function DatabasePage() {
               : `${total.toLocaleString()} cards`
         }
       />
+
+      <div className="flex gap-2 px-4 pb-3">
+        <Link
+          to="/products"
+          className="rounded-full bg-surface px-3 py-1.5 text-xs font-medium text-muted-foreground"
+        >
+          Sealed products
+        </Link>
+        <Link
+          to="/artists"
+          className="rounded-full bg-surface px-3 py-1.5 text-xs font-medium text-muted-foreground"
+        >
+          Artists
+        </Link>
+      </div>
+
+
 
       <div className="space-y-3 px-4">
         <label className="flex items-center gap-2 rounded-xl bg-surface px-3 py-2.5">

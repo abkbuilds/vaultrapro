@@ -1,5 +1,5 @@
 import { createFileRoute, Link, notFound } from "@tanstack/react-router";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { ChevronLeft, Handshake, Heart, Loader2, Plus } from "lucide-react";
@@ -11,6 +11,8 @@ import {
   fetchCardSales,
   fetchCardTrend,
 } from "@/lib/prices/prices.functions";
+import { importTcggoCardHistory } from "@/lib/prices/tcggo.functions";
+import { GradedSoldPrices } from "@/components/tcg/GradedSoldPrices";
 
 interface TrendWindow {
   days: number;
@@ -95,6 +97,24 @@ function CardDetail() {
     queryFn: () => getTrend({ data: { cardId: card.id } }),
     staleTime: 5 * 60 * 1000,
   });
+
+  // When we hold almost no dated history for a card, pull the feed's own daily
+  // market closes (and its completed eBay sales) once, then refresh the chart.
+  const importHistory = useServerFn(importTcggoCardHistory);
+  const backfilled = useRef<string | null>(null);
+  useEffect(() => {
+    if (prices.isLoading || !prices.data) return;
+    const points = prices.data.series.reduce((n, s) => n + s.points.length, 0);
+    if (points >= 5 || backfilled.current === card.id) return;
+    backfilled.current = card.id;
+    void importHistory({ data: { cardId: card.id } }).then((res) => {
+      if (res && "ok" in res && res.ok) {
+        void prices.refetch();
+        void salesQuery.refetch();
+      }
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [card.id, prices.isLoading, prices.data]);
 
 
   const getSales = useServerFn(fetchCardSales);
@@ -416,7 +436,10 @@ function CardDetail() {
         </div>
       </section>
 
+      <GradedSoldPrices cardId={card.id} />
+
       <section className="mt-5 px-4">
+
         <div className="flex items-baseline justify-between pb-2">
           <h2 className="font-display text-lg font-semibold">Sale history</h2>
           {market?.value != null && (
