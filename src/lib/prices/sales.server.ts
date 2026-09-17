@@ -208,7 +208,8 @@ export interface MarketPrice {
 
 /** Most recent completed sales for a card, newest first. */
 export async function getSales(cardId: string, limit = 50): Promise<SaleRow[]> {
-  const { data } = await supabase
+  const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+  const { data } = await supabaseAdmin
     .from("card_sales")
     .select("id,source,sold_at,price,currency,price_usd,condition,title,url")
     .eq("card_id", cardId)
