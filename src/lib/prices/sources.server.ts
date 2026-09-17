@@ -117,6 +117,27 @@ export async function quoteTcgplayer(card: {
     }
   }
 
+  // TCGGO (RapidAPI) republishes TCGplayer market prices for EN and JP.
+  {
+    const { tcggoLookup } = await import("./tcggo.server");
+    const reading = await tcggoLookup({
+      id: cardId,
+      name: (card as { name?: string }).name ?? "",
+      number: card.number,
+      setCode: card.setCode,
+      language: card.language,
+    });
+    if (reading?.tcgplayerUsd != null) {
+      return {
+        source: "tcgplayer",
+        price: reading.tcgplayerUsd,
+        currency: "USD",
+        live: true,
+        note: "via TCGGO",
+      };
+    }
+  }
+
   return {
     source: "tcgplayer",
     price: null,
