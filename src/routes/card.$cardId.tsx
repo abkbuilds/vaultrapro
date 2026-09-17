@@ -1,5 +1,5 @@
 import { createFileRoute, Link, notFound } from "@tanstack/react-router";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { ChevronLeft, Handshake, Heart, Loader2, Plus } from "lucide-react";
@@ -11,6 +11,8 @@ import {
   fetchCardSales,
   fetchCardTrend,
 } from "@/lib/prices/prices.functions";
+import { importTcggoCardHistory } from "@/lib/prices/tcggo.functions";
+import { GradedSoldPrices } from "@/components/tcg/GradedSoldPrices";
 
 interface TrendWindow {
   days: number;
@@ -416,7 +418,10 @@ function CardDetail() {
         </div>
       </section>
 
+      <GradedSoldPrices cardId={card.id} />
+
       <section className="mt-5 px-4">
+
         <div className="flex items-baseline justify-between pb-2">
           <h2 className="font-display text-lg font-semibold">Sale history</h2>
           {market?.value != null && (
