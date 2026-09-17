@@ -3,13 +3,13 @@ import { z } from "zod";
 
 const bodySchema = z.object({
   language: z.enum(["EN", "JP"]).default("EN"),
-  limit: z.number().int().min(1).max(400).default(60),
+  limit: z.number().int().min(1).max(600).default(60),
   offset: z.number().int().min(0).default(0),
   onlyMissing: z.boolean().default(true),
   fillImages: z.boolean().default(true),
   /** Coverage mode (default): never re-checks a card inside the cooldown. */
   coverage: z.boolean().default(true),
-  cooldownDays: z.number().int().min(0).max(120).default(14),
+  cooldownDays: z.number().int().min(0).max(365).default(90),
 });
 
 /**
