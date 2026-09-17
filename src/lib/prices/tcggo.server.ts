@@ -405,9 +405,15 @@ export async function runTcggoSync(args: TcggoSyncArgs) {
     });
   }
 
+  for (let i = 0; i < probes.length; i += 500) {
+    await supabaseAdmin
+      .from("tcggo_probe_log")
+      .upsert(probes.slice(i, i + 500) as never, { onConflict: "card_id" });
+  }
+
   return {
     ok: true,
-    scanned: rows.length,
+    scanned: probes.length,
     priced,
     imagesFilled: images,
     pointsCaptured: points.length,
