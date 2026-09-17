@@ -378,6 +378,24 @@ export type Database = {
         }
         Relationships: []
       }
+      tcggo_call_budget: {
+        Row: {
+          calls: number
+          day: string
+          updated_at: string
+        }
+        Insert: {
+          calls?: number
+          day: string
+          updated_at?: string
+        }
+        Update: {
+          calls?: number
+          day?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
@@ -416,6 +434,10 @@ export type Database = {
           n: number
           set_id: string
         }[]
+      }
+      tcggo_reserve_calls: {
+        Args: { _cap?: number; _want: number }
+        Returns: number
       }
     }
     Enums: {

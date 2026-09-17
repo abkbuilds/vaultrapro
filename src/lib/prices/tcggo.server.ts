@@ -14,9 +14,61 @@ function apiKey() {
   return process.env["RAPIDAPI_TCGGO_KEY"] ?? "";
 }
 
+/* --------------------------- daily call budget ---------------------------- */
+/**
+ * RapidAPI allows 15,000 requests a day on this plan. Every call below is
+ * metered against a shared daily ledger capped at 14,400, leaving 600 spare
+ * for live card-page lookups and retries. When the budget is exhausted the
+ * adapter simply reports "no data" instead of overspending the quota.
+ */
+export const TCGGO_DAILY_CAP = 14_400;
+
+/** Reservations are taken in blocks so a batch does not hit the DB per call. */
+const BLOCK = 25;
+let pool = 0;
+let poolDay = "";
+
+async function takeCall(): Promise<boolean> {
+  const today = new Date().toISOString().slice(0, 10);
+  if (today !== poolDay) {
+    poolDay = today;
+    pool = 0;
+  }
+  if (pool > 0) {
+    pool--;
+    return true;
+  }
+  try {
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { data } = await supabaseAdmin.rpc("tcggo_reserve_calls" as never, {
+      _want: BLOCK,
+      _cap: TCGGO_DAILY_CAP,
+    } as never);
+    const granted = Number(data ?? 0);
+    if (granted <= 0) return false;
+    pool = granted - 1;
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+/** Remaining requests for today, for reporting. */
+export async function tcggoBudgetRemaining(): Promise<number> {
+  const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+  const { data } = await supabaseAdmin
+    .from("tcggo_call_budget")
+    .select("calls")
+    .eq("day", new Date().toISOString().slice(0, 10))
+    .maybeSingle();
+  const used = Number((data as { calls?: number } | null)?.calls ?? 0);
+  return Math.max(0, TCGGO_DAILY_CAP - used) + pool;
+}
+
 async function api<T>(path: string): Promise<T | null> {
   const key = apiKey();
   if (!key) return null;
+  if (!(await takeCall())) return null;
   try {
     const res = await fetch(`${BASE}${path}`, {
       headers: { accept: "application/json", "x-rapidapi-host": HOST, "x-rapidapi-key": key },
@@ -336,6 +388,8 @@ export async function runTcggoSync(args: TcggoSyncArgs) {
     priced,
     imagesFilled: images,
     pointsCaptured: points.length,
+    dailyCap: TCGGO_DAILY_CAP,
+    budgetRemaining: await tcggoBudgetRemaining(),
     nextOffset: args.onlyMissing ? args.offset : args.offset + rows.length,
     done: rows.length < args.limit,
   };
