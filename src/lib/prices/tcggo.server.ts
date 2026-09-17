@@ -272,6 +272,13 @@ export interface TcggoSyncArgs {
   onlyMissing: boolean;
   /** Also fill in missing artwork from the feed. */
   fillImages?: boolean;
+  /**
+   * Coverage mode: pick cards that have not been probed in the last
+   * `cooldownDays` days (unpriced cards first) so each daily request lands on a
+   * different card instead of re-reading the same ones.
+   */
+  coverage?: boolean;
+  cooldownDays?: number;
 }
 
 function isoDaysAgo(days: number) {
