@@ -109,7 +109,15 @@ async function toReading(card: TcggoCard): Promise<TcggoReading> {
   const rate = await eurToUsd();
   const cm = card.prices?.cardmarket ?? null;
   // The feed quotes both marketplaces in EUR.
-  const cmNow = pick(cm, ["lowest_near_mint", "7d_average", "30d_average"]);
+  // Japanese printings publish region-scoped near-mint keys instead.
+  const cmNow = pick(cm, [
+    "lowest_near_mint",
+    "lowest_near_mint_JP",
+    "lowest_near_mint_EU_only",
+    "lowest_near_mint_JP_EU_only",
+    "7d_average",
+    "30d_average",
+  ]);
   const seeds: { daysAgo: number; price: number }[] = [];
   for (const [daysAgo, key] of [
     [30, "30d_average"],
