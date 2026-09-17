@@ -98,6 +98,24 @@ function CardDetail() {
     staleTime: 5 * 60 * 1000,
   });
 
+  // When we hold almost no dated history for a card, pull the feed's own daily
+  // market closes (and its completed eBay sales) once, then refresh the chart.
+  const importHistory = useServerFn(importTcggoCardHistory);
+  const backfilled = useRef<string | null>(null);
+  useEffect(() => {
+    if (prices.isLoading || !prices.data) return;
+    const points = prices.data.series.reduce((n, s) => n + s.points.length, 0);
+    if (points >= 5 || backfilled.current === card.id) return;
+    backfilled.current = card.id;
+    void importHistory({ data: { cardId: card.id } }).then((res) => {
+      if (res && "ok" in res && res.ok) {
+        void prices.refetch();
+        void salesQuery.refetch();
+      }
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [card.id, prices.isLoading, prices.data]);
+
 
   const getSales = useServerFn(fetchCardSales);
   const salesQuery = useQuery({
