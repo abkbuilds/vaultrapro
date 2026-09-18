@@ -9,6 +9,11 @@
  */
 
 import { tcggoApi, tcggoFindCard, type TcggoCard } from "./tcggo.server";
+import {
+  blockCurrency,
+  cardmarketNearMint,
+  cardmarketProductLow,
+} from "./tcggo-figures";
 
 /* ------------------------------ currency --------------------------------- */
 

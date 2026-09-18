@@ -7,6 +7,8 @@
  * the ECB daily reference rate — nothing is modelled, smoothed or estimated.
  */
 
+import { cardmarketNearMint, rollingAverages } from "./tcggo-figures";
+
 const HOST = "pokemon-tcg-api.p.rapidapi.com";
 const BASE = `https://${HOST}`;
 
