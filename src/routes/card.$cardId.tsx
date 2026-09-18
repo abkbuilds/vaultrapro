@@ -234,10 +234,9 @@ function CardDetail() {
               <p className="font-display text-3xl font-bold tabular-nums">
                 {market?.value != null ? money(market.value) : money(headline)}
               </p>
+              {/* Same 7-day figure the lists show, describing the same price. */}
               <PriceDelta
-                value={
-                  trend.data?.windows.find((w) => w.days === 7)?.pct ?? card.change7d
-                }
+                value={card.change7d ?? trend.data?.windows.find((w) => w.days === 7)?.pct ?? null}
                 className="mb-1"
               />
 
