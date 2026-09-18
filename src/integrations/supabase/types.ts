@@ -381,16 +381,19 @@ export type Database = {
       tcggo_call_budget: {
         Row: {
           calls: number
+          cards: number
           day: string
           updated_at: string
         }
         Insert: {
           calls?: number
+          cards?: number
           day: string
           updated_at?: string
         }
         Update: {
           calls?: number
+          cards?: number
           day?: string
           updated_at?: string
         }
@@ -454,6 +457,10 @@ export type Database = {
         }[]
       }
       tcggo_reserve_calls: {
+        Args: { _cap?: number; _want: number }
+        Returns: number
+      }
+      tcggo_reserve_cards: {
         Args: { _cap?: number; _want: number }
         Returns: number
       }
