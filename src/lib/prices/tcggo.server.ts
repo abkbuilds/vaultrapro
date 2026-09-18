@@ -304,8 +304,11 @@ export async function tcggoFindCard(
 }
 
 /** Live marketplace reading for a catalogue card, or null when unpublished. */
-export async function tcggoLookup(ref: TcggoRef): Promise<TcggoReading | null> {
-  const hit = await tcggoFindCard(ref);
+export async function tcggoLookup(
+  ref: TcggoRef,
+  opts: { singleCall?: boolean } = {},
+): Promise<TcggoReading | null> {
+  const hit = await tcggoFindCard(ref, opts);
   return hit ? toReading(hit) : null;
 }
 
