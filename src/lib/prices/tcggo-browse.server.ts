@@ -142,13 +142,13 @@ async function cardSummary(raw: TcggoCard & { episode?: { name?: string } | null
   const prices = (raw.prices ?? null) as RawPrices | null;
   const cm = prices?.cardmarket ?? null;
   const tp = money(prices?.tcg_player?.market_price) ?? money(prices?.tcg_player?.mid_price);
-  const cmLow = cm
-    ? (money(cm["lowest_near_mint"]) ??
-      money(cm["lowest_near_mint_JP"]) ??
-      money(cm["lowest_near_mint_EU_only"]) ??
-      money(cm["7d_average"]))
-    : null;
-  const priceUsd = tp != null ? await toUsd(tp, "EUR") : cmLow != null ? await toUsd(cmLow, "EUR") : null;
+  const cmLow = cardmarketNearMint(cm);
+  const priceUsd =
+    tp != null
+      ? await toUsd(tp, blockCurrency(prices?.tcg_player as Record<string, unknown> | null))
+      : cmLow != null
+        ? await toUsd(cmLow, blockCurrency(cm))
+        : null;
   const summary: TcggoCardSummary = {
     id: raw.id,
     name: raw.name,
@@ -282,7 +282,7 @@ type RawProduct = {
 
 async function productSummary(raw: RawProduct): Promise<TcggoProduct> {
   const cm = raw.prices?.cardmarket ?? null;
-  const low = cm ? (money(cm["lowest"]) ?? money(cm["lowest_EU_only"]) ?? money(cm["7d_average"])) : null;
+  const low = cardmarketProductLow(cm);
   return {
     id: raw.id,
     name: raw.name,
