@@ -9,6 +9,7 @@
 import { supabase } from "@/integrations/supabase/client";
 import type { PriceSource, TimeRange } from "@/lib/tcg/types";
 import { RANGE_DAYS } from "@/lib/tcg/types";
+import { dropOutliers } from "./outliers";
 import {
   cardmarketHistorySeeds,
   quoteAll,
