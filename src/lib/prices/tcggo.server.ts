@@ -403,18 +403,25 @@ export async function runTcggoSync(args: TcggoSyncArgs) {
   const CONCURRENCY = 12;
   for (let i = 0; i < rows.length; i += CONCURRENCY) {
     if (allowance <= 0 || tcggoBudgetExhausted()) break;
-    const chunk = rows.slice(i, i + CONCURRENCY);
+    let chunk = rows.slice(i, i + CONCURRENCY);
+    // One slot per distinct card, so the day lands on 14,800 different cards.
+    const slots = await reserveCardSlots(chunk.length);
+    if (slots <= 0) break;
+    if (slots < chunk.length) chunk = chunk.slice(0, slots);
     allowance -= chunk.length;
     const results = await Promise.all(
       chunk.map(async (row) => ({
         row,
-        reading: await tcggoLookup({
-          id: row.id,
-          name: row.name,
-          number: row.number,
-          setCode: row.set_code,
-          language: args.language,
-        }),
+        reading: await tcggoLookup(
+          {
+            id: row.id,
+            name: row.name,
+            number: row.number,
+            setCode: row.set_code,
+            language: args.language,
+          },
+          { singleCall: true },
+        ),
       })),
     );
 
