@@ -251,6 +251,7 @@ export type Database = {
           name: string
           native_name: string | null
           number: string
+          price_change_7d: number | null
           rarity: string | null
           release_date: string | null
           search_text: string | null
@@ -277,6 +278,7 @@ export type Database = {
           name: string
           native_name?: string | null
           number: string
+          price_change_7d?: number | null
           rarity?: string | null
           release_date?: string | null
           search_text?: string | null
@@ -303,6 +305,7 @@ export type Database = {
           name?: string
           native_name?: string | null
           number?: string
+          price_change_7d?: number | null
           rarity?: string | null
           release_date?: string | null
           search_text?: string | null
