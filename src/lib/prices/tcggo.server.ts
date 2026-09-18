@@ -270,7 +270,10 @@ function plainNumber(n?: string) {
 }
 
 /** Finds the matching TCGGO card record, by TCGplayer id first, then set code + number. */
-export async function tcggoFindCard(ref: TcggoRef): Promise<TcggoCard | null> {
+export async function tcggoFindCard(
+  ref: TcggoRef,
+  opts: { singleCall?: boolean } = {},
+): Promise<TcggoCard | null> {
   const lang: "en" | "jp" = ref.id.startsWith("jp-") || ref.language === "JP" ? "jp" : "en";
 
   if (lang === "en") {
@@ -281,8 +284,12 @@ export async function tcggoFindCard(ref: TcggoRef): Promise<TcggoCard | null> {
       );
       const hit = json?.data?.[0];
       if (hit) return hit;
+      // Bulk coverage runs spend exactly one request per card so the daily
+      // allowance lands on as many different cards as possible.
+      if (opts.singleCall) return null;
     }
   }
+
 
   const code = ref.setCode?.toUpperCase();
   const number = plainNumber(ref.number);
