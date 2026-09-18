@@ -497,6 +497,7 @@ export async function runTcggoSync(args: TcggoSyncArgs) {
     imagesFilled: images,
     pointsCaptured: points.length,
     dailyCap: TCGGO_DAILY_CAP,
+    dailyCardTarget: TCGGO_DAILY_CARD_TARGET,
     budgetRemaining: await tcggoBudgetRemaining(),
     nextOffset: args.onlyMissing ? args.offset : args.offset + rows.length,
     done: rows.length < args.limit,
