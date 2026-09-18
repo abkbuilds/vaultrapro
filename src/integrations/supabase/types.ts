@@ -448,6 +448,7 @@ export type Database = {
           set_name: string
         }[]
       }
+      refresh_market_prices: { Args: never; Returns: number }
       refresh_price_changes: { Args: never; Returns: number }
       set_card_counts: {
         Args: { lang: string }
