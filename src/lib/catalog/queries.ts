@@ -20,6 +20,7 @@ export interface DbCard {
   image_small: string | null;
   image_large: string | null;
   market_price: number | null;
+  price_change_7d?: number | null;
   is_promo: boolean;
   english_name: string | null;
   english_set_name: string | null;
