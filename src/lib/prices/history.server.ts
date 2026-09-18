@@ -9,6 +9,7 @@
 import { supabase } from "@/integrations/supabase/client";
 import type { PriceSource, TimeRange } from "@/lib/tcg/types";
 import { RANGE_DAYS } from "@/lib/tcg/types";
+import { dropOutliers } from "./outliers";
 import {
   cardmarketHistorySeeds,
   quoteAll,
@@ -86,13 +87,17 @@ export async function getCardPrices(
       if (!points.length) return [];
 
       points.sort((a, b) => a.date.localeCompare(b.date));
+      // A single mis-keyed asking price in the feed would otherwise draw a
+      // spike that never happened; those readings are dropped, not smoothed.
+      const clean = dropOutliers(points);
+      if (!clean.length) return [];
       return [
         {
           source,
           currency: quote?.currency ?? "USD",
           live: Boolean(quote?.price != null),
           note: quote?.note,
-          points,
+          points: clean,
         },
       ];
     },
