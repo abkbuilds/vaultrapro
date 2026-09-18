@@ -61,39 +61,18 @@ export function toTcgCard(row: DbCard): TcgCard {
     image: row.image_large ?? row.image_small ?? "",
     // Real catalogue price only — 0 means "no data", never an estimate.
     marketPrice: row.market_price != null ? Number(Number(row.market_price).toFixed(2)) : 0,
-    change7d: null,
+    // Movement of the very figure shown above it (sale average, or the
+    // priority marketplace quote when a card has no recorded sales).
+    change7d:
+      row.price_change_7d != null ? Number(Number(row.price_change_7d).toFixed(2)) : null,
   };
 }
 
-const SOURCE_RANK = ["tcgplayer", "cardmarket", "ebay"];
-
 /**
- * Fills in each card's real observed 7-day movement from the recorded
- * readings. Cards with no earlier reading keep `null` and render "No data".
+ * The 7-day movement now travels with the card row itself, so a list price and
+ * its percentage always describe the same figure.
  */
 export async function attachChanges(cards: TcgCard[]): Promise<TcgCard[]> {
-  if (!cards.length) return cards;
-  const { data } = await supabase
-    .from("card_price_latest")
-    .select("card_id,source,change_7d")
-    .in(
-      "card_id",
-      cards.map((c) => c.id),
-    )
-    .not("change_7d", "is", null);
-
-  const best = new Map<string, { rank: number; value: number }>();
-  for (const row of (data ?? []) as { card_id: string; source: string; change_7d: number }[]) {
-    const rank = SOURCE_RANK.indexOf(row.source);
-    const cur = best.get(row.card_id);
-    if (!cur || (rank >= 0 && rank < cur.rank)) {
-      best.set(row.card_id, { rank: rank < 0 ? 99 : rank, value: Number(row.change_7d) });
-    }
-  }
-  for (const card of cards) {
-    const hit = best.get(card.id);
-    if (hit) card.change7d = Number(hit.value.toFixed(2));
-  }
   registerCards(cards);
   return cards;
 }
