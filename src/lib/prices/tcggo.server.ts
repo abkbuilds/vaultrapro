@@ -21,7 +21,28 @@ function apiKey() {
  * for live card-page lookups and retries. When the budget is exhausted the
  * adapter simply reports "no data" instead of overspending the quota.
  */
-export const TCGGO_DAILY_CAP = 14_800;
+export const TCGGO_DAILY_CAP = 14_950;
+
+/**
+ * Distinct catalogue cards the coverage sync may check per day. Each card costs
+ * exactly one request in sync mode, so this is both the card target and the
+ * bulk of the request budget; the rest is left for live card-page lookups.
+ */
+export const TCGGO_DAILY_CARD_TARGET = 14_800;
+
+/** Reserves N distinct-card slots from today's ledger, returns how many were granted. */
+export async function reserveCardSlots(want: number): Promise<number> {
+  try {
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { data } = await supabaseAdmin.rpc("tcggo_reserve_cards" as never, {
+      _want: want,
+      _cap: TCGGO_DAILY_CARD_TARGET,
+    } as never);
+    return Number(data ?? 0);
+  } catch {
+    return 0;
+  }
+}
 
 /** Reservations are taken in blocks so a batch does not hit the DB per call. */
 const BLOCK = 50;
@@ -249,7 +270,10 @@ function plainNumber(n?: string) {
 }
 
 /** Finds the matching TCGGO card record, by TCGplayer id first, then set code + number. */
-export async function tcggoFindCard(ref: TcggoRef): Promise<TcggoCard | null> {
+export async function tcggoFindCard(
+  ref: TcggoRef,
+  opts: { singleCall?: boolean } = {},
+): Promise<TcggoCard | null> {
   const lang: "en" | "jp" = ref.id.startsWith("jp-") || ref.language === "JP" ? "jp" : "en";
 
   if (lang === "en") {
@@ -260,8 +284,12 @@ export async function tcggoFindCard(ref: TcggoRef): Promise<TcggoCard | null> {
       );
       const hit = json?.data?.[0];
       if (hit) return hit;
+      // Bulk coverage runs spend exactly one request per card so the daily
+      // allowance lands on as many different cards as possible.
+      if (opts.singleCall) return null;
     }
   }
+
 
   const code = ref.setCode?.toUpperCase();
   const number = plainNumber(ref.number);
@@ -276,8 +304,11 @@ export async function tcggoFindCard(ref: TcggoRef): Promise<TcggoCard | null> {
 }
 
 /** Live marketplace reading for a catalogue card, or null when unpublished. */
-export async function tcggoLookup(ref: TcggoRef): Promise<TcggoReading | null> {
-  const hit = await tcggoFindCard(ref);
+export async function tcggoLookup(
+  ref: TcggoRef,
+  opts: { singleCall?: boolean } = {},
+): Promise<TcggoReading | null> {
+  const hit = await tcggoFindCard(ref, opts);
   return hit ? toReading(hit) : null;
 }
 
@@ -372,18 +403,25 @@ export async function runTcggoSync(args: TcggoSyncArgs) {
   const CONCURRENCY = 12;
   for (let i = 0; i < rows.length; i += CONCURRENCY) {
     if (allowance <= 0 || tcggoBudgetExhausted()) break;
-    const chunk = rows.slice(i, i + CONCURRENCY);
+    let chunk = rows.slice(i, i + CONCURRENCY);
+    // One slot per distinct card, so the day lands on 14,800 different cards.
+    const slots = await reserveCardSlots(chunk.length);
+    if (slots <= 0) break;
+    if (slots < chunk.length) chunk = chunk.slice(0, slots);
     allowance -= chunk.length;
     const results = await Promise.all(
       chunk.map(async (row) => ({
         row,
-        reading: await tcggoLookup({
-          id: row.id,
-          name: row.name,
-          number: row.number,
-          setCode: row.set_code,
-          language: args.language,
-        }),
+        reading: await tcggoLookup(
+          {
+            id: row.id,
+            name: row.name,
+            number: row.number,
+            setCode: row.set_code,
+            language: args.language,
+          },
+          { singleCall: true },
+        ),
       })),
     );
 
@@ -459,6 +497,7 @@ export async function runTcggoSync(args: TcggoSyncArgs) {
     imagesFilled: images,
     pointsCaptured: points.length,
     dailyCap: TCGGO_DAILY_CAP,
+    dailyCardTarget: TCGGO_DAILY_CARD_TARGET,
     budgetRemaining: await tcggoBudgetRemaining(),
     nextOffset: args.onlyMissing ? args.offset : args.offset + rows.length,
     done: rows.length < args.limit,
