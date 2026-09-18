@@ -195,23 +195,12 @@ function pick(block: Record<string, unknown> | null | undefined, keys: string[])
 async function toReading(card: TcggoCard): Promise<TcggoReading> {
   const rate = await eurToUsd();
   const cm = card.prices?.cardmarket ?? null;
-  // The feed quotes both marketplaces in EUR.
-  // Japanese printings publish region-scoped near-mint keys instead.
-  const cmNow = pick(cm, [
-    "lowest_near_mint",
-    "lowest_near_mint_JP",
-    "lowest_near_mint_EU_only",
-    "lowest_near_mint_JP_EU_only",
-    "7d_average",
-    "30d_average",
-  ]);
+  // The feed quotes both marketplaces in EUR. A single mis-keyed asking price
+  // is rejected against the published rolling averages (see tcggo-figures).
+  const cmNow = cardmarketNearMint(cm);
   const seeds: { daysAgo: number; price: number }[] = [];
-  for (const [daysAgo, key] of [
-    [30, "30d_average"],
-    [7, "7d_average"],
-  ] as const) {
-    const v = pick(cm, [key]);
-    if (v != null) seeds.push({ daysAgo, price: Number((v * rate).toFixed(2)) });
+  for (const avg of rollingAverages(cm)) {
+    seeds.push({ daysAgo: avg.daysAgo, price: Number((avg.value * rate).toFixed(2)) });
   }
   const tp = num(card.prices?.tcg_player?.market_price) ?? num(card.prices?.tcg_player?.mid_price);
   return {
