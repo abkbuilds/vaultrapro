@@ -30,7 +30,7 @@ export const TCGGO_DAILY_CAP = 14_950;
  * exactly one request in sync mode, so this is both the card target and the
  * bulk of the request budget; the rest is left for live card-page lookups.
  */
-export const TCGGO_DAILY_CARD_TARGET = 14_800;
+export const TCGGO_DAILY_CARD_TARGET = 14_500;
 
 /** Reserves N distinct-card slots from today's ledger, returns how many were granted. */
 export async function reserveCardSlots(want: number): Promise<number> {
