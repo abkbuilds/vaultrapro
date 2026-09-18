@@ -135,11 +135,12 @@ function CardDetail() {
   // Headline price prefers a live quote (TCGplayer first, then any other live
   // source) so it can never contradict the quote table below it.
   const liveQuotes = (prices.data?.quotes ?? []).filter((q) => q.live && q.price != null);
-  const headline =
-    liveQuotes.find((q) => q.source === "tcgplayer")?.price ??
-    liveQuotes[0]?.price ??
-    card.marketPrice;
-  const headlineSource = liveQuotes.find((q) => q.source === "tcgplayer") ?? liveQuotes[0];
+  // Same priority the catalogue uses, so the list price and this page agree.
+  const QUOTE_ORDER: PriceSource[] = ["tcgplayer", "cardmarket", "ebay"];
+  const headlineSource = QUOTE_ORDER.map((s) => liveQuotes.find((q) => q.source === s)).find(
+    Boolean,
+  );
+  const headline = headlineSource?.price ?? card.marketPrice;
 
   const chartData = useMemo(() => {
     const rows = new Map<string, Record<string, string | number>>();
