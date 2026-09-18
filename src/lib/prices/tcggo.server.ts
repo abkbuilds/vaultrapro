@@ -21,7 +21,28 @@ function apiKey() {
  * for live card-page lookups and retries. When the budget is exhausted the
  * adapter simply reports "no data" instead of overspending the quota.
  */
-export const TCGGO_DAILY_CAP = 14_800;
+export const TCGGO_DAILY_CAP = 14_950;
+
+/**
+ * Distinct catalogue cards the coverage sync may check per day. Each card costs
+ * exactly one request in sync mode, so this is both the card target and the
+ * bulk of the request budget; the rest is left for live card-page lookups.
+ */
+export const TCGGO_DAILY_CARD_TARGET = 14_800;
+
+/** Reserves N distinct-card slots from today's ledger, returns how many were granted. */
+export async function reserveCardSlots(want: number): Promise<number> {
+  try {
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { data } = await supabaseAdmin.rpc("tcggo_reserve_cards" as never, {
+      _want: want,
+      _cap: TCGGO_DAILY_CARD_TARGET,
+    } as never);
+    return Number(data ?? 0);
+  } catch {
+    return 0;
+  }
+}
 
 /** Reservations are taken in blocks so a batch does not hit the DB per call. */
 const BLOCK = 50;
