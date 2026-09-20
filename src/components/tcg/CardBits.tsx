@@ -127,7 +127,10 @@ export function CardTile({ card, sub }: { card: TcgCard; sub?: string }) {
         className="transition-transform duration-200 group-active:scale-[0.97]"
       />
       <div className="space-y-0.5">
-        <p className="truncate text-sm font-semibold">{card.name}</p>
+        <div className="flex items-center gap-1.5">
+          <p className="truncate text-sm font-semibold">{card.name}</p>
+          <PrintingBadge card={card} className="shrink-0" />
+        </div>
         <p className="truncate text-[11px] text-muted-foreground">
           {card.setCode} — {card.number} · {card.language}
         </p>
