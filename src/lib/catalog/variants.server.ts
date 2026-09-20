@@ -113,6 +113,10 @@ export async function runVariantSync(opts: {
           // exists, the catalogue entry already is that card.
           if (entry.has("holofoil") && entry.has("normal")) {
             make(HOLO_SUFFIX, "holofoil", entry.get("holofoil") ?? null);
+            // The base entry is the plain printing, so it must carry the plain
+            // printing's own published price — not the holo one.
+            const plain = entry.get("normal");
+            if (plain != null) priced.push({ id: baseId, price: plain });
           }
         }
 
