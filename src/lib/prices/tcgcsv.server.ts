@@ -149,16 +149,20 @@ export async function groupPrintings(
     if (num) numberOf.set(product.productId, numberKey(num));
   }
 
-  const out = new Map<string, number | null>();
+  const out = new Map<string, Map<PrintingKind, number | null>>();
   for (const p of prices.results) {
-    const sub = (p.subTypeName ?? "").toLowerCase();
-    if (!sub.includes("reverse")) continue;
+    const kind = printingKind(p.subTypeName);
+    if (!kind) continue;
     const key = numberOf.get(p.productId);
     if (!key) continue;
     const v = p.marketPrice ?? p.midPrice ?? p.lowPrice;
     const price = typeof v === "number" && v > 0 ? Number(v.toFixed(2)) : null;
-    const prev = out.get(key);
-    if (prev == null) out.set(key, price);
+    let entry = out.get(key);
+    if (!entry) {
+      entry = new Map<PrintingKind, number | null>();
+      out.set(key, entry);
+    }
+    if (!entry.has(kind) || (entry.get(kind) == null && price != null)) entry.set(kind, price);
   }
   return out;
 }
