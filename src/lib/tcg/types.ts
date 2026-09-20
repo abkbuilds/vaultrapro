@@ -54,7 +54,7 @@ export interface TcgCard {
   change7d: number | null;
   variants?: string[];
   /** Which printing this entry is: the standard card or its reverse holofoil. */
-  printing?: "normal" | "reverse_holofoil";
+  printing?: "normal" | "holofoil" | "reverse_holofoil";
 }
 
 export type GameId = "pokemon" | "magic" | "onepiece" | "lorcana" | "yugioh";
