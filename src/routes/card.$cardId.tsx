@@ -221,18 +221,23 @@ function CardDetail() {
             <p className="mt-1 text-xs text-muted-foreground">
               {card.setName} · {card.setCode} — {card.number}
             </p>
-            {card.printing === "reverse_holofoil" ? (
+            {card.printing === "reverse_holofoil" || card.printing === "holofoil" ? (
               <Link
                 to="/card/$cardId"
-                params={{ cardId: card.id.replace(/-rh$/, "") }}
+                params={{ cardId: card.id.replace(/-(rh|holo)$/, "") }}
                 className="mt-1 inline-block text-[11px] font-semibold text-primary"
               >
-                Reverse holofoil printing · view standard card
+                {card.printing === "holofoil" ? "Holofoil" : "Reverse holofoil"} printing · view
+                standard card
               </Link>
             ) : null}
             <div className="mt-2 flex flex-wrap gap-1.5 text-[11px]">
               {[
-                card.printing === "reverse_holofoil" ? "Reverse holo" : null,
+                card.printing === "reverse_holofoil"
+                  ? "Reverse holo"
+                  : card.printing === "holofoil"
+                    ? "Holo"
+                    : null,
                 card.rarity,
                 card.language,
                 card.type,
