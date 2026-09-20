@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import { useRouterState } from "@tanstack/react-router";
 import { animate, utils } from "animejs";
 import { useLenis } from "lenis/react";
@@ -25,8 +25,19 @@ function prefersReducedMotion() {
  * re-armed on every route change. Purely presentational.
  */
 export function ScrollAnimator() {
-  const pathname = useRouterState({ select: (s) => s.location.pathname });
+  const location = useRouterState({
+    select: (s) => ({ pathname: s.location.pathname, hash: s.location.hash }),
+  });
   const lenis = useLenis();
+  const restoringHistory = useRef(false);
+
+  useEffect(() => {
+    const markHistoryNavigation = () => {
+      restoringHistory.current = true;
+    };
+    window.addEventListener("popstate", markHistoryNavigation);
+    return () => window.removeEventListener("popstate", markHistoryNavigation);
+  }, []);
 
   useEffect(() => {
     if (prefersReducedMotion()) return;
@@ -112,16 +123,33 @@ export function ScrollAnimator() {
         utils.set(el, { opacity: 1, y: 0, filter: "none" });
       });
     };
-  }, [pathname]);
+  }, [location.pathname]);
 
-  // Cancel any carried momentum and start each page at a stable position.
+  // Cancel carried momentum for new pages while preserving browser back/forward positions.
   useEffect(() => {
-    if (lenis) {
-      lenis.scrollTo(0, { immediate: true, force: true });
+    if (restoringHistory.current) {
+      restoringHistory.current = false;
+      requestAnimationFrame(() => lenis?.resize());
       return;
     }
-    window.scrollTo({ top: 0, behavior: "auto" });
-  }, [lenis, pathname]);
+
+    const target = location.hash
+      ? document.getElementById(location.hash.replace(/^#/, ""))
+      : null;
+    requestAnimationFrame(() => {
+      if (lenis) {
+        lenis.resize();
+        lenis.scrollTo(target ?? 0, {
+          offset: target ? -88 : 0,
+          immediate: !target || prefersReducedMotion(),
+          force: true,
+        });
+        return;
+      }
+      if (target) target.scrollIntoView({ behavior: "auto" });
+      else window.scrollTo({ top: 0, behavior: "auto" });
+    });
+  }, [lenis, location.hash, location.pathname]);
 
   return null;
 }

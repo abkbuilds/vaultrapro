@@ -8,8 +8,9 @@ export function ScrollProgress() {
   useLenis((lenis) => {
     const el = bar.current;
     if (!el) return;
-    el.style.transform = `scaleX(${lenis.progress})`;
-    el.style.opacity = lenis.progress > 0.01 ? "1" : "0";
+    const progress = Math.max(0, Math.min(1, lenis.progress));
+    el.style.transform = `scaleX(${progress})`;
+    el.style.opacity = progress > 0.01 ? "1" : "0";
   });
 
   useEffect(() => {
@@ -23,7 +24,7 @@ export function ScrollProgress() {
     <div className="pointer-events-none fixed inset-x-0 top-0 z-50 h-0.5">
       <div
         ref={bar}
-        className="h-full origin-left bg-linear-to-r from-primary to-accent opacity-0"
+        className="h-full origin-left bg-linear-to-r from-primary to-accent opacity-0 will-change-transform"
         style={{ transform: "scaleX(0)" }}
       />
     </div>
