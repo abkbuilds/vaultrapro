@@ -42,7 +42,7 @@ export interface DbSet {
 }
 
 const SELECT =
-  "id,language,name,english_name,native_name,set_id,set_name,english_set_name,set_code,number,rarity,types,hp,artist,image_small,image_large,market_price,price_change_7d,is_promo";
+  "id,language,name,english_name,native_name,set_id,set_name,english_set_name,set_code,number,rarity,types,hp,artist,image_small,image_large,market_price,price_change_7d,is_promo,variant,base_card_id";
 
 export function toTcgCard(row: DbCard): TcgCard {
   return {
