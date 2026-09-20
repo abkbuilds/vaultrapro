@@ -221,8 +221,23 @@ function CardDetail() {
             <p className="mt-1 text-xs text-muted-foreground">
               {card.setName} · {card.setCode} — {card.number}
             </p>
+            {card.printing === "reverse_holofoil" ? (
+              <Link
+                to="/card/$cardId"
+                params={{ cardId: card.id.replace(/-rh$/, "") }}
+                className="mt-1 inline-block text-[11px] font-semibold text-primary"
+              >
+                Reverse holofoil printing · view standard card
+              </Link>
+            ) : null}
             <div className="mt-2 flex flex-wrap gap-1.5 text-[11px]">
-              {[card.rarity, card.language, card.type, card.hp && `${card.hp} HP`]
+              {[
+                card.printing === "reverse_holofoil" ? "Reverse holo" : null,
+                card.rarity,
+                card.language,
+                card.type,
+                card.hp && `${card.hp} HP`,
+              ]
                 .filter(Boolean)
                 .map((t) => (
                   <span key={String(t)} className="rounded-md bg-surface-2 px-2 py-1">
