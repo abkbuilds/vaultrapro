@@ -1,6 +1,7 @@
 @import "tailwindcss" source(none);
 @source "../src";
 @import "tw-animate-css";
+@import "lenis/dist/lenis.css";
 
 @custom-variant dark (&:is(.dark *));
 
@@ -182,13 +183,6 @@
   html {
     color-scheme: dark;
     -webkit-tap-highlight-color: transparent;
-    scroll-behavior: smooth;
-  }
-
-  @media (prefers-reduced-motion: reduce) {
-    html {
-      scroll-behavior: auto;
-    }
   }
 
   body {
@@ -205,6 +199,12 @@
   .overflow-x-auto {
     -webkit-overflow-scrolling: touch;
     scroll-behavior: smooth;
+    overscroll-behavior-inline: contain;
+  }
+
+  [data-radix-scroll-area-viewport],
+  [role="dialog"] {
+    overscroll-behavior: contain;
   }
 
   /* Tactile press feedback across interactive elements */

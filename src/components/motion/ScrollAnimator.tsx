@@ -1,6 +1,7 @@
 import { useEffect } from "react";
 import { useRouterState } from "@tanstack/react-router";
 import { animate, utils } from "animejs";
+import { useLenis } from "lenis/react";
 
 const SELECTOR = [
   "[data-reveal]",
@@ -25,6 +26,7 @@ function prefersReducedMotion() {
  */
 export function ScrollAnimator() {
   const pathname = useRouterState({ select: (s) => s.location.pathname });
+  const lenis = useLenis();
 
   useEffect(() => {
     if (prefersReducedMotion()) return;
@@ -112,10 +114,14 @@ export function ScrollAnimator() {
     };
   }, [pathname]);
 
-  // Smooth scroll to top between pages.
+  // Cancel any carried momentum and start each page at a stable position.
   useEffect(() => {
-    window.scrollTo({ top: 0, behavior: prefersReducedMotion() ? "auto" : "smooth" });
-  }, [pathname]);
+    if (lenis) {
+      lenis.scrollTo(0, { immediate: true, force: true });
+      return;
+    }
+    window.scrollTo({ top: 0, behavior: "auto" });
+  }, [lenis, pathname]);
 
   return null;
 }

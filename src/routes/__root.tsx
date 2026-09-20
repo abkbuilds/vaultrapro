@@ -8,6 +8,7 @@ import {
   Scripts,
 } from "@tanstack/react-router";
 import { useEffect, type ReactNode } from "react";
+import { ReactLenis } from "lenis/react";
 
 import appCss from "../styles.css?url";
 import { reportLovableError } from "../lib/lovable-error-reporting";
@@ -142,23 +143,36 @@ function RootComponent() {
 
   return (
     <QueryClientProvider client={queryClient}>
-      <AuthProvider>
-        <CollectionProvider>
-          <TradeProvider>
-          <ScrollProgress />
-          <ScrollAnimator />
-          <TopBar />
-          <div className="mx-auto min-h-screen w-full max-w-lg pb-24">
-            {/* Required: nested routes render here. */}
-            <PageTransition>
-              <Outlet />
-            </PageTransition>
-          </div>
-          <BottomNav />
-          <Toaster position="top-center" theme="dark" offset={16} />
-          </TradeProvider>
-        </CollectionProvider>
-      </AuthProvider>
+      <ReactLenis
+        root
+        options={{
+          autoRaf: true,
+          anchors: { offset: -72, duration: 1.05 },
+          duration: 1.05,
+          smoothWheel: true,
+          syncTouch: false,
+          allowNestedScroll: true,
+          stopInertiaOnNavigate: true,
+        }}
+      >
+        <AuthProvider>
+          <CollectionProvider>
+            <TradeProvider>
+            <ScrollProgress />
+            <ScrollAnimator />
+            <TopBar />
+            <div className="mx-auto min-h-screen w-full max-w-lg pb-24">
+              {/* Required: nested routes render here. */}
+              <PageTransition>
+                <Outlet />
+              </PageTransition>
+            </div>
+            <BottomNav />
+            <Toaster position="top-center" theme="dark" offset={16} />
+            </TradeProvider>
+          </CollectionProvider>
+        </AuthProvider>
+      </ReactLenis>
     </QueryClientProvider>
   );
 }
