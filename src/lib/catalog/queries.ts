@@ -67,7 +67,8 @@ export function toTcgCard(row: DbCard): TcgCard {
     // priority marketplace quote when a card has no recorded sales).
     change7d:
       row.price_change_7d != null ? Number(Number(row.price_change_7d).toFixed(2)) : null,
-    printing: row.variant === "reverse_holofoil" ? "reverse_holofoil" : "normal",
+    printing:
+      row.variant === "reverse_holofoil" || row.variant === "holofoil" ? row.variant : "normal",
   };
 }
 
