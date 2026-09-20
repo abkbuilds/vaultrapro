@@ -203,8 +203,14 @@
   }
 
   [data-radix-scroll-area-viewport],
-  [role="dialog"] {
+  [role="dialog"],
+  [data-lenis-prevent] {
     overscroll-behavior: contain;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  [data-lenis-stopped] {
+    overscroll-behavior: none;
   }
 
   /* Tactile press feedback across interactive elements */
