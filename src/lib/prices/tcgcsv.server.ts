@@ -114,15 +114,28 @@ export async function groupPricesByNumber(
   return byNumber;
 }
 
+export type PrintingKind = "normal" | "holofoil" | "reverse_holofoil";
+
+/** Real TCGplayer sub-types, mapped onto the printings we track. */
+function printingKind(subTypeName: string | null | undefined): PrintingKind | null {
+  const sub = (subTypeName ?? "").toLowerCase();
+  if (!sub) return null;
+  if (sub.includes("reverse")) return "reverse_holofoil";
+  if (sub.includes("holofoil") || sub.includes("holo")) return "holofoil";
+  if (sub.includes("normal") || sub.includes("unlimited") || sub.includes("1st edition"))
+    return "normal";
+  return null;
+}
+
 /**
- * Which printings in a TCGplayer group exist as a Reverse Holofoil, keyed by
- * loose card number. The value is the published Reverse Holofoil market price
- * when TCGplayer lists one, otherwise null ("no data") — never estimated.
+ * Which printings TCGplayer actually publishes for each card in a group, keyed
+ * by loose card number. Each value maps a printing to its published market
+ * price, or null when the printing is listed with no price ("no data").
  */
-export async function groupReverseHolos(
+export async function groupPrintings(
   category: number,
   groupId: number,
-): Promise<Map<string, number | null>> {
+): Promise<Map<string, Map<PrintingKind, number | null>>> {
   const [products, prices] = await Promise.all([
     getJson<{ results: CsvProduct[] }>(`${base(category)}/${groupId}/products`),
     getJson<{ results: CsvPrice[] }>(`${base(category)}/${groupId}/prices`).catch(() => ({
@@ -136,16 +149,20 @@ export async function groupReverseHolos(
     if (num) numberOf.set(product.productId, numberKey(num));
   }
 
-  const out = new Map<string, number | null>();
+  const out = new Map<string, Map<PrintingKind, number | null>>();
   for (const p of prices.results) {
-    const sub = (p.subTypeName ?? "").toLowerCase();
-    if (!sub.includes("reverse")) continue;
+    const kind = printingKind(p.subTypeName);
+    if (!kind) continue;
     const key = numberOf.get(p.productId);
     if (!key) continue;
     const v = p.marketPrice ?? p.midPrice ?? p.lowPrice;
     const price = typeof v === "number" && v > 0 ? Number(v.toFixed(2)) : null;
-    const prev = out.get(key);
-    if (prev == null) out.set(key, price);
+    let entry = out.get(key);
+    if (!entry) {
+      entry = new Map<PrintingKind, number | null>();
+      out.set(key, entry);
+    }
+    if (!entry.has(kind) || (entry.get(kind) == null && price != null)) entry.set(kind, price);
   }
   return out;
 }

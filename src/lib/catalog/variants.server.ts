@@ -1,21 +1,23 @@
 /**
- * Splits Reverse Holofoil printings into their own catalogue entries.
+ * Splits Holofoil and Reverse Holofoil printings into their own catalogue
+ * entries.
  *
  * Source of truth: tcgcsv.com, the keyless mirror of the TCGplayer catalogue.
- * A reverse entry is only created when TCGplayer actually lists a Reverse
- * Holofoil sub-type for that printing — nothing is inferred from the set era.
- * Its price is the published Reverse Holofoil market price, or nothing at all
- * ("no data") when TCGplayer has no listing.
+ * A separate entry is only created when TCGplayer actually lists that sub-type
+ * alongside the plain printing — nothing is inferred from the set era. Its
+ * price is the published market price for that exact printing, or nothing at
+ * all ("no data") when TCGplayer has no listing.
  */
 import {
   EN_CATEGORY,
   JP_CATEGORY,
-  groupReverseHolos,
+  groupPrintings,
   listGroups,
   numberKey,
 } from "@/lib/prices/tcgcsv.server";
 
 export const REVERSE_SUFFIX = "-rh";
+export const HOLO_SUFFIX = "-holo";
 
 export interface VariantSyncResult {
   language: "EN" | "JP";
@@ -62,8 +64,8 @@ export async function runVariantSync(opts: {
   for (const group of batch) {
     const abbr = (group.abbreviation ?? "").toUpperCase();
     try {
-      const reverses = await groupReverseHolos(category, group.groupId);
-      if (!reverses.size) {
+      const printings = await groupPrintings(category, group.groupId);
+      if (!printings.size) {
         processed.push(abbr);
         continue;
       }
@@ -87,18 +89,35 @@ export async function runVariantSync(opts: {
         for (const card of cards) {
           const baseId = String(card.id);
           const key = numberKey(String(card.number ?? ""));
-          if (!reverses.has(key)) continue;
-          const price = reverses.get(key) ?? null;
-          const row: Record<string, unknown> = { ...card };
-          delete row.search_text;
-          row.id = `${baseId}${REVERSE_SUFFIX}`;
-          row.base_card_id = baseId;
-          row.variant = "reverse_holofoil";
-          row.market_price = price;
-          row.price_change_7d = null;
-          row.updated_at = new Date().toISOString();
-          rows.push(row);
-          if (price != null) priced.push({ id: String(row.id), price });
+          const entry = printings.get(key);
+          if (!entry) continue;
+
+          const make = (suffix: string, variant: string, price: number | null) => {
+            const row: Record<string, unknown> = { ...card };
+            delete row.search_text;
+            row.id = `${baseId}${suffix}`;
+            row.base_card_id = baseId;
+            row.variant = variant;
+            row.market_price = price;
+            row.price_change_7d = null;
+            row.updated_at = new Date().toISOString();
+            rows.push(row);
+            if (price != null) priced.push({ id: String(row.id), price });
+          };
+
+          if (entry.has("reverse_holofoil")) {
+            make(REVERSE_SUFFIX, "reverse_holofoil", entry.get("reverse_holofoil") ?? null);
+          }
+          // Only split the holofoil out when TCGplayer publishes BOTH a plain
+          // and a holofoil printing of this exact card. When only the holofoil
+          // exists, the catalogue entry already is that card.
+          if (entry.has("holofoil") && entry.has("normal")) {
+            make(HOLO_SUFFIX, "holofoil", entry.get("holofoil") ?? null);
+            // The base entry is the plain printing, so it must carry the plain
+            // printing's own published price — not the holo one.
+            const plain = entry.get("normal");
+            if (plain != null) priced.push({ id: baseId, price: plain });
+          }
         }
 
         for (let i = 0; i < rows.length; i += 200) {
