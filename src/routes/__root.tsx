@@ -8,7 +8,6 @@ import {
   Scripts,
 } from "@tanstack/react-router";
 import { useEffect, type ReactNode } from "react";
-import { ReactLenis } from "lenis/react";
 
 import appCss from "../styles.css?url";
 import { reportLovableError } from "../lib/lovable-error-reporting";
@@ -21,6 +20,7 @@ import { Toaster } from "@/components/ui/sonner";
 import { ScrollAnimator } from "@/components/motion/ScrollAnimator";
 import { ScrollProgress } from "@/components/motion/ScrollProgress";
 import { PageTransition } from "@/components/motion/PageTransition";
+import { SmoothScroll } from "@/components/motion/SmoothScroll";
 
 function NotFoundComponent() {
   return (
@@ -143,18 +143,7 @@ function RootComponent() {
 
   return (
     <QueryClientProvider client={queryClient}>
-      <ReactLenis
-        root
-        options={{
-          autoRaf: true,
-          anchors: { offset: -72, duration: 1.05 },
-          duration: 1.05,
-          smoothWheel: true,
-          syncTouch: false,
-          allowNestedScroll: true,
-          stopInertiaOnNavigate: true,
-        }}
-      >
+      <SmoothScroll>
         <AuthProvider>
           <CollectionProvider>
             <TradeProvider>
@@ -172,7 +161,7 @@ function RootComponent() {
             </TradeProvider>
           </CollectionProvider>
         </AuthProvider>
-      </ReactLenis>
+      </SmoothScroll>
     </QueryClientProvider>
   );
 }
