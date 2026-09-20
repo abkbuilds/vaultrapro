@@ -114,6 +114,43 @@ export async function groupPricesByNumber(
   return byNumber;
 }
 
+/**
+ * Which printings in a TCGplayer group exist as a Reverse Holofoil, keyed by
+ * loose card number. The value is the published Reverse Holofoil market price
+ * when TCGplayer lists one, otherwise null ("no data") — never estimated.
+ */
+export async function groupReverseHolos(
+  category: number,
+  groupId: number,
+): Promise<Map<string, number | null>> {
+  const [products, prices] = await Promise.all([
+    getJson<{ results: CsvProduct[] }>(`${base(category)}/${groupId}/products`),
+    getJson<{ results: CsvPrice[] }>(`${base(category)}/${groupId}/prices`).catch(() => ({
+      results: [] as CsvPrice[],
+    })),
+  ]);
+
+  const numberOf = new Map<number, string>();
+  for (const product of products.results) {
+    const num = baseNumber(ext(product, "Number"));
+    if (num) numberOf.set(product.productId, numberKey(num));
+  }
+
+  const out = new Map<string, number | null>();
+  for (const p of prices.results) {
+    const sub = (p.subTypeName ?? "").toLowerCase();
+    if (!sub.includes("reverse")) continue;
+    const key = numberOf.get(p.productId);
+    if (!key) continue;
+    const v = p.marketPrice ?? p.midPrice ?? p.lowPrice;
+    const price = typeof v === "number" && v > 0 ? Number(v.toFixed(2)) : null;
+    const prev = out.get(key);
+    if (prev == null) out.set(key, price);
+  }
+  return out;
+}
+
+
 /* --------------------------- per-card live quote -------------------------- */
 
 const CACHE_TTL_MS = 60 * 60 * 1000;

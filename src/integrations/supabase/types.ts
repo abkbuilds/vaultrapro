@@ -238,6 +238,7 @@ export type Database = {
       tcg_cards: {
         Row: {
           artist: string | null
+          base_card_id: string | null
           english_name: string | null
           english_set_name: string | null
           game: string
@@ -262,9 +263,11 @@ export type Database = {
           supertype: string | null
           types: string[] | null
           updated_at: string
+          variant: string
         }
         Insert: {
           artist?: string | null
+          base_card_id?: string | null
           english_name?: string | null
           english_set_name?: string | null
           game?: string
@@ -289,9 +292,11 @@ export type Database = {
           supertype?: string | null
           types?: string[] | null
           updated_at?: string
+          variant?: string
         }
         Update: {
           artist?: string | null
+          base_card_id?: string | null
           english_name?: string | null
           english_set_name?: string | null
           game?: string
@@ -316,6 +321,7 @@ export type Database = {
           supertype?: string | null
           types?: string[] | null
           updated_at?: string
+          variant?: string
         }
         Relationships: [
           {

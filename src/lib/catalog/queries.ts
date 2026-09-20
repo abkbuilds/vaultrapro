@@ -24,6 +24,8 @@ export interface DbCard {
   is_promo: boolean;
   english_name: string | null;
   english_set_name: string | null;
+  variant?: string | null;
+  base_card_id?: string | null;
 }
 
 export interface DbSet {
@@ -40,7 +42,7 @@ export interface DbSet {
 }
 
 const SELECT =
-  "id,language,name,english_name,native_name,set_id,set_name,english_set_name,set_code,number,rarity,types,hp,artist,image_small,image_large,market_price,price_change_7d,is_promo";
+  "id,language,name,english_name,native_name,set_id,set_name,english_set_name,set_code,number,rarity,types,hp,artist,image_small,image_large,market_price,price_change_7d,is_promo,variant,base_card_id";
 
 export function toTcgCard(row: DbCard): TcgCard {
   return {
@@ -65,6 +67,7 @@ export function toTcgCard(row: DbCard): TcgCard {
     // priority marketplace quote when a card has no recorded sales).
     change7d:
       row.price_change_7d != null ? Number(Number(row.price_change_7d).toFixed(2)) : null,
+    printing: row.variant === "reverse_holofoil" ? "reverse_holofoil" : "normal",
   };
 }
 

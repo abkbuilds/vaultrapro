@@ -51,6 +51,21 @@ export function CardImage({
 }
 
 
+/** Marks an entry as the reverse holofoil printing of a card. */
+export function PrintingBadge({ card, className }: { card: TcgCard; className?: string }) {
+  if (card.printing !== "reverse_holofoil") return null;
+  return (
+    <span
+      className={cn(
+        "inline-flex items-center rounded-md bg-primary/12 px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-primary",
+        className,
+      )}
+    >
+      Reverse holo
+    </span>
+  );
+}
+
 export function PriceDelta({
   value,
   className,
@@ -112,7 +127,10 @@ export function CardTile({ card, sub }: { card: TcgCard; sub?: string }) {
         className="transition-transform duration-200 group-active:scale-[0.97]"
       />
       <div className="space-y-0.5">
-        <p className="truncate text-sm font-semibold">{card.name}</p>
+        <div className="flex items-center gap-1.5">
+          <p className="truncate text-sm font-semibold">{card.name}</p>
+          <PrintingBadge card={card} className="shrink-0" />
+        </div>
         <p className="truncate text-[11px] text-muted-foreground">
           {card.setCode} — {card.number} · {card.language}
         </p>
@@ -145,7 +163,10 @@ export function CardRow({
     >
       <CardImage card={card} className="w-11 shrink-0 rounded-lg" />
       <div className="min-w-0 flex-1">
-        <p className="truncate text-sm font-semibold">{card.name}</p>
+        <div className="flex items-center gap-1.5">
+          <p className="truncate text-sm font-semibold">{card.name}</p>
+          <PrintingBadge card={card} className="shrink-0" />
+        </div>
         <p className="truncate text-[11px] text-muted-foreground">
           {sub ?? `${card.setName} · ${card.setCode} ${card.number}`}
         </p>
