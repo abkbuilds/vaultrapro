@@ -72,6 +72,30 @@ export function toTcgCard(row: DbCard): TcgCard {
   };
 }
 
+/** Holo variants use the exact artwork of their linked base printing. */
+async function inheritBaseArtwork(rows: DbCard[]): Promise<DbCard[]> {
+  const ids = [...new Set(
+    rows
+      .filter((row) => !row.image_large && !row.image_small && row.base_card_id)
+      .map((row) => row.base_card_id as string),
+  )];
+  if (!ids.length) return rows;
+
+  const { data, error } = await supabase
+    .from("tcg_cards")
+    .select("id,image_small,image_large")
+    .in("id", ids);
+  if (error) return rows;
+  const images = new Map(
+    ((data ?? []) as { id: string; image_small: string | null; image_large: string | null }[])
+      .map((row) => [row.id, row]),
+  );
+  return rows.map((row) => {
+    const base = row.base_card_id ? images.get(row.base_card_id) : undefined;
+    return base ? { ...row, image_small: base.image_small, image_large: base.image_large } : row;
+  });
+}
+
 /**
  * The 7-day movement now travels with the card row itself, so a list price and
  * its percentage always describe the same figure.
@@ -132,7 +156,7 @@ export async function searchCards(args: SearchArgs) {
 
   const { data, error, count } = await q;
   if (error) throw error;
-  const cards = ((data ?? []) as unknown as DbCard[]).map(toTcgCard);
+  const cards = (await inheritBaseArtwork((data ?? []) as unknown as DbCard[])).map(toTcgCard);
   await attachChanges(cards);
   return { cards, total: count ?? cards.length };
 
@@ -167,7 +191,7 @@ export async function fetchCardById(id: string): Promise<TcgCard | null> {
     .maybeSingle();
   if (error) throw error;
   if (!data) return null;
-  const card = toTcgCard(data as unknown as DbCard);
+  const card = (await inheritBaseArtwork([data as unknown as DbCard])).map(toTcgCard)[0];
   await attachChanges([card]);
   return card;
 }
@@ -176,7 +200,7 @@ export async function fetchCardsByIds(ids: string[]): Promise<TcgCard[]> {
   if (!ids.length) return [];
   const { data, error } = await supabase.from("tcg_cards").select(SELECT).in("id", ids);
   if (error) throw error;
-  const cards = ((data ?? []) as unknown as DbCard[]).map(toTcgCard);
+  const cards = (await inheritBaseArtwork((data ?? []) as unknown as DbCard[])).map(toTcgCard);
   await attachChanges(cards);
   return cards;
 
