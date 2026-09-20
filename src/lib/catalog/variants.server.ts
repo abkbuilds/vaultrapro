@@ -64,8 +64,8 @@ export async function runVariantSync(opts: {
   for (const group of batch) {
     const abbr = (group.abbreviation ?? "").toUpperCase();
     try {
-      const reverses = await groupReverseHolos(category, group.groupId);
-      if (!reverses.size) {
+      const printings = await groupPrintings(category, group.groupId);
+      if (!printings.size) {
         processed.push(abbr);
         continue;
       }
