@@ -1,21 +1,23 @@
 /**
- * Splits Reverse Holofoil printings into their own catalogue entries.
+ * Splits Holofoil and Reverse Holofoil printings into their own catalogue
+ * entries.
  *
  * Source of truth: tcgcsv.com, the keyless mirror of the TCGplayer catalogue.
- * A reverse entry is only created when TCGplayer actually lists a Reverse
- * Holofoil sub-type for that printing — nothing is inferred from the set era.
- * Its price is the published Reverse Holofoil market price, or nothing at all
- * ("no data") when TCGplayer has no listing.
+ * A separate entry is only created when TCGplayer actually lists that sub-type
+ * alongside the plain printing — nothing is inferred from the set era. Its
+ * price is the published market price for that exact printing, or nothing at
+ * all ("no data") when TCGplayer has no listing.
  */
 import {
   EN_CATEGORY,
   JP_CATEGORY,
-  groupReverseHolos,
+  groupPrintings,
   listGroups,
   numberKey,
 } from "@/lib/prices/tcgcsv.server";
 
 export const REVERSE_SUFFIX = "-rh";
+export const HOLO_SUFFIX = "-holo";
 
 export interface VariantSyncResult {
   language: "EN" | "JP";
