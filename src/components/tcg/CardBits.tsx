@@ -51,6 +51,21 @@ export function CardImage({
 }
 
 
+/** Marks an entry as the reverse holofoil printing of a card. */
+export function PrintingBadge({ card, className }: { card: TcgCard; className?: string }) {
+  if (card.printing !== "reverse_holofoil") return null;
+  return (
+    <span
+      className={cn(
+        "inline-flex items-center rounded-md bg-primary/12 px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-primary",
+        className,
+      )}
+    >
+      Reverse holo
+    </span>
+  );
+}
+
 export function PriceDelta({
   value,
   className,
