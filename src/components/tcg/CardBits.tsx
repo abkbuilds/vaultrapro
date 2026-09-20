@@ -163,7 +163,10 @@ export function CardRow({
     >
       <CardImage card={card} className="w-11 shrink-0 rounded-lg" />
       <div className="min-w-0 flex-1">
-        <p className="truncate text-sm font-semibold">{card.name}</p>
+        <div className="flex items-center gap-1.5">
+          <p className="truncate text-sm font-semibold">{card.name}</p>
+          <PrintingBadge card={card} className="shrink-0" />
+        </div>
         <p className="truncate text-[11px] text-muted-foreground">
           {sub ?? `${card.setName} · ${card.setCode} ${card.number}`}
         </p>
