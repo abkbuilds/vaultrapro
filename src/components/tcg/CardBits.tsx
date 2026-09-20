@@ -51,9 +51,15 @@ export function CardImage({
 }
 
 
-/** Marks an entry as the reverse holofoil printing of a card. */
+export const PRINTING_LABEL: Record<string, string> = {
+  holofoil: "Holo",
+  reverse_holofoil: "Reverse holo",
+};
+
+/** Marks an entry as the holofoil or reverse holofoil printing of a card. */
 export function PrintingBadge({ card, className }: { card: TcgCard; className?: string }) {
-  if (card.printing !== "reverse_holofoil") return null;
+  const label = card.printing ? PRINTING_LABEL[card.printing] : undefined;
+  if (!label) return null;
   return (
     <span
       className={cn(
@@ -61,7 +67,7 @@ export function PrintingBadge({ card, className }: { card: TcgCard; className?: 
         className,
       )}
     >
-      Reverse holo
+      {label}
     </span>
   );
 }
