@@ -89,18 +89,31 @@ export async function runVariantSync(opts: {
         for (const card of cards) {
           const baseId = String(card.id);
           const key = numberKey(String(card.number ?? ""));
-          if (!reverses.has(key)) continue;
-          const price = reverses.get(key) ?? null;
-          const row: Record<string, unknown> = { ...card };
-          delete row.search_text;
-          row.id = `${baseId}${REVERSE_SUFFIX}`;
-          row.base_card_id = baseId;
-          row.variant = "reverse_holofoil";
-          row.market_price = price;
-          row.price_change_7d = null;
-          row.updated_at = new Date().toISOString();
-          rows.push(row);
-          if (price != null) priced.push({ id: String(row.id), price });
+          const entry = printings.get(key);
+          if (!entry) continue;
+
+          const make = (suffix: string, variant: string, price: number | null) => {
+            const row: Record<string, unknown> = { ...card };
+            delete row.search_text;
+            row.id = `${baseId}${suffix}`;
+            row.base_card_id = baseId;
+            row.variant = variant;
+            row.market_price = price;
+            row.price_change_7d = null;
+            row.updated_at = new Date().toISOString();
+            rows.push(row);
+            if (price != null) priced.push({ id: String(row.id), price });
+          };
+
+          if (entry.has("reverse_holofoil")) {
+            make(REVERSE_SUFFIX, "reverse_holofoil", entry.get("reverse_holofoil") ?? null);
+          }
+          // Only split the holofoil out when TCGplayer publishes BOTH a plain
+          // and a holofoil printing of this exact card. When only the holofoil
+          // exists, the catalogue entry already is that card.
+          if (entry.has("holofoil") && entry.has("normal")) {
+            make(HOLO_SUFFIX, "holofoil", entry.get("holofoil") ?? null);
+          }
         }
 
         for (let i = 0; i < rows.length; i += 200) {
