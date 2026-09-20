@@ -20,6 +20,7 @@ import { Toaster } from "@/components/ui/sonner";
 import { ScrollAnimator } from "@/components/motion/ScrollAnimator";
 import { ScrollProgress } from "@/components/motion/ScrollProgress";
 import { PageTransition } from "@/components/motion/PageTransition";
+import { SmoothScroll } from "@/components/motion/SmoothScroll";
 
 function NotFoundComponent() {
   return (
@@ -142,23 +143,25 @@ function RootComponent() {
 
   return (
     <QueryClientProvider client={queryClient}>
-      <AuthProvider>
-        <CollectionProvider>
-          <TradeProvider>
-          <ScrollProgress />
-          <ScrollAnimator />
-          <TopBar />
-          <div className="mx-auto min-h-screen w-full max-w-lg pb-24">
-            {/* Required: nested routes render here. */}
-            <PageTransition>
-              <Outlet />
-            </PageTransition>
-          </div>
-          <BottomNav />
-          <Toaster position="top-center" theme="dark" offset={16} />
-          </TradeProvider>
-        </CollectionProvider>
-      </AuthProvider>
+      <SmoothScroll>
+        <AuthProvider>
+          <CollectionProvider>
+            <TradeProvider>
+            <ScrollProgress />
+            <ScrollAnimator />
+            <TopBar />
+            <div className="mx-auto min-h-screen w-full max-w-lg pb-24">
+              {/* Required: nested routes render here. */}
+              <PageTransition>
+                <Outlet />
+              </PageTransition>
+            </div>
+            <BottomNav />
+            <Toaster position="top-center" theme="dark" offset={16} />
+            </TradeProvider>
+          </CollectionProvider>
+        </AuthProvider>
+      </SmoothScroll>
     </QueryClientProvider>
   );
 }
