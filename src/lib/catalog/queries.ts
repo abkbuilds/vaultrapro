@@ -24,6 +24,8 @@ export interface DbCard {
   is_promo: boolean;
   english_name: string | null;
   english_set_name: string | null;
+  variant?: string | null;
+  base_card_id?: string | null;
 }
 
 export interface DbSet {
