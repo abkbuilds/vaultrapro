@@ -11,6 +11,10 @@ export const Route = createFileRoute("/api/public/sync-jp-images")({
   server: {
     handlers: {
       POST: async ({ request }) => {
+        const secret = process.env["PRICE_REFRESH_TOKEN"];
+        if (secret && request.headers.get("x-refresh-token") !== secret) {
+          return new Response("Unauthorized", { status: 401 });
+        }
         let parsed;
         try {
           const raw = await request.text();

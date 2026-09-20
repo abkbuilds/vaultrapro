@@ -2,6 +2,7 @@ import { Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { cn } from "@/lib/utils";
 import type { TcgCard } from "@/lib/tcg/types";
+import artworkUnavailable from "@/assets/card-artwork-unavailable.png";
 
 export function CardImage({
   card,
@@ -31,18 +32,26 @@ export function CardImage({
           onError={() => setFailed(true)}
         />
       ) : (
-        // No upstream artwork exists for this printing — show the card's real
-        // identity rather than a blank tile.
-        <div className="flex size-full flex-col items-center justify-center gap-1 bg-linear-to-b from-surface-2 to-surface p-2 text-center">
-          <span className="line-clamp-3 text-[10px] font-semibold leading-tight">
-            {card.name}
-          </span>
-          <span className="text-[9px] text-muted-foreground">
-            {card.setCode} {card.number}
-          </span>
-          <span className="text-[8px] uppercase tracking-wide text-muted-foreground/70">
-            No image
-          </span>
+        // Keep the catalogue visually complete without substituting or
+        // generating artwork for a real printing that has no verified scan.
+        <div className="relative size-full bg-surface text-center">
+          <img
+            src={artworkUnavailable}
+            alt=""
+            aria-hidden="true"
+            loading="lazy"
+            width={768}
+            height={1056}
+            className="size-full object-cover"
+          />
+          <div className="absolute inset-x-[9%] bottom-[7%] rounded-lg border border-white/10 bg-black/65 px-2 py-1.5 backdrop-blur-md">
+            <span className="block line-clamp-2 text-[9px] font-semibold leading-tight text-white">
+              {card.name}
+            </span>
+            <span className="mt-0.5 block text-[7px] uppercase tracking-[0.12em] text-white/60">
+              {card.setCode} {card.number} · artwork unavailable
+            </span>
+          </div>
         </div>
       )}
       <span className="pointer-events-none absolute inset-0 bg-linear-to-t from-black/45 to-transparent opacity-60" />

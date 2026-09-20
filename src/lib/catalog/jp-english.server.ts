@@ -59,7 +59,14 @@ export function baseNumber(raw: string | null): string | null {
 /** Loose key so "001" and "1" match. */
 export function numberKey(n: string | null | undefined): string {
   if (!n) return "";
-  const s = n.trim().toUpperCase();
+  // Normalize typography and separators, but preserve every printed prefix
+  // and suffix so similarly numbered promos cannot be paired accidentally.
+  const s = n
+    .normalize("NFKC")
+    .trim()
+    .toUpperCase()
+    .replace(/[‐‑‒–—]/g, "-")
+    .replace(/\s+/g, "");
   const m = s.match(/^([A-Z]*)0*(\d+)([A-Z]*)$/);
   return m ? `${m[1]}${m[2]}${m[3]}` : s;
 }
