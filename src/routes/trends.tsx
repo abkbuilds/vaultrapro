@@ -151,14 +151,36 @@ function TrendsPage() {
           })}
         </div>
         <p className="mt-2 text-[11px] text-muted-foreground">
-          The index is the average observed price change across every tracked card with a
-          real recorded reading in the selected window. Games without an ingested
+          The index is the average observed price change {windowLabel} across every tracked
+          card with a real recorded reading in that window. Games without an ingested
           catalogue show “no data” rather than an estimate.
         </p>
       </section>
 
       <section className="mt-6 px-4">
-        <h2 className="font-display text-lg font-semibold">Top movers</h2>
+        <h2 className="font-display text-lg font-semibold">
+          Biggest movers · {moverMeta.label.toLowerCase()}
+        </h2>
+        <div className="mt-2 flex gap-1 rounded-xl bg-surface-2/70 p-1">
+          {MOVER_WINDOWS.map((w) => (
+            <button
+              key={w.id}
+              type="button"
+              onClick={() => setMoverWin(w.id)}
+              className={cn(
+                "flex-1 rounded-lg py-1.5 text-xs font-semibold transition-colors",
+                moverWin === w.id
+                  ? "bg-primary text-primary-foreground"
+                  : "text-muted-foreground",
+              )}
+            >
+              {w.label}
+            </button>
+          ))}
+        </div>
+        <p className="mt-1.5 text-[11px] text-muted-foreground">
+          {moverMeta.caption} — every percentage below is measured over exactly this window.
+        </p>
         <div className="mt-2 flex gap-2">
           <div className="flex flex-1 gap-1 rounded-xl bg-surface-2/70 p-1">
             {(["EN", "JP"] as const).map((l) => (
