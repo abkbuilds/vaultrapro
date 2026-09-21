@@ -17,6 +17,7 @@ export type Database = {
       card_price_latest: {
         Row: {
           card_id: string
+          change_1y: number | null
           change_24h: number | null
           change_30d: number | null
           change_7d: number | null
@@ -28,6 +29,7 @@ export type Database = {
         }
         Insert: {
           card_id: string
+          change_1y?: number | null
           change_24h?: number | null
           change_30d?: number | null
           change_7d?: number | null
@@ -39,6 +41,7 @@ export type Database = {
         }
         Update: {
           card_id?: string
+          change_1y?: number | null
           change_24h?: number | null
           change_30d?: number | null
           change_7d?: number | null

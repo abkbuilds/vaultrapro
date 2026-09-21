@@ -254,7 +254,7 @@ export async function snapshotCard(card: CardLike) {
 
 /* --------------------------------- movers -------------------------------- */
 
-export type MoverWindow = "24h" | "7d" | "30d";
+export type MoverWindow = "24h" | "7d" | "30d" | "1y";
 
 export interface MoverRow {
   cardId: string;
@@ -268,10 +268,11 @@ export interface MoverRow {
   change: number;
 }
 
-const COL: Record<MoverWindow, "change_24h" | "change_7d" | "change_30d"> = {
+const COL: Record<MoverWindow, "change_24h" | "change_7d" | "change_30d" | "change_1y"> = {
   "24h": "change_24h",
   "7d": "change_7d",
   "30d": "change_30d",
+  "1y": "change_1y",
 };
 
 export async function getMovers(opts: {

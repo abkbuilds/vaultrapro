@@ -38,10 +38,19 @@ const WINDOWS = [
   { id: "30d", label: "This month" },
 ] as const;
 
+/** Movers get their own windows — each list's % is that window's change. */
+const MOVER_WINDOWS = [
+  { id: "7d", label: "This week", caption: "Change over the last 7 days" },
+  { id: "30d", label: "This month", caption: "Change over the last 30 days" },
+  { id: "1y", label: "This year", caption: "Change over the last 365 days" },
+] as const;
+
 function TrendsPage() {
   // Weekly is the shortest window with broad recorded coverage, so it is the
   // honest default rather than an empty "today" board.
   const [win, setWin] = useState<(typeof WINDOWS)[number]["id"]>("7d");
+  const [moverWin, setMoverWin] =
+    useState<(typeof MOVER_WINDOWS)[number]["id"]>("7d");
 
   const [lang, setLang] = useState<"EN" | "JP">("EN");
   const [scope, setScope] = useState<"market" | "portfolio">("market");
@@ -61,11 +70,11 @@ function TrendsPage() {
 
   const getMovers = useServerFn(fetchMovers);
   const movers = useQuery({
-    queryKey: ["movers", win, lang, scope, scope === "portfolio" ? portfolioIds : null],
+    queryKey: ["movers", moverWin, lang, scope, scope === "portfolio" ? portfolioIds : null],
     queryFn: () =>
       getMovers({
         data: {
-          window: win,
+          window: moverWin,
           language: lang,
           limit: 10,
           cardIds: scope === "portfolio" ? portfolioIds : undefined,
@@ -75,6 +84,7 @@ function TrendsPage() {
   });
 
   const windowLabel = WINDOWS.find((w) => w.id === win)!.label.toLowerCase();
+  const moverMeta = MOVER_WINDOWS.find((w) => w.id === moverWin)!;
 
   return (
     <main>
@@ -141,14 +151,36 @@ function TrendsPage() {
           })}
         </div>
         <p className="mt-2 text-[11px] text-muted-foreground">
-          The index is the average observed price change across every tracked card with a
-          real recorded reading in the selected window. Games without an ingested
+          The index is the average observed price change {windowLabel} across every tracked
+          card with a real recorded reading in that window. Games without an ingested
           catalogue show “no data” rather than an estimate.
         </p>
       </section>
 
       <section className="mt-6 px-4">
-        <h2 className="font-display text-lg font-semibold">Top movers</h2>
+        <h2 className="font-display text-lg font-semibold">
+          Biggest movers · {moverMeta.label.toLowerCase()}
+        </h2>
+        <div className="mt-2 flex gap-1 rounded-xl bg-surface-2/70 p-1">
+          {MOVER_WINDOWS.map((w) => (
+            <button
+              key={w.id}
+              type="button"
+              onClick={() => setMoverWin(w.id)}
+              className={cn(
+                "flex-1 rounded-lg py-1.5 text-xs font-semibold transition-colors",
+                moverWin === w.id
+                  ? "bg-primary text-primary-foreground"
+                  : "text-muted-foreground",
+              )}
+            >
+              {w.label}
+            </button>
+          ))}
+        </div>
+        <p className="mt-1.5 text-[11px] text-muted-foreground">
+          {moverMeta.caption} — every percentage below is measured over exactly this window.
+        </p>
         <div className="mt-2 flex gap-2">
           <div className="flex flex-1 gap-1 rounded-xl bg-surface-2/70 p-1">
             {(["EN", "JP"] as const).map((l) => (
@@ -192,8 +224,15 @@ function TrendsPage() {
           </p>
         ) : (
           <>
-            <MoverList title="Gainers" rows={movers.data?.gainers ?? []} />
-            <MoverList title="Losers" rows={movers.data?.losers ?? []} />
+            <MoverList title={`Gainers · ${moverMeta.label.toLowerCase()}`} rows={movers.data?.gainers ?? []} />
+            <MoverList title={`Losers · ${moverMeta.label.toLowerCase()}`} rows={movers.data?.losers ?? []} />
+            {moverWin === "1y" &&
+              !(movers.data?.gainers.length || movers.data?.losers.length) && (
+                <p className="py-6 text-center text-sm text-muted-foreground">
+                  Yearly movement only appears for cards with a recorded price from a year
+                  ago. It fills in as price history builds up.
+                </p>
+              )}
           </>
         )}
       </section>

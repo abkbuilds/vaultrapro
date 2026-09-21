@@ -70,11 +70,11 @@ function Dashboard() {
   const cardIds = useMemo(() => [...new Set(entries.map((e) => e.cardId))], [entries]);
   const getMovers = useServerFn(fetchMovers);
   const movers = useQuery({
-    queryKey: ["my-movers", cardIds],
+    queryKey: ["my-movers-7d", cardIds],
     queryFn: async () => {
       const [en, jp] = await Promise.all([
-        getMovers({ data: { window: "24h", language: "EN", limit: 10, cardIds } }),
-        getMovers({ data: { window: "24h", language: "JP", limit: 10, cardIds } }),
+        getMovers({ data: { window: "7d", language: "EN", limit: 10, cardIds } }),
+        getMovers({ data: { window: "7d", language: "JP", limit: 10, cardIds } }),
       ]);
       return [...en.gainers, ...en.losers, ...jp.gainers, ...jp.losers]
         .sort((a, b) => Math.abs(b.change) - Math.abs(a.change))
@@ -174,7 +174,7 @@ function Dashboard() {
 
       <section className="mt-6">
         <div className="flex items-center justify-between px-4 pb-2">
-          <h2 className="font-display text-lg font-semibold">My top movers</h2>
+          <h2 className="font-display text-lg font-semibold">My top movers · this week</h2>
           <Link to="/trends" className="text-xs font-semibold text-primary">
             Market movers
           </Link>
