@@ -174,7 +174,7 @@ function Dashboard() {
 
       <section className="mt-6">
         <div className="flex items-center justify-between px-4 pb-2">
-          <h2 className="font-display text-lg font-semibold">My top movers</h2>
+          <h2 className="font-display text-lg font-semibold">My top movers · this week</h2>
           <Link to="/trends" className="text-xs font-semibold text-primary">
             Market movers
           </Link>
