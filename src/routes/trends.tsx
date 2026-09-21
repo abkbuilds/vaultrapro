@@ -38,10 +38,19 @@ const WINDOWS = [
   { id: "30d", label: "This month" },
 ] as const;
 
+/** Movers get their own windows — each list's % is that window's change. */
+const MOVER_WINDOWS = [
+  { id: "7d", label: "This week", caption: "Change over the last 7 days" },
+  { id: "30d", label: "This month", caption: "Change over the last 30 days" },
+  { id: "1y", label: "This year", caption: "Change over the last 365 days" },
+] as const;
+
 function TrendsPage() {
   // Weekly is the shortest window with broad recorded coverage, so it is the
   // honest default rather than an empty "today" board.
   const [win, setWin] = useState<(typeof WINDOWS)[number]["id"]>("7d");
+  const [moverWin, setMoverWin] =
+    useState<(typeof MOVER_WINDOWS)[number]["id"]>("7d");
 
   const [lang, setLang] = useState<"EN" | "JP">("EN");
   const [scope, setScope] = useState<"market" | "portfolio">("market");
