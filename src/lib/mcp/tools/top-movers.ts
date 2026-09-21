@@ -2,7 +2,12 @@ import { defineTool, ToolError } from "@lovable.dev/mcp-js";
 import { z } from "zod";
 import { jsonResult, supabaseAnon } from "../supabase";
 
-const COLUMN = { "24h": "change_24h", "7d": "change_7d", "30d": "change_30d" } as const;
+const COLUMN = {
+  "24h": "change_24h",
+  "7d": "change_7d",
+  "30d": "change_30d",
+  "1y": "change_1y",
+} as const;
 
 export default defineTool({
   name: "top_movers",

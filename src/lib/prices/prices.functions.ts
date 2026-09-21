@@ -66,7 +66,7 @@ export const fetchMovers = createServerFn({ method: "POST" })
   .inputValidator((data: unknown) =>
     z
       .object({
-        window: z.enum(["24h", "7d", "30d"]),
+        window: z.enum(["24h", "7d", "30d", "1y"]),
         language: z.enum(["EN", "JP"]),
         limit: z.number().min(1).max(25).optional(),
         cardIds: z.array(z.string()).max(400).optional(),
