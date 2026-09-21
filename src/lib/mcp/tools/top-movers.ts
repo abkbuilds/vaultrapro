@@ -13,9 +13,12 @@ export default defineTool({
   name: "top_movers",
   title: "Top market movers",
   description:
-    "Biggest recorded price gainers or losers across the Pokémon TCG catalogue over the last day, week or month, for English or Japanese cards.",
+    "Biggest recorded price gainers or losers across the Pokémon TCG catalogue over the last day, week, month or year, for English or Japanese cards.",
   inputSchema: {
-    window: z.enum(["24h", "7d", "30d"]).describe("Movement window. Defaults to 7d.").optional(),
+    window: z
+      .enum(["24h", "7d", "30d", "1y"])
+      .describe("Movement window. Defaults to 7d.")
+      .optional(),
     direction: z.enum(["gainers", "losers"]).describe("Defaults to gainers.").optional(),
     language: z.enum(["EN", "JP"]).describe("Restrict to English or Japanese printings.").optional(),
     limit: z.number().int().describe("Max cards to return (1-25, default 10).").optional(),
