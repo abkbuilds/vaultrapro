@@ -119,7 +119,7 @@
       {
         "name": "top_movers",
         "title": "Top market movers",
-        "description": "Biggest recorded price gainers or losers across the Pokémon TCG catalogue over the last day, week or month, for English or Japanese cards.",
+        "description": "Biggest recorded price gainers or losers across the Pokémon TCG catalogue over the last day, week, month or year, for English or Japanese cards.",
         "annotations": {
           "readOnlyHint": true,
           "idempotentHint": true,
@@ -134,7 +134,8 @@
               "enum": [
                 "24h",
                 "7d",
-                "30d"
+                "30d",
+                "1y"
               ],
               "description": "Movement window. Defaults to 7d."
             },
