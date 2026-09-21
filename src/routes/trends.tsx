@@ -224,8 +224,15 @@ function TrendsPage() {
           </p>
         ) : (
           <>
-            <MoverList title="Gainers" rows={movers.data?.gainers ?? []} />
-            <MoverList title="Losers" rows={movers.data?.losers ?? []} />
+            <MoverList title={`Gainers · ${moverMeta.label.toLowerCase()}`} rows={movers.data?.gainers ?? []} />
+            <MoverList title={`Losers · ${moverMeta.label.toLowerCase()}`} rows={movers.data?.losers ?? []} />
+            {moverWin === "1y" &&
+              !(movers.data?.gainers.length || movers.data?.losers.length) && (
+                <p className="py-6 text-center text-sm text-muted-foreground">
+                  Yearly movement only appears for cards with a recorded price from a year
+                  ago. It fills in as price history builds up.
+                </p>
+              )}
           </>
         )}
       </section>
