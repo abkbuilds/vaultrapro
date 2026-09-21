@@ -70,11 +70,11 @@ function TrendsPage() {
 
   const getMovers = useServerFn(fetchMovers);
   const movers = useQuery({
-    queryKey: ["movers", win, lang, scope, scope === "portfolio" ? portfolioIds : null],
+    queryKey: ["movers", moverWin, lang, scope, scope === "portfolio" ? portfolioIds : null],
     queryFn: () =>
       getMovers({
         data: {
-          window: win,
+          window: moverWin,
           language: lang,
           limit: 10,
           cardIds: scope === "portfolio" ? portfolioIds : undefined,
