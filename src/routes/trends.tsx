@@ -84,6 +84,7 @@ function TrendsPage() {
   });
 
   const windowLabel = WINDOWS.find((w) => w.id === win)!.label.toLowerCase();
+  const moverMeta = MOVER_WINDOWS.find((w) => w.id === moverWin)!;
 
   return (
     <main>
