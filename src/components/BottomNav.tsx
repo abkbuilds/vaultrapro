@@ -78,6 +78,8 @@ export function BottomNav() {
             <li key={to} className="flex-1" data-active={active ? "true" : "false"}>
               <Link
                 to={to}
+                preload="render"
+
                 className={cn(
                   "flex flex-col items-center gap-1 py-2.5 text-[9px] font-medium tracking-tight transition-colors duration-300 active:scale-95",
                   "transition-transform will-change-transform",
