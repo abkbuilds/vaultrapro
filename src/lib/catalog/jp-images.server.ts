@@ -9,6 +9,8 @@
  */
 
 import { baseNumber, numberKey } from "./jp-english.server";
+import { matchJapaneseNames } from "./jp-name-match.server";
+
 
 const BASE = "https://tcgcsv.com/tcgplayer/85";
 
@@ -164,11 +166,11 @@ export async function runJpImageSync(opts: {
       }
       if (!byNumber.size && !byName.size) continue;
 
-      const rows: { id: string; number: string; english_name: string | null }[] = [];
+      const rows: { id: string; number: string; name: string; english_name: string | null }[] = [];
       for (let from = 0; ; from += 1000) {
         const { data } = await supabaseAdmin
           .from("tcg_cards")
-          .select("id,number,english_name")
+          .select("id,number,name,english_name")
           .eq("set_id", setId)
           .is("image_small", null)
           .is("image_large", null)
@@ -176,11 +178,13 @@ export async function runJpImageSync(opts: {
         const page = (data ?? []) as {
           id: string;
           number: string;
+          name: string;
           english_name: string | null;
         }[];
         rows.push(...page);
         if (page.length < 1000) break;
       }
+
 
       const unmatched: { id: string; number: string; name: string }[] = [];
       const applied = new Set<string>();
