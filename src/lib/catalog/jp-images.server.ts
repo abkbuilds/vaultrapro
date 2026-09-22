@@ -182,6 +182,24 @@ export async function runJpImageSync(opts: {
         if (page.length < 1000) break;
       }
 
+      const unmatched: { id: string; number: string; name: string }[] = [];
+      const applied = new Set<string>();
+
+      const apply = async (id: string, p: Product) => {
+        const { error } = await supabaseAdmin
+          .from("tcg_cards")
+          .update({
+            image_small: sized(p.imageUrl, "200w"),
+            image_large: sized(p.imageUrl, "400w"),
+            updated_at: new Date().toISOString(),
+          } as never)
+          .eq("id", id);
+        if (!error) {
+          cardsUpdated += 1;
+          applied.add(id);
+        }
+      };
+
       for (let i = 0; i < rows.length; i += 200) {
         const chunk = rows.slice(i, i + 200);
         await Promise.all(
@@ -189,19 +207,34 @@ export async function runJpImageSync(opts: {
             const p =
               byNumber.get(numberKey(row.number)) ??
               (row.english_name ? byName.get(nameKey(row.english_name)) : null);
-            if (!p) return;
-            const { error } = await supabaseAdmin
-              .from("tcg_cards")
-              .update({
-                image_small: sized(p.imageUrl, "200w"),
-                image_large: sized(p.imageUrl, "400w"),
-                updated_at: new Date().toISOString(),
-              } as never)
-              .eq("id", row.id);
-            if (!error) cardsUpdated += 1;
+            if (!p) {
+              unmatched.push({ id: row.id, number: row.number, name: row.name ?? "" });
+              return;
+            }
+            await apply(row.id, p);
           }),
         );
       }
+
+      // Vintage groups carry neither numbers nor Japanese names, so the printed
+      // Japanese name is lined up against the real product list for this set.
+      if (unmatched.length) {
+        const productByName = new Map(products.filter((p) => p.imageUrl).map((p) => [p.name, p]));
+        const names = [...productByName.keys()];
+        for (let i = 0; i < unmatched.length; i += 60) {
+          const slice = unmatched.slice(i, i + 60);
+          const matches = await matchJapaneseNames({
+            setName: english ?? abbr,
+            cards: slice,
+            productNames: names,
+          });
+          for (const [id, productName] of Object.entries(matches)) {
+            const p = productByName.get(productName);
+            if (p && !applied.has(id)) await apply(id, p);
+          }
+        }
+      }
+
     } catch (e) {
       console.error(`jp image sync failed for ${abbr}`, e);
     }
