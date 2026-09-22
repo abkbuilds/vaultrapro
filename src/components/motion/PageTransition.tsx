@@ -23,12 +23,12 @@ export function PageTransition({ children }: { children: ReactNode }) {
     }
     const anim = animate(el, {
       opacity: [0, 1],
-      y: [10, 0],
-      scale: [0.995, 1],
-      duration: 420,
-      ease: "outQuart",
+      y: [6, 0],
+      duration: 200,
+      ease: "outQuad",
       onComplete: () => utils.set(el, { transform: "none" }),
     });
+
     return () => {
       anim.pause();
       utils.set(el, { opacity: 1, transform: "none" });
