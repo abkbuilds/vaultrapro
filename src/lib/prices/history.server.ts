@@ -266,6 +266,11 @@ export interface MoverRow {
   image: string | null;
   price: number;
   change: number;
+  /** Marketplace the price and % both come from. */
+  source?: string;
+  /** Recorded price at the start of the window (price ÷ (1 + change)). */
+  fromPrice?: number;
+  updatedAt?: string;
 }
 
 const COL: Record<MoverWindow, "change_24h" | "change_7d" | "change_30d" | "change_1y"> = {
