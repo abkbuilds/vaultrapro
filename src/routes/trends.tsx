@@ -40,9 +40,9 @@ const WINDOWS = [
 
 /** Movers get their own windows — each list's % is that window's change. */
 const MOVER_WINDOWS = [
+  { id: "24h", label: "Right now", caption: "Change over the last 24 hours" },
   { id: "7d", label: "This week", caption: "Change over the last 7 days" },
   { id: "30d", label: "This month", caption: "Change over the last 30 days" },
-  { id: "1y", label: "This year", caption: "Change over the last 365 days" },
 ] as const;
 
 function TrendsPage() {
@@ -80,7 +80,8 @@ function TrendsPage() {
           cardIds: scope === "portfolio" ? portfolioIds : undefined,
         },
       }),
-    staleTime: 5 * 60 * 1000,
+    staleTime: 60 * 1000,
+    refetchInterval: 2 * 60 * 1000,
   });
 
   const windowLabel = WINDOWS.find((w) => w.id === win)!.label.toLowerCase();
@@ -159,7 +160,7 @@ function TrendsPage() {
 
       <section className="mt-6 px-4">
         <h2 className="font-display text-lg font-semibold">
-          Biggest movers · {moverMeta.label.toLowerCase()}
+          Moving {moverMeta.label.toLowerCase()}
         </h2>
         <div className="mt-2 flex gap-1 rounded-xl bg-surface-2/70 p-1">
           {MOVER_WINDOWS.map((w) => (
@@ -226,13 +227,6 @@ function TrendsPage() {
           <>
             <MoverList title={`Gainers · ${moverMeta.label.toLowerCase()}`} rows={movers.data?.gainers ?? []} />
             <MoverList title={`Losers · ${moverMeta.label.toLowerCase()}`} rows={movers.data?.losers ?? []} />
-            {moverWin === "1y" &&
-              !(movers.data?.gainers.length || movers.data?.losers.length) && (
-                <p className="py-6 text-center text-sm text-muted-foreground">
-                  Yearly movement only appears for cards with a recorded price from a year
-                  ago. It fills in as price history builds up.
-                </p>
-              )}
           </>
         )}
       </section>
@@ -279,6 +273,11 @@ function MoverList({ title, rows }: { title: string; rows: MoverRow[] }) {
             <span className="shrink-0 space-y-1 text-right">
               <span className="block text-sm font-bold tabular-nums">{money(m.price)}</span>
               <PriceDelta value={m.change} />
+              {m.fromPrice != null && Number.isFinite(m.fromPrice) && (
+                <span className="block text-[10px] text-muted-foreground tabular-nums">
+                  from {money(m.fromPrice)}{m.source ? ` · ${m.source}` : ""}
+                </span>
+              )}
             </span>
           </Link>
         ))}

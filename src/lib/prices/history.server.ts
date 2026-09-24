@@ -266,6 +266,11 @@ export interface MoverRow {
   image: string | null;
   price: number;
   change: number;
+  /** Marketplace the price and % both come from. */
+  source?: string;
+  /** Recorded price at the start of the window (price ÷ (1 + change)). */
+  fromPrice?: number;
+  updatedAt?: string;
 }
 
 const COL: Record<MoverWindow, "change_24h" | "change_7d" | "change_30d" | "change_1y"> = {
@@ -288,20 +293,25 @@ export async function getMovers(opts: {
     let q = supabase
       .from("card_price_latest")
       .select(
-        `card_id,price,${col},tcg_cards!inner(name,set_name,set_code,number,language,image_small,image_large)`,
+        `card_id,source,price,updated_at,${col},tcg_cards!inner(name,set_name,set_code,number,language,image_small,image_large)`,
       )
       .not(col, "is", null)
+      .gt("price", 0)
+      .gte(col, -300)
+      .lte(col, 300)
+      .gte("updated_at", new Date(Date.now() - (opts.window === "24h" ? 2 : 8) * 86400000).toISOString())
       .eq("tcg_cards.language", opts.language)
       .order(col, { ascending: asc })
-      .limit(limit);
+      .limit(limit * 4);
     if (opts.cardIds?.length) q = q.in("card_id", opts.cardIds);
     const { data } = await q;
     return (data ?? []) as unknown as any[];
   };
 
   const [up, down] = await Promise.all([pull(false), pull(true)]);
-  const map = (rows: any[]): MoverRow[] =>
-    rows.map((r) => ({
+  const map = (rows: any[]): MoverRow[] => {
+    const seen = new Set<string>();
+    return rows.filter((r) => !seen.has(r.card_id) && seen.add(r.card_id)).slice(0, limit).map((r) => ({
       cardId: r.card_id,
       name: r.tcg_cards.name,
       setName: r.tcg_cards.set_name,
@@ -311,7 +321,11 @@ export async function getMovers(opts: {
       image: r.tcg_cards.image_large ?? r.tcg_cards.image_small,
       price: Number(r.price),
       change: Number(r[col]),
+      source: r.source as string,
+      fromPrice: Number(r.price) / (1 + Number(r[col]) / 100),
+      updatedAt: r.updated_at as string,
     }));
+  };
 
   // Real readings only. When the captured history does not yet cover this
   // window the lists come back empty and the UI shows "no data".
