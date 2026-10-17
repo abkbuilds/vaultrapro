@@ -14,6 +14,113 @@ export type Database = {
   }
   public: {
     Tables: {
+      ai_pick_outcomes: {
+        Row: {
+          horizon_days: number
+          measured_at: string
+          pick_id: string
+          price_after: number
+          return_pct: number
+          win: boolean
+        }
+        Insert: {
+          horizon_days: number
+          measured_at?: string
+          pick_id: string
+          price_after: number
+          return_pct: number
+          win: boolean
+        }
+        Update: {
+          horizon_days?: number
+          measured_at?: string
+          pick_id?: string
+          price_after?: number
+          return_pct?: number
+          win?: boolean
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ai_pick_outcomes_pick_id_fkey"
+            columns: ["pick_id"]
+            isOneToOne: false
+            referencedRelation: "ai_picks"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      ai_picks: {
+        Row: {
+          ai_score: number
+          bucket: string
+          confidence: number
+          created_at: string
+          expected_return_max: number | null
+          expected_return_min: number | null
+          id: string
+          image: string | null
+          item_id: string
+          kind: string
+          long_term_outlook: string | null
+          name: string
+          picked_on: string
+          price_at_pick: number
+          recommendation: string
+          risk_level: string
+          safety_explanation: string | null
+          set_name: string | null
+          short_term_outlook: string | null
+          signals: Json
+          thesis: string | null
+        }
+        Insert: {
+          ai_score: number
+          bucket: string
+          confidence: number
+          created_at?: string
+          expected_return_max?: number | null
+          expected_return_min?: number | null
+          id?: string
+          image?: string | null
+          item_id: string
+          kind: string
+          long_term_outlook?: string | null
+          name: string
+          picked_on?: string
+          price_at_pick: number
+          recommendation: string
+          risk_level: string
+          safety_explanation?: string | null
+          set_name?: string | null
+          short_term_outlook?: string | null
+          signals?: Json
+          thesis?: string | null
+        }
+        Update: {
+          ai_score?: number
+          bucket?: string
+          confidence?: number
+          created_at?: string
+          expected_return_max?: number | null
+          expected_return_min?: number | null
+          id?: string
+          image?: string | null
+          item_id?: string
+          kind?: string
+          long_term_outlook?: string | null
+          name?: string
+          picked_on?: string
+          price_at_pick?: number
+          recommendation?: string
+          risk_level?: string
+          safety_explanation?: string | null
+          set_name?: string | null
+          short_term_outlook?: string | null
+          signals?: Json
+          thesis?: string | null
+        }
+        Relationships: []
+      }
       card_price_latest: {
         Row: {
           card_id: string
@@ -235,6 +342,33 @@ export type Database = {
           display_name?: string | null
           id?: string
           updated_at?: string
+        }
+        Relationships: []
+      }
+      sealed_price_points: {
+        Row: {
+          captured_on: string
+          episode: string | null
+          image: string | null
+          name: string
+          price_usd: number
+          product_id: string
+        }
+        Insert: {
+          captured_on?: string
+          episode?: string | null
+          image?: string | null
+          name: string
+          price_usd: number
+          product_id: string
+        }
+        Update: {
+          captured_on?: string
+          episode?: string | null
+          image?: string | null
+          name?: string
+          price_usd?: number
+          product_id?: string
         }
         Relationships: []
       }
