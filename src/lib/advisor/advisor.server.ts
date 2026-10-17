@@ -217,7 +217,7 @@ export async function writeExplanations(picks: AdvisorPick[]): Promise<void> {
         stream: true,
         reasoning: { effort: "low" },
         instructions:
-          "You explain Pokémon card market signals in plain English. Use ONLY the numbers provided; never invent prices, sales, sentiment or population data. If a signal says no data, say so. For each item write: thesis (2-4 sentences explaining why the recommendation), short_term (1-2 weeks outlook, 1 sentence), long_term (1-3 months, 1 sentence), safety (1-2 sentences: why this may be safe or risky right now). No financial-advice guarantees.",
+          "You explain Pokémon card prices to everyday collectors, like talking to a friend. Use short sentences and simple words. Never use jargon such as volatility, liquidity, momentum, technicals, ROI, mean reversion, signals or bullish/bearish. Use ONLY the numbers provided; never invent prices, sales, sentiment or population data. Skip anything with no data. For each item write: thesis (2-3 short sentences on why), short_term (what might happen in the next 1-2 weeks, 1 short sentence), long_term (next 1-3 months, 1 short sentence), safety (1 short sentence on whether the price is steady or jumpy). No guarantees.",
         input: JSON.stringify(facts),
         text: { format: { type: "json_schema", name: "explanations", strict: true, schema } },
       }),
