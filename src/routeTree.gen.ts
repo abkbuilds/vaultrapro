@@ -30,6 +30,7 @@ import { Route as ArtistArtistIdRouteImport } from './routes/artist.$artistId'
 import { Route as CardCardIdRouteImport } from './routes/card.$cardId'
 import { Route as ProductProductIdRouteImport } from './routes/product.$productId'
 import { Route as Char91DotmcpChar93InvokeToolToolRouteImport } from './routes/[.mcp]/invoke-tool/$tool'
+import { Route as ApiPublicBuildAiPicksRouteImport } from './routes/api/public/build-ai-picks'
 import { Route as ApiPublicRefreshPricesRouteImport } from './routes/api/public/refresh-prices'
 import { Route as ApiPublicSyncCatalogRouteImport } from './routes/api/public/sync-catalog'
 import { Route as ApiPublicSyncEbayRouteImport } from './routes/api/public/sync-ebay'
@@ -151,6 +152,11 @@ const Char91DotmcpChar93InvokeToolToolRoute =
     path: '/.mcp/invoke-tool/$tool',
     getParentRoute: () => rootRouteImport,
   } as any)
+const ApiPublicBuildAiPicksRoute = ApiPublicBuildAiPicksRouteImport.update({
+  id: '/api/public/build-ai-picks',
+  path: '/api/public/build-ai-picks',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiPublicRefreshPricesRoute = ApiPublicRefreshPricesRouteImport.update({
   id: '/api/public/refresh-prices',
   path: '/api/public/refresh-prices',
@@ -239,6 +245,7 @@ export interface FileRoutesByFullPath {
   '/card/$cardId': typeof CardCardIdRoute
   '/product/$productId': typeof ProductProductIdRoute
   '/.mcp/invoke-tool/$tool': typeof Char91DotmcpChar93InvokeToolToolRoute
+  '/api/public/build-ai-picks': typeof ApiPublicBuildAiPicksRoute
   '/api/public/refresh-prices': typeof ApiPublicRefreshPricesRoute
   '/api/public/sync-catalog': typeof ApiPublicSyncCatalogRoute
   '/api/public/sync-ebay': typeof ApiPublicSyncEbayRoute
@@ -274,6 +281,7 @@ export interface FileRoutesByTo {
   '/card/$cardId': typeof CardCardIdRoute
   '/product/$productId': typeof ProductProductIdRoute
   '/.mcp/invoke-tool/$tool': typeof Char91DotmcpChar93InvokeToolToolRoute
+  '/api/public/build-ai-picks': typeof ApiPublicBuildAiPicksRoute
   '/api/public/refresh-prices': typeof ApiPublicRefreshPricesRoute
   '/api/public/sync-catalog': typeof ApiPublicSyncCatalogRoute
   '/api/public/sync-ebay': typeof ApiPublicSyncEbayRoute
@@ -311,6 +319,7 @@ export interface FileRoutesById {
   '/card/$cardId': typeof CardCardIdRoute
   '/product/$productId': typeof ProductProductIdRoute
   '/.mcp/invoke-tool/$tool': typeof Char91DotmcpChar93InvokeToolToolRoute
+  '/api/public/build-ai-picks': typeof ApiPublicBuildAiPicksRoute
   '/api/public/refresh-prices': typeof ApiPublicRefreshPricesRoute
   '/api/public/sync-catalog': typeof ApiPublicSyncCatalogRoute
   '/api/public/sync-ebay': typeof ApiPublicSyncEbayRoute
@@ -348,6 +357,7 @@ export interface FileRouteTypes {
     | '/card/$cardId'
     | '/product/$productId'
     | '/.mcp/invoke-tool/$tool'
+    | '/api/public/build-ai-picks'
     | '/api/public/refresh-prices'
     | '/api/public/sync-catalog'
     | '/api/public/sync-ebay'
@@ -383,6 +393,7 @@ export interface FileRouteTypes {
     | '/card/$cardId'
     | '/product/$productId'
     | '/.mcp/invoke-tool/$tool'
+    | '/api/public/build-ai-picks'
     | '/api/public/refresh-prices'
     | '/api/public/sync-catalog'
     | '/api/public/sync-ebay'
@@ -419,6 +430,7 @@ export interface FileRouteTypes {
     | '/card/$cardId'
     | '/product/$productId'
     | '/.mcp/invoke-tool/$tool'
+    | '/api/public/build-ai-picks'
     | '/api/public/refresh-prices'
     | '/api/public/sync-catalog'
     | '/api/public/sync-ebay'
@@ -455,6 +467,7 @@ export interface RootRouteChildren {
   CardCardIdRoute: typeof CardCardIdRoute
   ProductProductIdRoute: typeof ProductProductIdRoute
   Char91DotmcpChar93InvokeToolToolRoute: typeof Char91DotmcpChar93InvokeToolToolRoute
+  ApiPublicBuildAiPicksRoute: typeof ApiPublicBuildAiPicksRoute
   ApiPublicRefreshPricesRoute: typeof ApiPublicRefreshPricesRoute
   ApiPublicSyncCatalogRoute: typeof ApiPublicSyncCatalogRoute
   ApiPublicSyncEbayRoute: typeof ApiPublicSyncEbayRoute
@@ -619,6 +632,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof Char91DotmcpChar93InvokeToolToolRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/build-ai-picks': {
+      id: '/api/public/build-ai-picks'
+      path: '/api/public/build-ai-picks'
+      fullPath: '/api/public/build-ai-picks'
+      preLoaderRoute: typeof ApiPublicBuildAiPicksRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/refresh-prices': {
       id: '/api/public/refresh-prices'
       path: '/api/public/refresh-prices'
@@ -746,6 +766,7 @@ const rootRouteChildren: RootRouteChildren = {
   CardCardIdRoute: CardCardIdRoute,
   ProductProductIdRoute: ProductProductIdRoute,
   Char91DotmcpChar93InvokeToolToolRoute: Char91DotmcpChar93InvokeToolToolRoute,
+  ApiPublicBuildAiPicksRoute: ApiPublicBuildAiPicksRoute,
   ApiPublicRefreshPricesRoute: ApiPublicRefreshPricesRoute,
   ApiPublicSyncCatalogRoute: ApiPublicSyncCatalogRoute,
   ApiPublicSyncEbayRoute: ApiPublicSyncEbayRoute,
