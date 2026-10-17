@@ -1,6 +1,6 @@
 import { useEffect, useRef } from "react";
 import { Link, useRouterState } from "@tanstack/react-router";
-import { Home, ScanLine, Library, TrendingUp, Handshake, User, Search } from "lucide-react";
+import { Home, ScanLine, Library, TrendingUp, Handshake, User, Search, Sparkles } from "lucide-react";
 import { animate, utils } from "animejs";
 import { cn } from "@/lib/utils";
 
@@ -11,6 +11,7 @@ const TABS = [
   { to: "/scan", label: "Scan", icon: ScanLine },
   { to: "/trades", label: "Sales", icon: Handshake },
   { to: "/trends", label: "Trends", icon: TrendingUp },
+  { to: "/advisor", label: "Advisor", icon: Sparkles },
   { to: "/profile", label: "Profile", icon: User },
 ] as const;
 
@@ -81,7 +82,7 @@ export function BottomNav() {
                 preload="render"
 
                 className={cn(
-                  "flex flex-col items-center gap-1 py-2.5 text-[9px] font-medium tracking-tight transition-colors duration-300 active:scale-95",
+                  "flex flex-col items-center gap-1 py-2.5 text-[8.5px] font-medium tracking-tight transition-colors duration-300 active:scale-95",
                   "transition-transform will-change-transform",
                   active ? "text-primary" : "text-muted-foreground hover:text-foreground",
                 )}

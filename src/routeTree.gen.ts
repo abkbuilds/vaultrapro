@@ -11,6 +11,7 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
+import { Route as AdvisorRouteImport } from './routes/advisor'
 import { Route as ArtistsRouteImport } from './routes/artists'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as CollectionRouteImport } from './routes/collection'
@@ -30,6 +31,7 @@ import { Route as ArtistArtistIdRouteImport } from './routes/artist.$artistId'
 import { Route as CardCardIdRouteImport } from './routes/card.$cardId'
 import { Route as ProductProductIdRouteImport } from './routes/product.$productId'
 import { Route as Char91DotmcpChar93InvokeToolToolRouteImport } from './routes/[.mcp]/invoke-tool/$tool'
+import { Route as ApiPublicBuildAiPicksRouteImport } from './routes/api/public/build-ai-picks'
 import { Route as ApiPublicRefreshPricesRouteImport } from './routes/api/public/refresh-prices'
 import { Route as ApiPublicSyncCatalogRouteImport } from './routes/api/public/sync-catalog'
 import { Route as ApiPublicSyncEbayRouteImport } from './routes/api/public/sync-ebay'
@@ -51,6 +53,11 @@ const IndexRoute = IndexRouteImport.update({
 } as any)
 const AuthenticatedRouteRoute = AuthenticatedRouteRouteImport.update({
   id: '/_authenticated',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AdvisorRoute = AdvisorRouteImport.update({
+  id: '/advisor',
+  path: '/advisor',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ArtistsRoute = ArtistsRouteImport.update({
@@ -151,6 +158,11 @@ const Char91DotmcpChar93InvokeToolToolRoute =
     path: '/.mcp/invoke-tool/$tool',
     getParentRoute: () => rootRouteImport,
   } as any)
+const ApiPublicBuildAiPicksRoute = ApiPublicBuildAiPicksRouteImport.update({
+  id: '/api/public/build-ai-picks',
+  path: '/api/public/build-ai-picks',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiPublicRefreshPricesRoute = ApiPublicRefreshPricesRouteImport.update({
   id: '/api/public/refresh-prices',
   path: '/api/public/refresh-prices',
@@ -220,6 +232,7 @@ const ApiPublicSyncVariantsRoute = ApiPublicSyncVariantsRouteImport.update({
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/advisor': typeof AdvisorRoute
   '/artists': typeof ArtistsRoute
   '/auth': typeof AuthRoute
   '/collection': typeof CollectionRoute
@@ -239,6 +252,7 @@ export interface FileRoutesByFullPath {
   '/card/$cardId': typeof CardCardIdRoute
   '/product/$productId': typeof ProductProductIdRoute
   '/.mcp/invoke-tool/$tool': typeof Char91DotmcpChar93InvokeToolToolRoute
+  '/api/public/build-ai-picks': typeof ApiPublicBuildAiPicksRoute
   '/api/public/refresh-prices': typeof ApiPublicRefreshPricesRoute
   '/api/public/sync-catalog': typeof ApiPublicSyncCatalogRoute
   '/api/public/sync-ebay': typeof ApiPublicSyncEbayRoute
@@ -255,6 +269,7 @@ export interface FileRoutesByFullPath {
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/advisor': typeof AdvisorRoute
   '/artists': typeof ArtistsRoute
   '/auth': typeof AuthRoute
   '/collection': typeof CollectionRoute
@@ -274,6 +289,7 @@ export interface FileRoutesByTo {
   '/card/$cardId': typeof CardCardIdRoute
   '/product/$productId': typeof ProductProductIdRoute
   '/.mcp/invoke-tool/$tool': typeof Char91DotmcpChar93InvokeToolToolRoute
+  '/api/public/build-ai-picks': typeof ApiPublicBuildAiPicksRoute
   '/api/public/refresh-prices': typeof ApiPublicRefreshPricesRoute
   '/api/public/sync-catalog': typeof ApiPublicSyncCatalogRoute
   '/api/public/sync-ebay': typeof ApiPublicSyncEbayRoute
@@ -292,6 +308,7 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/_authenticated': typeof AuthenticatedRouteRouteWithChildren
+  '/advisor': typeof AdvisorRoute
   '/artists': typeof ArtistsRoute
   '/auth': typeof AuthRoute
   '/collection': typeof CollectionRoute
@@ -311,6 +328,7 @@ export interface FileRoutesById {
   '/card/$cardId': typeof CardCardIdRoute
   '/product/$productId': typeof ProductProductIdRoute
   '/.mcp/invoke-tool/$tool': typeof Char91DotmcpChar93InvokeToolToolRoute
+  '/api/public/build-ai-picks': typeof ApiPublicBuildAiPicksRoute
   '/api/public/refresh-prices': typeof ApiPublicRefreshPricesRoute
   '/api/public/sync-catalog': typeof ApiPublicSyncCatalogRoute
   '/api/public/sync-ebay': typeof ApiPublicSyncEbayRoute
@@ -329,6 +347,7 @@ export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
+    | '/advisor'
     | '/artists'
     | '/auth'
     | '/collection'
@@ -348,6 +367,7 @@ export interface FileRouteTypes {
     | '/card/$cardId'
     | '/product/$productId'
     | '/.mcp/invoke-tool/$tool'
+    | '/api/public/build-ai-picks'
     | '/api/public/refresh-prices'
     | '/api/public/sync-catalog'
     | '/api/public/sync-ebay'
@@ -364,6 +384,7 @@ export interface FileRouteTypes {
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
+    | '/advisor'
     | '/artists'
     | '/auth'
     | '/collection'
@@ -383,6 +404,7 @@ export interface FileRouteTypes {
     | '/card/$cardId'
     | '/product/$productId'
     | '/.mcp/invoke-tool/$tool'
+    | '/api/public/build-ai-picks'
     | '/api/public/refresh-prices'
     | '/api/public/sync-catalog'
     | '/api/public/sync-ebay'
@@ -400,6 +422,7 @@ export interface FileRouteTypes {
     | '__root__'
     | '/'
     | '/_authenticated'
+    | '/advisor'
     | '/artists'
     | '/auth'
     | '/collection'
@@ -419,6 +442,7 @@ export interface FileRouteTypes {
     | '/card/$cardId'
     | '/product/$productId'
     | '/.mcp/invoke-tool/$tool'
+    | '/api/public/build-ai-picks'
     | '/api/public/refresh-prices'
     | '/api/public/sync-catalog'
     | '/api/public/sync-ebay'
@@ -437,6 +461,7 @@ export interface FileRouteTypes {
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AuthenticatedRouteRoute: typeof AuthenticatedRouteRouteWithChildren
+  AdvisorRoute: typeof AdvisorRoute
   ArtistsRoute: typeof ArtistsRoute
   AuthRoute: typeof AuthRoute
   CollectionRoute: typeof CollectionRoute
@@ -455,6 +480,7 @@ export interface RootRouteChildren {
   CardCardIdRoute: typeof CardCardIdRoute
   ProductProductIdRoute: typeof ProductProductIdRoute
   Char91DotmcpChar93InvokeToolToolRoute: typeof Char91DotmcpChar93InvokeToolToolRoute
+  ApiPublicBuildAiPicksRoute: typeof ApiPublicBuildAiPicksRoute
   ApiPublicRefreshPricesRoute: typeof ApiPublicRefreshPricesRoute
   ApiPublicSyncCatalogRoute: typeof ApiPublicSyncCatalogRoute
   ApiPublicSyncEbayRoute: typeof ApiPublicSyncEbayRoute
@@ -484,6 +510,13 @@ declare module '@tanstack/react-router' {
       path: ''
       fullPath: '/'
       preLoaderRoute: typeof AuthenticatedRouteRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/advisor': {
+      id: '/advisor'
+      path: '/advisor'
+      fullPath: '/advisor'
+      preLoaderRoute: typeof AdvisorRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/artists': {
@@ -619,6 +652,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof Char91DotmcpChar93InvokeToolToolRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/build-ai-picks': {
+      id: '/api/public/build-ai-picks'
+      path: '/api/public/build-ai-picks'
+      fullPath: '/api/public/build-ai-picks'
+      preLoaderRoute: typeof ApiPublicBuildAiPicksRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/refresh-prices': {
       id: '/api/public/refresh-prices'
       path: '/api/public/refresh-prices'
@@ -727,6 +767,7 @@ const AuthenticatedRouteRouteWithChildren =
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
+  AdvisorRoute: AdvisorRoute,
   ArtistsRoute: ArtistsRoute,
   AuthRoute: AuthRoute,
   CollectionRoute: CollectionRoute,
@@ -746,6 +787,7 @@ const rootRouteChildren: RootRouteChildren = {
   CardCardIdRoute: CardCardIdRoute,
   ProductProductIdRoute: ProductProductIdRoute,
   Char91DotmcpChar93InvokeToolToolRoute: Char91DotmcpChar93InvokeToolToolRoute,
+  ApiPublicBuildAiPicksRoute: ApiPublicBuildAiPicksRoute,
   ApiPublicRefreshPricesRoute: ApiPublicRefreshPricesRoute,
   ApiPublicSyncCatalogRoute: ApiPublicSyncCatalogRoute,
   ApiPublicSyncEbayRoute: ApiPublicSyncEbayRoute,
