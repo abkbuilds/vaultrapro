@@ -174,7 +174,7 @@ function Advisor() {
             return (
               <div key={b} className="mt-5">
                 <h3 className="mb-2 text-sm font-semibold text-muted-foreground uppercase tracking-wide">
-                  {b === "buy" ? "Top buys" : b === "sell" ? "Top sells / avoids" : "Top holds"}
+                  {b === "buy" ? "Worth buying" : b === "sell" ? "Worth selling or skipping" : "Worth keeping"}
                 </h3>
                 {list.length ? (
                   <div className="grid gap-3 md:grid-cols-2">
@@ -214,43 +214,58 @@ function PickCard({ p, full }: { p: PickView; full?: boolean }) {
           <p className="truncate text-[11px] text-muted-foreground">{p.set}</p>
           <p className="mt-1 text-sm font-bold">{money(p.price)}</p>
           <div className="mt-1.5 flex flex-wrap gap-1.5 text-[11px] font-semibold">
-            <span className={cn("rounded-full px-2 py-0.5 ring-1", recTone(p.recommendation))}>{p.recommendation}</span>
-            <span className={cn("rounded-full bg-surface px-2 py-0.5", riskTone(p.riskLevel))}>{p.riskLevel}</span>
+            <span className={cn("rounded-full px-2 py-0.5 ring-1", recTone(p.recommendation))}>
+              {REC_LABEL[p.recommendation] ?? p.recommendation}
+            </span>
+            <span className={cn("rounded-full bg-surface px-2 py-0.5", riskTone(p.riskLevel))}>
+              {RISK_LABEL[p.riskLevel] ?? p.riskLevel}
+            </span>
           </div>
         </div>
         <div className="text-right">
           <p className="font-display text-2xl font-bold tabular-nums">{p.aiScore}</p>
-          <p className="text-[10px] text-muted-foreground">AI score</p>
-          <p className="mt-1 text-[11px] text-muted-foreground">{p.confidence}% conf.</p>
+          <p className="text-[10px] text-muted-foreground">out of 100</p>
+          <p className="mt-1 text-[11px] text-muted-foreground">How sure: {sureLabel(p.confidence)}</p>
         </div>
       </div>
       <p className="mt-3 text-sm leading-relaxed">{p.thesis}</p>
+      {(() => {
+        const reasons = REASON_ORDER.map((k) => p.signals[k]).filter((s) => s && s.score != null);
+        const missing = REASON_ORDER.some((k) => !p.signals[k] || p.signals[k].score == null);
+        return (
+          <>
+            {reasons.length > 0 && (
+              <ul className="mt-2 list-disc space-y-0.5 pl-4 text-xs text-muted-foreground">
+                {reasons.slice(0, full ? 5 : 3).map((s, i) => (
+                  <li key={i}>{s.detail}</li>
+                ))}
+              </ul>
+            )}
+            {full && missing && <p className="mt-1 text-[11px] text-muted-foreground">Some info isn't available yet.</p>}
+          </>
+        );
+      })()}
       {p.safety && (
         <p className="mt-2 flex gap-1.5 text-xs text-muted-foreground">
           <ShieldCheck className="size-3.5 shrink-0" /> {p.safety}
         </p>
       )}
-      <p className="mt-2 text-xs">
-        <span className="text-muted-foreground">Next 30 days: </span>
-        {p.min != null && p.max != null ? `${pct(p.min)} to ${pct(p.max)}` : "not enough price history to estimate a range"}
-      </p>
+      {p.min != null && p.max != null && (
+        <p className="mt-2 text-xs">
+          Over the next month, the price could move between {pct(p.min)} and {pct(p.max)}.
+        </p>
+      )}
       {p.thin && (
-        <p className="mt-2 text-xs text-warning">Thin trading — few real sales or sources, so prices can jump.</p>
+        <p className="mt-2 text-xs text-warning">
+          Not many people buy or sell this, so the price can change quickly.
+        </p>
       )}
       {full && (p.short || p.long) && (
         <div className="mt-3 grid gap-2 text-xs sm:grid-cols-2">
-          <p className="rounded-xl bg-surface p-2"><b>1–2 weeks:</b> {p.short}</p>
-          <p className="rounded-xl bg-surface p-2"><b>1–3 months:</b> {p.long}</p>
+          <p className="rounded-xl bg-surface p-2"><b>Next 1–2 weeks:</b> {p.short}</p>
+          <p className="rounded-xl bg-surface p-2"><b>Next 1–3 months:</b> {p.long}</p>
         </div>
       )}
-      <div className="mt-3 flex flex-wrap gap-1.5">
-        {Object.entries(p.signals).map(([k, s]) => (
-          <span key={k} title={s.detail} className="rounded-lg bg-surface px-2 py-1 text-[10px] text-muted-foreground">
-            {SIGNAL_LABELS[k]}: <b className="text-foreground">{s.score == null ? "no data" : Math.round(s.score)}</b>
-            {full && <span className="block">{s.detail}</span>}
-          </span>
-        ))}
-      </div>
     </article>
   );
   if (p.kind !== "card" || full) return body;
