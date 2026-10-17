@@ -383,7 +383,7 @@ function CollectionInsights({ picks }: { picks: PickView[] }) {
                   ? `Consider selling ${p.name} — it's ranked in today's top sells.`
                   : p.bucket === "buy"
                     ? `${p.name} is ranked a top buy today.`
-                    : `Your ${p.name} is a Hold according to today's model.`}
+                    : `Your ${p.name} is worth keeping for now.`}
               </li>
             ))}
           </ul>
@@ -399,18 +399,18 @@ function TrackRecord() {
   return (
     <section className="mt-6 px-4">
       <div className="rounded-2xl bg-surface p-4">
-        <h2 className="font-display text-base font-semibold">Track record</h2>
+        <h2 className="font-display text-base font-semibold">How past picks did</h2>
         {q.isLoading ? (
           <Loader2 className="mt-3 size-4 animate-spin text-muted-foreground" />
         ) : (
           <table className="mt-2 w-full text-sm">
             <thead className="text-xs text-muted-foreground">
-              <tr><th className="text-left">Window</th><th>Picks graded</th><th>Win rate</th><th>Avg return</th></tr>
+              <tr><th className="text-left">Time later</th><th>Picks checked</th><th>Went the right way</th><th>Average change</th></tr>
             </thead>
             <tbody>
               {(q.data ?? []).map((r) => (
                 <tr key={r.horizon} className="text-center">
-                  <td className="py-1 text-left">{r.horizon} days</td>
+                  <td className="py-1 text-left">{r.horizon} days later</td>
                   <td>{r.count}</td>
                   <td>{r.winRate == null ? "no data yet" : `${r.winRate.toFixed(0)}%`}</td>
                   <td>{r.avgReturn == null ? "—" : pct(r.avgReturn)}</td>
@@ -420,7 +420,7 @@ function TrackRecord() {
           </table>
         )}
         <p className="mt-2 text-[11px] text-muted-foreground">
-          Measured against real later prices. Past performance is not a guarantee of future results.
+          We check each pick against its real price later. Past results don't promise future ones.
         </p>
       </div>
     </section>
