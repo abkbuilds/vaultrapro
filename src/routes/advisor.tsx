@@ -57,6 +57,20 @@ const SIGNAL_LABELS: Record<string, string> = {
   liquidity: "Liquidity",
 };
 
+const REC_LABEL: Record<string, string> = {
+  "Strong Buy": "Great time to buy",
+  Buy: "Good time to buy",
+  Hold: "Keep it",
+  Sell: "Think about selling",
+  "Strong Sell": "Good time to sell",
+};
+const RISK_LABEL: Record<string, string> = {
+  Safe: "Steady price",
+  Caution: "Some ups and downs",
+  "High Risk": "Price jumps a lot",
+};
+const sureLabel = (c: number) => (c >= 75 ? "High" : c >= 55 ? "Medium" : "Low");
+
 function recTone(r: string) {
   if (r.includes("Buy")) return "bg-success/15 text-success ring-success/30";
   if (r.includes("Sell")) return "bg-destructive/15 text-destructive ring-destructive/30";
@@ -68,6 +82,7 @@ function riskTone(r: string) {
   return "text-warning";
 }
 const pct = (v: number) => `${v >= 0 ? "+" : ""}${v.toFixed(1)}%`;
+const REASON_ORDER = ["priceTrend", "technicals", "volume", "liquidity", "gradingRoi"];
 
 function Advisor() {
   const [kind, setKind] = useState<"card" | "sealed">("card");
@@ -114,6 +129,14 @@ function Advisor() {
           research.
         </p>
       </div>
+      <div className="mx-4 mt-3 rounded-2xl bg-surface p-3 text-xs text-muted-foreground">
+        <p className="font-semibold text-foreground">How to read this</p>
+        <p className="mt-1">
+          Each card gets a score out of 100 based on its real recent prices. Higher means a better time to buy, lower
+          means a better time to sell.
+        </p>
+      </div>
+
 
       <SearchAdvisor />
       <CollectionInsights picks={picks} />
