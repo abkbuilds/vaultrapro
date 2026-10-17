@@ -80,7 +80,7 @@ export const Route = createFileRoute("/api/public/build-ai-picks")({
               risk_level: p.riskLevel,
               expected_return_min: p.expectedReturnMin,
               expected_return_max: p.expectedReturnMax,
-              signals: { ...p.signals, thinLiquidity: p.thinLiquidity },
+              signals: JSON.parse(JSON.stringify({ ...p.signals, thinLiquidity: p.thinLiquidity })),
               thesis: p.thesis,
               short_term_outlook: p.shortTermOutlook,
               long_term_outlook: p.longTermOutlook,
